@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.1 $
-$Date: 2005-02-11 05:01:13 $
+$Revision: 1.2 $
+$Date: 2005-02-17 02:20:18 $
 $State: Exp $
 -->
 <project name="jai_imageio" default="jar" basedir=".">
@@ -292,8 +292,7 @@ $State: Exp $
     </copy>
   </target>
 
-  <target name="compile" depends="init"
-	  description="Executes targets compile-debug and compile-opt.">
+  <target name="compilation" depends="init">
     <!-- Create the class file directory -->
     <mkdir dir="${classdir}"/>
 
@@ -323,16 +322,19 @@ $State: Exp $
   <target name="compile-debug" depends="init,clib-debug"
 	  description="Builds all classes with debug compilation.">
     <antcall target="debugcall">
-      <param name="targetname" value="compile"/>
+      <param name="targetname" value="compilation"/>
     </antcall>
   </target>
 
   <target name="compile-opt" depends="init,clib-opt"
 	  description="Builds all classes with non-debug compilation.">
     <antcall target="optcall">
-      <param name="targetname" value="compile"/>
+      <param name="targetname" value="compilation"/>
     </antcall>
   </target>
+
+  <target name="compile" depends="compile-debug,compile-opt"
+	  description="Executes targets compile-debug and compile-opt."/>
 
   <!-- Generic manifest file. -->
   <target name="manifest">

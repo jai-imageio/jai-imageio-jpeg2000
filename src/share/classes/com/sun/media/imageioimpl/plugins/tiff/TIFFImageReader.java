@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:46 $
+ * $Revision: 1.2 $
+ * $Date: 2005-04-21 22:19:49 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -488,7 +488,11 @@ public class TIFFImageReader extends ImageReader {
     private int getCompression() {
         TIFFField f =
             imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_COMPRESSION);
-        return f.getAsInt(0);
+        if (f == null) {
+	    return BaselineTIFFTagSet.COMPRESSION_NONE;
+	} else {
+            return f.getAsInt(0);
+	}
     }
 
     public int getWidth(int imageIndex) throws IOException {

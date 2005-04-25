@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.2 $
-$Date: 2005-02-17 02:20:18 $
+$Revision: 1.3 $
+$Date: 2005-04-25 20:56:12 $
 $State: Exp $
 -->
 <project name="jai_imageio" default="jar" basedir=".">
@@ -49,9 +49,31 @@ $State: Exp $
     The build requires that Java Advanced Imaging (JAI) either be installed
     in the J2SDK used for the build or that jai_core.jar be on the CLASSPATH.
 
-    The environment variable CLIB_DIR may be used via the ant "-D" command
-    line option to specify the directory containing clibwrapper_jiio.jar;
-    the default value is src/share/jclib4jai/lib.
+    Normally the target platform will be determined automatically from the
+    system on which the build is being run. This may be overridden by setting
+    the "BUILD_TARGET" property to the desired target platform using the ant
+    "-D" command line option. The supported BUILD_TARGET property values and
+    their respective target platforms are:
+
+      linux-amd64	64-bit Linux-AMD64
+      linux-i586	32-bit Linux-x86
+      solaris-amd64     64-bit Solaris-AMD64
+      solaris-i586	32-bit Solaris-x86
+      solaris-sparc	32-bit Solaris-SPARC
+      solaris-sparcv9	64-bit Solaris-SPARC
+      windows-i586	32-bit Windows-x86
+
+    It is legal to specify a target as only Java classes and not
+    platform-specific native objects are built by this project.
+
+    If the build and target operating system are both Solaris, the build
+    target is determined automatically, and a 64-bit JVM is being used for the
+    build, then 64-bit mode should be selected by including "-d64" in the
+    list of values passed to the JVM in the "ANT_OPTS" environment variable.
+
+    The "CLIB_DIR" property may be used via the ant "-D" command line
+    option to specify the directory containing clibwrapper_jiio.jar;
+    the default value is src/share/jclib4jai.
 
     Class files are compiled into build/${platform}/debug/classes or
     build/${platform}/opt/classes.
@@ -77,11 +99,11 @@ $State: Exp $
 
   <!-- Version strings -->
   <property name="verspec" value="1.0-mr"/>
-  <property name="verimpl" value="1.0_01"/>
+  <property name="verimpl" value="1.1-alpha"/>
 
   <!-- Version strings as used in file names -->
   <property name="verspecfile" value="1_0-mr"/>
-  <property name="verimplfile" value="1_0_01"/>
+  <property name="verimplfile" value="1_0-alpha"/>
 
   <!-- Javadoc properties -->
   <property name="packageListLoc" value="build-tools"/>
@@ -95,14 +117,57 @@ $State: Exp $
   <property name="pkgname" value="jai_imageio-${verimplfile}-lib"/>
   <property name="docname" value="jai_imageio-${verspecfile}-doc"/>
 
-  <!-- Sets a single property depending on the type of current platform. -->
-  <target name="determinePlatform">
-    <condition property="isLinuxOnX86">
-        <os name="linux" arch="i386"/>
+  <!-- Sets a simgle property if a target is specified. -->
+  <target name="selectPlatform" if="BUILD_TARGET">
+    <condition property="isLinuxOnAMD64">
+        <equals arg1="${BUILD_TARGET}" arg2="linux-amd64" trim="true"/>
     </condition>
 
+    <condition property="isLinuxOnX86">
+        <equals arg1="${BUILD_TARGET}" arg2="linux-i586" trim="true"/>
+    </condition>
+
+    <condition property="isSolarisOnAMD64">
+        <equals arg1="${BUILD_TARGET}" arg2="solaris-amd64" trim="true"/>
+    </condition>   
+
     <condition property="isSolarisOnSparc">
-        <os name="SunOS" arch="sparc"/>
+        <equals arg1="${BUILD_TARGET}" arg2="solaris-sparc" trim="true"/>
+    </condition>   
+
+    <condition property="isSolarisOnSparcV9">
+        <equals arg1="${BUILD_TARGET}" arg2="solaris-sparcv9" trim="true"/>
+    </condition>   
+
+    <condition property="isSolarisOnX86">
+        <equals arg1="${BUILD_TARGET}" arg2="solaris-i586" trim="true"/>
+    </condition>   
+
+    <condition property="isWindowsOnX86">
+        <equals arg1="${BUILD_TARGET}" arg2="windows-i586" trim="true"/>
+    </condition>
+  </target>
+
+  <!-- Sets a single property depending on the type of current platform. -->
+  <target name="determinePlatform" unless="BUILD_TARGET">
+    <condition property="isLinuxOnAMD64">
+      <os name="linux" arch="amd64"/>
+    </condition>
+
+    <condition property="isLinuxOnX86">
+      <os name="linux" arch="i386"/>
+    </condition>
+
+    <condition property="isSolarisOnAMD64">
+      <os name="SunOS" arch="amd64"/>
+    </condition>   
+
+    <condition property="isSolarisOnSparcV9">
+      <os name="SunOS" arch="sparcv9"/>
+    </condition>   
+
+    <condition property="isSolarisOnSparc">
+      <os name="SunOS" arch="sparc"/>
     </condition>   
 
     <condition property="isSolarisOnX86">
@@ -114,11 +179,29 @@ $State: Exp $
     </condition>
   </target>
 
-  <target name="setupLinuxX86" if="isLinuxOnX86">	
+  <!-- Set various properties as a function of platform type. -->
+
+  <target name="setupLinuxAMD64" if="isLinuxOnAMD64">
+    <property name="ostype" value="linux"/>
+    <property name="platform" value="linux-amd64"/>
+    <property name="arch" value="amd64"/>
+    <property name="clibarch" value="linux/amd64"/>
+    <property name="jrenativesubdir" value="lib/${arch}"/>
+  </target>
+
+  <target name="setupLinuxX86" if="isLinuxOnX86">
     <property name="ostype" value="linux"/>
     <property name="platform" value="linux-i586"/>
     <property name="arch" value="i386"/>
-    <property name="clibarch" value="linux"/>
+    <property name="clibarch" value="linux/i386"/>
+    <property name="jrenativesubdir" value="lib/${arch}"/>
+  </target>
+
+  <target name="setupSolarisAMD64" if="isSolarisOnAMD64">
+    <property name="ostype" value="solaris"/>
+    <property name="platform" value="solaris-amd64"/>
+    <property name="arch" value="amd64"/>
+    <property name="clibarch" value="solaris/amd64"/>
     <property name="jrenativesubdir" value="lib/${arch}"/>
   </target>
 
@@ -126,15 +209,23 @@ $State: Exp $
     <property name="ostype" value="solaris"/>
     <property name="platform" value="solaris-sparc"/>
     <property name="arch" value="sparc"/>
-    <property name="clibarch" value="sparc"/>
+    <property name="clibarch" value="solaris/sparc"/>
     <property name="jrenativesubdir" value="lib/${arch}"/>
   </target>
 
-  <target name="setupSolarisX86" if="isSolarisOnX86">	
+  <target name="setupSolarisSparcV9" if="isSolarisOnSparcV9">	
+    <property name="ostype" value="solaris"/>
+    <property name="platform" value="solaris-sparcv9"/>
+    <property name="arch" value="sparcv9"/>
+    <property name="clibarch" value="solaris/sparcv9"/>
+    <property name="jrenativesubdir" value="lib/${arch}"/>
+  </target>
+
+  <target name="setupSolarisX86" if="isSolarisOnX86">
     <property name="ostype" value="solaris"/>
     <property name="platform" value="solaris-i586"/>
     <property name="arch" value="i386"/>
-    <property name="clibarch" value="i386"/>
+    <property name="clibarch" value="solaris/i386"/>
     <property name="jrenativesubdir" value="lib/${arch}"/>
   </target>
 
@@ -142,27 +233,33 @@ $State: Exp $
     <property name="ostype" value="windows"/>
     <property name="platform" value="windows-i586"/>
     <property name="arch" value="i386"/>
-    <property name="clibarch" value="win32"/>
+    <property name="clibarch" value="windows/i386"/>
     <property name="jrenativesubdir" value="bin"/>
   </target>
 
   <!-- Set properties as a function of the type of platform. -->
   <target name="setupPlatform"
 	  depends="determinePlatform,
+		   selectPlatform,
+		   setupLinuxAMD64,
 		   setupLinuxX86,
+		   setupSolarisAMD64,
 		   setupSolarisSparc,
+		   setupSolarisSparcV9,
 		   setupSolarisX86,
 		   setupWindows">
+    <fail message="Unable to determine the target platform!"
+	  unless="platform"/>
   </target>
 
-  <!-- Sets "clib" property to "CLIB_DIR" environment variable. -->
+  <!-- Sets "clib" property to "CLIB_DIR" property. -->
   <target name="clib-env" if="CLIB_DIR">
     <property name="clib" value="${CLIB_DIR}"/>
   </target>
 
   <!-- Sets "clib" property to default value. -->
   <target name="clib-def" unless="CLIB_DIR">
-    <property name="clib" value="src/share/jclib4jai/lib"/>
+    <property name="clib" value="src/share/jclib4jai"/>
   </target>
 
   <!-- Sets "clib" property. -->
@@ -211,8 +308,6 @@ $State: Exp $
     <echo message="textdir         = ${textdir}"/>
     <echo message="packageListLoc  = ${packageListLoc}"/>
     <echo message="docurl          = ${docurl}"/>
-    <echo message="proxyhost       = ${proxyhost}"/>
-    <echo message="proxyport       = ${proxyport}"/>
     <echo message="build           = ${build}"/>
     <echo message="dist            = ${dist}"/>
     <echo message="pkgname         = ${pkgname}"/>

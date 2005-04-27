@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:46 $
+ * $Revision: 1.2 $
+ * $Date: 2005-04-27 18:23:02 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -1446,8 +1446,8 @@ public class TIFFImageMetadata extends IIOMetadata {
                 try {
                     Class setClass = Class.forName(className);
                     Method getInstanceMethod =
-                        setClass.getMethod("getInstance", null);
-                    o = getInstanceMethod.invoke(null, null);
+                        setClass.getMethod("getInstance", (Class[])null);
+                    o = getInstanceMethod.invoke(null, (Object[])null);
                 } catch (NoSuchMethodException e) {
                     throw new RuntimeException(e);
                 } catch (IllegalAccessException e) {

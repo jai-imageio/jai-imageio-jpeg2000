@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:35 $
+ * $Revision: 1.2 $
+ * $Date: 2005-04-27 18:23:01 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -207,8 +207,9 @@ public class J2KMetadataFormat extends IIOMetadataFormatImpl {
                 Class c = Box.getBoxClass(Box.getTypeInt(Box.getTypeByName(s)));
 
                 try {
-                    Method m = c.getMethod("getElementNames", null);
-                    String[] elementNames = (String[])m.invoke(null, null);
+                    Method m = c.getMethod("getElementNames", (Class[])null);
+                    String[] elementNames = (String[])m.invoke(null,
+                                                               (Object[])null);
                     for (int i = 0; i < elementNames.length; i++)
                         addElement(elementNames[i], s, CHILD_POLICY_EMPTY);
                 } catch (Exception e) {

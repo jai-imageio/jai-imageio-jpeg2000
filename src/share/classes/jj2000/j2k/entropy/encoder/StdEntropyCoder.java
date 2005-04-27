@@ -1,7 +1,7 @@
 /*
  * $RCSfile: StdEntropyCoder.java,v $
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:02:09 $
+ * $Revision: 1.2 $
+ * $Date: 2005-04-27 18:23:03 $
  * $State: Exp $
  *
  * Class:                   StdEntropyCoder
@@ -1050,11 +1050,11 @@ public class StdEntropyCoder extends EntropyCoder
                     sb.append(time[c]);
                     sb.append(" ms");
                 }
-                Enumeration enum = idleComps.elements();
+                Enumeration enumVar = idleComps.elements();
                 sb.append("\nStdEntropyCoder compressor threads wall clock "+
                           "time:");
-                while (enum.hasMoreElements()) {
-                    compr = (Compressor)(enum.nextElement());
+                while (enumVar.hasMoreElements()) {
+                    compr = (Compressor)(enumVar.nextElement());
                     for (c=0; c<time.length; c++) {
                         sb.append("\n  compressor ");
                         sb.append(compr.getIdx());

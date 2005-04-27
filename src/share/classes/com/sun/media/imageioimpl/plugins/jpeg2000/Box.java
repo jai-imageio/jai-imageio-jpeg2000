@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:31 $
+ * $Revision: 1.2 $
+ * $Date: 2005-04-27 18:23:01 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -487,15 +487,17 @@ public class Box {
      */
     protected IIOMetadataNode getNativeNodeForSimpleBox() {
         try {
-            Method m = this.getClass().getMethod("getElementNames", null);
-            String[] elementNames = (String[])m.invoke(null, null);
+            Method m = this.getClass().getMethod("getElementNames",
+                                                 (Class[])null);
+            String[] elementNames = (String[])m.invoke(null, (Object[])null);
 
             IIOMetadataNode node = new IIOMetadataNode(Box.getName(getType()));
             setDefaultAttributes(node);
             for (int i = 0; i < elementNames.length; i++) {
                 IIOMetadataNode child = new IIOMetadataNode(elementNames[i]);
-                m = this.getClass().getMethod("get" + elementNames[i], null);
-		Object obj = m.invoke(this, null);
+                m = this.getClass().getMethod("get" + elementNames[i],
+                                              (Class[])null);
+		Object obj = m.invoke(this, (Object[])null);
                 child.setUserObject(obj);
 		child.setNodeValue(ImageUtil.convertObjectToString(obj));
                 node.appendChild(child);

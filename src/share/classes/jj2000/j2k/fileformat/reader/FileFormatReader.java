@@ -1,7 +1,7 @@
 /*
  * $RCSfile: FileFormatReader.java,v $
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:02:10 $
+ * $Revision: 1.2 $
+ * $Date: 2005-04-28 01:25:38 $
  * $State: Exp $
  *
  * Class:                   FileFormatReader
@@ -251,7 +251,7 @@ public class FileFormatReader implements FileFormatBoxes{
                     readURLBox(length);
                     break;
                 case PALETTE_BOX:
-                    readPaletteBox(length);
+                    readPaletteBox(length + 8);
                     break;
                 case BITS_PER_COMPONENT_BOX:
                     readBitsPerComponentBox(length);
@@ -662,7 +662,10 @@ public class FileFormatReader implements FileFormatBoxes{
      * Returns the color model created from the palette box.
      */
     public ColorModel getColorModel() {
-        if (lut != null) {
+        // Check 'numComp' instance variable here in case there is an
+        // embedded palette such as in the pngsuite images pp0n2c16.png
+        // and pp0n6a08.png.
+        if (lut != null && numComp == 1) {
             int numComp = lut.length;
 
             int maxDepth = 1 + (bitDepth & 0x7F);

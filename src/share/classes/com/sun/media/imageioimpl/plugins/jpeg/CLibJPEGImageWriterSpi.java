@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:30 $
+ * $Revision: 1.2 $
+ * $Date: 2005-05-10 01:18:46 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -123,9 +123,9 @@ public class CLibJPEGImageWriterSpi extends ImageWriterSpi {
     public boolean canEncodeImage(ImageTypeSpecifier type) {
         ColorModel colorModel = type.getColorModel();
 
-        // Cannot correctly handle indexed images: writes as grayscale.
         if (colorModel instanceof IndexColorModel) {
-            return false;
+            // No need to check further: writer converts to 8-8-8 RGB.
+            return true;
         }
 
         SampleModel sampleModel = type.getSampleModel();

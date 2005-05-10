@@ -38,13 +38,20 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:30 $
+ * $Revision: 1.2 $
+ * $Date: 2005-05-10 01:18:45 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DirectColorModel;
+import java.awt.image.IndexColorModel;
+import java.awt.image.PackedColorModel;
+import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
+import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Locale;
@@ -64,6 +71,73 @@ import com.sun.medialib.codec.jiio.mediaLibImage;
 
 final class CLibJPEGImageWriter extends CLibImageWriter {
     private Encoder encoder;
+
+    /**
+     * Convert an IndexColorModel-based image to 3-band component RGB.
+     *
+     * @param im The source image.
+     * @throws IllegalArgumentException if the parameter is <code>null</code>.
+     * @throws IllegalArgumentException if the source does is not indexed.
+     */
+    private static BufferedImage convertTo3BandRGB(RenderedImage im) {
+        // Check parameter.
+        if(im == null) {
+            throw new IllegalArgumentException("im == null");
+        }
+
+        ColorModel cm = im.getColorModel();
+        if(!(cm instanceof IndexColorModel)) {
+            throw new IllegalArgumentException
+                ("!(im.getColorModel() instanceof IndexColorModel)");
+        }
+
+        Raster src;
+        if(im.getNumXTiles() == 1 && im.getNumYTiles() == 1) {
+            // Image is not tiled so just get a reference to the tile.
+            src = im.getTile(im.getMinTileX(), im.getMinTileY());
+
+            if (src.getWidth() != im.getWidth() ||
+                src.getHeight() != im.getHeight()) {
+                src = src.createChild(src.getMinX(), src.getMinY(),
+                                      im.getWidth(), im.getHeight(),
+                                      src.getMinX(), src.getMinY(),
+                                      null);
+            }
+        } else {
+            // Image is tiled so need to get a contiguous raster.
+            src = im.getData();
+        }
+
+        // This is probably not the most efficient approach given that
+        // the mediaLibImage will eventually need to be in component form.
+        BufferedImage dst =
+            ((IndexColorModel)cm).convertToIntDiscrete(src, false);
+
+        if(dst.getSampleModel().getNumBands() == 4) {
+            //
+            // Without copying data create a BufferedImage which has
+            // only the RGB bands, not the alpha band.
+            //
+            WritableRaster rgbaRas = dst.getRaster();
+            WritableRaster rgbRas =
+                rgbaRas.createWritableChild(0, 0,
+                                            dst.getWidth(), dst.getHeight(),
+                                            0, 0,
+                                            new int[] {0, 1, 2});
+            PackedColorModel pcm = (PackedColorModel)dst.getColorModel();
+            int bits =
+                pcm.getComponentSize(0) +
+                pcm.getComponentSize(1) +
+                pcm.getComponentSize(2);
+            DirectColorModel dcm = new DirectColorModel(bits,
+                                                        pcm.getMask(0),
+                                                        pcm.getMask(1),
+                                                        pcm.getMask(2));
+            dst = new BufferedImage(dcm, rgbRas, false, null);
+        }
+
+        return dst;
+    }
 
     CLibJPEGImageWriter(ImageWriterSpi originatingProvider)
         throws IOException {
@@ -97,6 +171,10 @@ final class CLibJPEGImageWriter extends CLibImageWriter {
         }
 
         RenderedImage renderedImage = image.getRenderedImage();
+
+        if(renderedImage.getColorModel() instanceof IndexColorModel) {
+            renderedImage = convertTo3BandRGB(renderedImage);
+        }
 
         // Test for all.
 	ImageUtil.canEncodeImage(this, renderedImage.getColorModel(),

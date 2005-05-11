@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:27 $
+ * $Revision: 1.2 $
+ * $Date: 2005-05-11 00:37:01 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -112,6 +112,53 @@ public abstract class CLibImageWriter extends ImageWriter {
         }
 
         return mlibType;
+    }
+
+    /**
+     * Returns a contiguous <code>Raster</code> of data over the specified
+     * <code>Rectangle</code>.
+     */
+    private static final Raster getContiguousData(RenderedImage im,
+                                                  Rectangle region) {
+        if(im == null) {
+            throw new IllegalArgumentException("im == null");
+        } else if(region == null) {
+            throw new IllegalArgumentException("region == null");
+        }
+
+        Raster raster;
+        if(im.getNumXTiles() == 1 && im.getNumYTiles() == 1) {
+            // Image is not tiled so just get a reference to the tile.
+            raster = im.getTile(im.getMinTileX(), im.getMinTileY());
+
+            // Ensure result has requested coverage.
+            Rectangle bounds = raster.getBounds();
+            if (!bounds.equals(region)) {
+                raster = raster.createChild(region.x, region.y,
+                                            region.width, region.height,
+                                            region.x, region.y,
+                                            null);
+            }
+        } else {
+            // Image is tiled.
+
+            // Create an interleaved raster for copying for 8-bit case.
+            // This ensures that for RGB data the band offsets are {0,1,2}.
+            SampleModel sampleModel = im.getSampleModel();
+            WritableRaster target = sampleModel.getSampleSize(0) == 8 ?
+                Raster.createInterleavedRaster(DataBuffer.TYPE_BYTE,
+                                               im.getWidth(),
+                                               im.getHeight(),
+                                               sampleModel.getNumBands(),
+                                               new Point(im.getMinX(),
+                                                         im.getMinY())) :
+                null;
+
+            // Copy the data.
+            raster = im.copyData(target);
+        }
+
+        return raster;
     }
 
     /**
@@ -455,7 +502,7 @@ public abstract class CLibImageWriter extends ImageWriter {
                (param.getSourceXSubsampling() != 1 ||
                 param.getSourceXSubsampling() != 1)) {
                 // Subsampling, possibly with sub-banding.
-                reformat(image.getData(sourceRegion),
+                reformat(getContiguousData(image, sourceRegion),
                          sourceBands,
                          param.getSourceXSubsampling(),
                          param.getSourceYSubsampling(),
@@ -478,7 +525,7 @@ public abstract class CLibImageWriter extends ImageWriter {
                 WritableRaster translatedChild =
                     newRaster.createWritableTranslatedChild(sourceRegion.x,
                                                             sourceRegion.y);
-                Raster sourceRaster = image.getData(sourceRegion);
+                Raster sourceRaster = getContiguousData(image, sourceRegion);
                 if(sourceBands != null) {
                     // Copy only the requested bands.
                     sourceRaster =
@@ -500,7 +547,7 @@ public abstract class CLibImageWriter extends ImageWriter {
             sampleModel = newRaster.getSampleModel();
         } else { // !reformatData
             // No reformatting needed.
-            raster = image.getData(sourceRegion).createTranslatedChild(0, 0);
+            raster = getContiguousData(image, sourceRegion).createTranslatedChild(0, 0);
             sampleModel = raster.getSampleModel();
         }
 

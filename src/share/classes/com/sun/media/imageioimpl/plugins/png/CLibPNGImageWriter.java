@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:38 $
+ * $Revision: 1.2 $
+ * $Date: 2005-05-11 00:09:34 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.png;
@@ -230,10 +230,12 @@ final class CLibPNGImageWriter extends CLibImageWriter {
                 colorModel = destinationType.getColorModel();
             }
 
-            // Set the compression level to 9*compressionQuality (truncated).
+            // Set compression level to (int)(9*(1.0F - compressionQuality)).
             if(param.getCompressionMode() == ImageWriteParam.MODE_EXPLICIT) {
                 try {
-                    encoder.setCompressionLevel((int)(param.getCompressionQuality()*9));
+                    int compressionLevel =
+                        (int)(9*(1.0F - param.getCompressionQuality()));
+                    encoder.setCompressionLevel(compressionLevel);
                 } catch(Throwable t) {
                     throw new IIOException("codecLib error", t);
                 }
@@ -282,14 +284,16 @@ final class CLibPNGImageWriter extends CLibImageWriter {
  * . compression modes are: MODE_DEFAULT, MODE_EXPLICIT and
  * MODE_COPY_FROM_METADATA); MODE_DISABLED is not allowed.
  * . compression quality is used to set the compression level of the
- * encoder according to compressionLevel = (int)(9*compressionQuality).
+ * encoder according to:
+ *
+ *     compressionLevel = (int)(9*(1.0F - compressionQuality))
  *
  * As in the core PNG writer, a progressiveMode of MODE_DEFAULT sets
  * Adam7 interlacing whereas MODE_DISABLED sets default interlacing,
  * i.e., none.
  */
 final class CLibPNGImageWriteParam extends ImageWriteParam {
-    private static final float DEFAULT_COMPRESSION_QUALITY = 1.0F;
+    private static final float DEFAULT_COMPRESSION_QUALITY = 1.0F/3.0F;
 
     // Encoder strategies mapped to compression types.
     private static final String DEFAULT_COMPRESSION_TYPE = "DEFAULT";
@@ -336,9 +340,16 @@ final class CLibPNGImageWriteParam extends ImageWriteParam {
     public float[] getCompressionQualityValues() {
         super.getCompressionQualityValues(); // Performs checks.
 
-        return new float[] { 0.0F,             // "No Compression"
-                             (float)(1.0/9.0), // "Best Speed"
-                             1.0F };           // "Best Compression"
+        // According to the java.util.zip.Deflater class, the Deflater
+        // level 1 gives the best speed (short of no compression). Since
+        // quality is derived from level as
+        //
+        //     quality = 1 - level/9
+        //
+        // this gives a value of 8.0/9.0 for the corresponding quality.
+        return new float[] { 0.0F,               // "Best Compression"
+                             (float)(8.0F/9.0F), // "Best Speed"
+                             1.0F };             // "No Compression"
     }
 
     public void setCompressionMode(int mode) {

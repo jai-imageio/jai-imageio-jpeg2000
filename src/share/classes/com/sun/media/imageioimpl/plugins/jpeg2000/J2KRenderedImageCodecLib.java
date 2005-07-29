@@ -38,12 +38,13 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:36 $
+ * $Revision: 1.2 $
+ * $Date: 2005-07-29 01:16:11 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
 
+import javax.imageio.IIOException;
 import javax.imageio.ImageReadParam;
 import javax.imageio.stream.ImageInputStream;
 
@@ -68,11 +69,11 @@ import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 
+import java.io.IOException;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
-
-import java.io.*;
 
 import com.sun.medialib.codec.jp2k.CompParams;
 import com.sun.medialib.codec.jp2k.Constants;
@@ -83,6 +84,8 @@ import com.sun.medialib.codec.jiio.mediaLibImage;
 import com.sun.media.imageio.plugins.jpeg2000.J2KImageReadParam;
 import com.sun.media.imageioimpl.common.SimpleRenderedImage;
 import com.sun.media.imageioimpl.common.ImageUtil;
+
+// XXX Overall documentation
 
 public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
     /** The sample model for the original image. */
@@ -108,6 +111,7 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
     /** Caches the medialib decoder. */
     private Decoder decoder;
     private Size size;
+    private int xStep, yStep; // JPEG 2000 internal subsampling parameters
 
     /** The destination bounds. */
     Rectangle destinationRegion;
@@ -161,30 +165,66 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
 
         size = decoder.decodeSize(null);
 
-        // If the destination band is set used it
-        sourceBands = param.getSourceBands();
+        CompParams compParam = new CompParams();
+        for (int i = 0; i < size.csize; i++) {
+            decoder.decodeCompParams(compParam, i);
+            if(i == 0) {
+                xStep = compParam.xstep;
+                yStep = compParam.ystep;
+            } else if(compParam.xstep != xStep || compParam.ystep != yStep) {
+                // All components must have same subsampling along each axis.
+                throw new IIOException
+                    ("All components must have the same subsampling factors!");
+            }
+        }
 
+        // Set source sub-banding.
+        sourceBands = param.getSourceBands();
         if (sourceBands == null) {
             nComp = size.csize;
             sourceBands = new int[nComp];
             for (int i = 0; i < nComp; i++)
                 sourceBands[i] = i;
+        } else {
+            for(int i = 0; i < sourceBands.length; i++) {
+                if(sourceBands[i] < 0 ||
+                   sourceBands[i] >= size.csize) {
+                    throw new IIOException
+                        ("Source band out of range!");
+                }
+            }
         }
 
+        // Cache number of components.
         nComp = sourceBands.length;
 
+        // Set destination sub-banding.
         destinationBands = param.getDestinationBands();
         if (destinationBands == null) {
             destinationBands = new int[nComp];
             for (int i = 0; i < nComp; i++)
                 destinationBands[i] = i;
+        } else {
+            for(int i = 0; i < destinationBands.length; i++) {
+                if(destinationBands[i] < 0 ||
+                   destinationBands[i] >= size.csize) {
+                    throw new IIOException
+                        ("Destination band out of range!");
+                }
+            }
         }
 
-        this.width = size.xsize - size.xosize;
-        this.height = size.ysize - size.yosize;
+        // Check number of source and dest bands.
+        if(destinationBands.length != sourceBands.length) {
+                throw new IIOException
+                    ("Number of source and destination bands must be equal!");
+        }
+
+        this.width = (size.xosize + size.xsize + xStep - 1)/xStep;
+        this.height = (size.yosize + size.ysize + yStep - 1)/yStep;
 
         Rectangle sourceRegion =
-                new Rectangle(size.xosize, size.yosize, this.width, this.height);
+                new Rectangle(0, 0, this.width, this.height);
 
         originalRegion = (Rectangle)sourceRegion.clone();
 
@@ -204,10 +244,13 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
         sourceOrigin = new Point(sourceRegion.x, sourceRegion.y);
         if (!destinationRegion.equals(originalRegion))
             noTransform = false;
-        this.tileWidth = size.xtsize;
-        this.tileHeight = size.ytsize;
-        this.tileGridXOffset = size.xtosize;
-        this.tileGridYOffset = size.ytosize;
+
+        this.tileWidth = (size.xtsize + xStep - 1)/xStep;
+        this.tileHeight = (size.ytsize + yStep - 1)/yStep;
+        this.tileGridXOffset =
+            (size.xtosize + xStep - 1)/xStep - (size.xosize + xStep - 1)/xStep;
+        this.tileGridYOffset =
+            (size.ytosize + yStep - 1)/yStep - (size.yosize + yStep - 1)/yStep;
 
         this.width = destinationRegion.width;
         this.height = destinationRegion.height;
@@ -227,6 +270,7 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
         // percentage; so convert first.
         double rate = ((J2KImageReadParam)param).getDecodingRate();
         if (rate != Double.MAX_VALUE) {
+            // XXX Obtain bits per sample from elsewhere, e.g., ColorModel.
             rate /= ImageUtil.getElementSize(sampleModel);
             decoder.setRate(rate, 0);
         }
@@ -238,36 +282,19 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
             currentTileGrid.y == tileY)
             return currentTile;
 
-        if (tileX >= getNumXTiles() || tileY >= getNumYTiles())
+        if (tileX < getMinTileX() || tileY < getMinTileY() ||
+            tileX > getMaxTileX() || tileY > getMaxTileY())
             throw new IllegalArgumentException(I18N.getString("J2KReadState1"));
 
+        int x = tileXToX(tileX);
+        int y = tileYToY(tileY);
+        currentTile = Raster.createWritableRaster(sampleModel,
+                                                  new Point(x, y));
+
         try {
-            int x = tileXToX(tileX);
-            int y = tileYToY(tileY);
-            currentTile = Raster.createWritableRaster(sampleModel, new Point(x, y));
-
-            if (noTransform) {
-                int sourceFormatTag =
-                    MediaLibAccessor.findCompatibleTag(currentTile);
-
-                MediaLibAccessor accessor =
-                    new MediaLibAccessor(currentTile,
-//                                         currentTile.getBounds(),
-                                         currentTile.getBounds().intersection(originalRegion),
-                                         sourceFormatTag, true);
-
-                mediaLibImage[] mlImage = accessor.getMediaLibImages();
-
-                //this image may be a subregion of the image in the stream
-                // So use the original tile number.
-                int tileNo = (x - size.xtosize) / size.xtsize +
-                             (y - size.ytosize) / size.ytsize * size.nxtiles;
-                decoder.decode(mlImage, tileNo);
-            } else {
-                currentTile = readSubsampledRaster((WritableRaster)currentTile);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            readAsRaster((WritableRaster)currentTile);
+        } catch(IOException ioe) {
+            throw new RuntimeException(ioe);
         }
 
         if (currentTileGrid == null)
@@ -280,38 +307,111 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
         return currentTile;
     }
 
-    public synchronized void readAsRaster(WritableRaster raster)
-                                          throws java.io.IOException {
-        if (noTransform) {
-            // XXX 2004-05-11 Change to JP2K_COMPOSITE_TILE per jcheng test.
-            //decoder.setMode(Constants.JP2K_COMPOSITE_IMAGE);
-            decoder.setMode(Constants.JP2K_COMPOSITE_TILE);
-            int sourceFormatTag =
-                MediaLibAccessor.findCompatibleTag(raster);
+    synchronized WritableRaster readAsRaster(WritableRaster raster)
+        throws IOException {
+        int x = raster.getMinX();
+        int y = raster.getMinY();
 
-            //sourceFormatTag = sourceFormatTag ^ MediaLibAccessor.COPIED;
+        try {
+            if (noTransform) {
+                int E2c = (size.xosize + xStep - 1)/xStep;
+                int E1c = (size.yosize + yStep - 1)/yStep;
 
-            MediaLibAccessor accessor =
-                new MediaLibAccessor(raster, destinationRegion,
-                                         sourceFormatTag, true);
+                int tXStart =
+                    ((x + E2c)*xStep - size.xtosize)/size.xtsize;
+                int tXEnd =
+                    ((x + raster.getWidth() - 1 + E2c)*xStep - size.xtosize)/
+                    size.xtsize;
+                int tYStart =
+                    ((y + E2c)*yStep - size.ytosize)/size.ytsize;
+                int tYEnd =
+                    ((y + raster.getHeight() - 1 + E2c)*yStep - size.ytosize)/
+                    size.ytsize;
 
-            mediaLibImage[] mlImage = accessor.getMediaLibImages();
+                int sourceFormatTag =
+                    MediaLibAccessor.findCompatibleTag(raster);
 
-            decoder.decode(mlImage, 0);
+                if(tXStart == tXEnd && tYStart == tYEnd) {
+                    MediaLibAccessor accessor =
+                        new MediaLibAccessor(raster,
+                                             raster.getBounds().intersection(originalRegion),
+                                             sourceFormatTag, true);
 
-            if (accessor.isDataCopy())
-                accessor.copyDataToRaster(channelMap);
-        } else readSubsampledRaster(raster);
+                    mediaLibImage[] mlImage = accessor.getMediaLibImages();
+
+                    //this image may be a subregion of the image in the stream
+                    // So use the original tile number.
+                    int tileNo = tXStart + tYStart*size.nxtiles;
+                    decoder.decode(mlImage, tileNo);
+                    accessor.copyDataToRaster(channelMap);
+                } else {
+                    for(int ty = tYStart; ty <= tYEnd; ty++) {
+                        for(int tx = tXStart; tx <= tXEnd; tx++) {
+                            int sx = (size.xtosize + tx*size.xtsize +
+                                      xStep - 1)/xStep - E2c;
+                            int sy = (size.ytosize + ty*size.ytsize +
+                                      yStep - 1)/yStep - E1c;
+                            int ex = (size.xtosize + (tx + 1)*size.xtsize +
+                                      xStep - 1)/xStep - E2c;
+                            int ey = (size.ytosize + (ty + 1)*size.ytsize +
+                                      yStep - 1)/yStep - E1c;
+                            Rectangle subRect =
+                                new Rectangle(sx, sy, ex - sx, ey - sy);
+                            if(subRect.isEmpty()) {
+                                continue;
+                            }
+                            if (rasForATile == null) {
+                                rasForATile =
+                                    Raster.createWritableRaster
+                                    (originalSampleModel, null);
+                            }
+                            WritableRaster subRaster =
+                                rasForATile.createWritableChild
+                                (rasForATile.getMinX(),
+                                 rasForATile.getMinY(),
+                                 subRect.width, subRect.height,
+                                 subRect.x, subRect.y, null);
+                            MediaLibAccessor accessor =
+                                new MediaLibAccessor(subRaster,
+                                                     subRect,
+                                                     sourceFormatTag, true);
+
+                            mediaLibImage[] mlImage =
+                                accessor.getMediaLibImages();
+
+                            int tileNo = tx + ty*size.nxtiles;
+                            decoder.decode(mlImage, tileNo);
+                            accessor.copyDataToRaster(channelMap);
+
+                            Rectangle rasBounds = raster.getBounds();
+                            Rectangle childRect =
+                                rasBounds.intersection(subRect);
+                            if(childRect.isEmpty()) {
+                                continue;
+                            }
+
+                            Raster childRaster =
+                                subRaster.createChild(childRect.x, childRect.y,
+                                                      childRect.width,
+                                                      childRect.height,
+                                                      childRect.x, childRect.y,
+                                                      null);
+                            ((WritableRaster)raster).setRect(childRaster);
+                        }
+                    }
+                }
+            } else {
+                readSubsampledRaster(raster);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return raster;
     }
 
-    private Raster readSubsampledRaster(WritableRaster raster) throws IOException {
-        if (raster == null)
-            raster = Raster.createWritableRaster(
-                sampleModel.createCompatibleSampleModel(destinationRegion.x +
-                                                        destinationRegion.width,
-                                                        destinationRegion.y +
-                                                        destinationRegion.height),
-                new Point(destinationRegion.x, destinationRegion.y));
+    private void readSubsampledRaster(WritableRaster raster)
+        throws IOException {
 
         int numBands = sourceBands.length;
 
@@ -325,19 +425,26 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
         int sourceEX = (destRect.width - 1) * scaleX + sourceSX;
         int sourceEY = (destRect.height - 1)* scaleY + sourceSY;
 
-        int startXTile = (sourceSX - size.xtosize) / tileWidth;
-        int startYTile = (sourceSY - size.ytosize) / tileHeight;
-        int endXTile = (sourceEX - size.xtosize) / tileWidth;
-        int endYTile = (sourceEY - size.ytosize) / tileHeight;
+        int E2c = (size.xosize + xStep - 1)/xStep;
+        int E1c = (size.yosize + yStep - 1)/yStep;
+
+        int startXTile =
+            ((sourceSX + E2c)*xStep - size.xtosize)/size.xtsize;
+        int endXTile =
+            ((sourceEX + E2c)*xStep - size.xtosize)/size.xtsize;
+        int startYTile =
+            ((sourceSY + E1c)*yStep - size.ytosize)/size.ytsize;
+        int endYTile =
+            ((sourceEY + E1c)*yStep - size.ytosize)/size.ytsize;
 
         startXTile = clip(startXTile, 0,  size.nxtiles - 1);
         startYTile = clip(startYTile, 0, size.nytiles - 1);
         endXTile = clip(endXTile, 0,  size.nxtiles - 1);
         endYTile = clip(endYTile, 0, size.nytiles - 1);
 
-        int toltaXTiles = endXTile - startXTile + 1;
+        int totalXTiles = endXTile - startXTile + 1;
         int totalYTiles = endYTile - startYTile + 1;
-        int totalTiles = toltaXTiles * totalYTiles;
+        int totalTiles = totalXTiles * totalYTiles;
 
         int[] pixbuf = null;  // integer buffer for the decoded pixels.
 
@@ -351,11 +458,19 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
                 if (reader.getAbortRequest())
                     break;
 
-                float percentage =
-                    (x - startXTile + 1.0F + y * toltaXTiles) / totalTiles;
+                float percentage = // XXX Incorrect?
+                    (x - startXTile + 1.0F + y * totalXTiles) / totalTiles;
 
-                int startX = x * size.xtsize + size.xtosize;
-                int startY = y * size.ytsize + size.ytosize;
+                int startX =
+                    (x * size.xtsize + size.xtosize + xStep - 1)/xStep - E2c;
+                int startY =
+                    (y * size.ytsize + size.ytosize + yStep - 1)/yStep - E1c;
+                int endX =
+                    ((x + 1)*size.xtsize + size.xtosize + xStep - 1)/
+                    xStep - E2c;
+                int endY =
+                    ((y + 1)*size.ytsize + size.ytosize + yStep - 1)/
+                    yStep - E1c;
 
                 if (rasForATile == null) {
                     rasForATile =
@@ -366,29 +481,37 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
                         rasForATile.createWritableTranslatedChild(startX, startY);
                 }
 
+                int tw = endX - startX;
+                int th = endY - startY;
+                WritableRaster targetRas;
+                if(tw != tileWidth || th != tileHeight) {
+                    targetRas = rasForATile.createWritableChild
+                        (startX, startY, tw, th, startX, startY, null);
+                } else {
+                    targetRas = rasForATile;
+                }
+
                 int sourceFormatTag =
-                    MediaLibAccessor.findCompatibleTag(rasForATile);
+                    MediaLibAccessor.findCompatibleTag(targetRas);
 
                 MediaLibAccessor accessor =
-                    new MediaLibAccessor(rasForATile,
-//                                         rasForATile.getBounds(),
-                                         rasForATile.getBounds().intersection(originalRegion),
+                    new MediaLibAccessor(targetRas,
+//                                         targetRas.getBounds(),
+                                         targetRas.getBounds().intersection(originalRegion),
                                          sourceFormatTag, true);
 
                 mediaLibImage[] mlImage = accessor.getMediaLibImages();
                 decoder.decode(mlImage, x + y * size.nxtiles);
-                if (accessor.isDataCopy())
-                    accessor.copyDataToRaster(channelMap);
-
                 accessor.copyDataToRaster(channelMap);
-                int cTileHeight = size.ytsize;
-                int cTileWidth = size.xtsize;
 
-                if (startY + cTileHeight >= size.ysize)
-                    cTileHeight = size.ysize - startY;
+                int cTileHeight = th;
+                int cTileWidth = tw;
 
-                if (startX + cTileWidth >= size.xsize)
-                    cTileWidth = size.xsize - startX;
+                if (startY + cTileHeight >= originalRegion.height)
+                    cTileHeight = originalRegion.height - startY;
+
+                if (startX + cTileWidth >= originalRegion.width)
+                    cTileWidth = originalRegion.width - startX;
 
                 int tx = startX;
                 int ty = startY;
@@ -417,6 +540,9 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
                 int x1 = (startX + scaleX - 1 - sourceOrigin.x) / scaleX;
                 int x2 = (startX + scaleX -1 + cTileWidth - sourceOrigin.x) / scaleX;
                 int lineLength = x2 - x1;
+                // Suppress further processing if lineLength is non-positive
+                // XXX (which it should never be).
+                if(lineLength <= 0) continue;
                 x2 = (x2 - 1) * scaleX + sourceOrigin.x;
 
                 int y1 = (startY + scaleY -1 - sourceOrigin.y) /scaleY;
@@ -437,7 +563,7 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
                     // Request line data
                     for (int i = 0; i < numBands; i++) {
                         for (int j = lineLength - 1, k1 = x2; j >= 0; j--, k1-=scaleX) {
-                            pixbuf[j] = rasForATile.getSample(k1, l, i);
+                            pixbuf[j] = targetRas.getSample(k1, l, i);
                         }
 
                         // Send the line data to the BufferedImage
@@ -455,8 +581,6 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
 		}
             } // End loop on horizontal tiles
         } // End loop on vertical tiles
-
-        return raster;
     }
 
     public void setDestImage(BufferedImage image) {
@@ -484,7 +608,7 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
         return value;
     }
 
-    private SampleModel createSampleModel() throws java.io.IOException {
+    private SampleModel createSampleModel() throws IOException {
         if (sampleModel != null)
             return sampleModel;
 
@@ -543,10 +667,7 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
                                  isSigned, tileWidth, tileHeight);
     }
 
-    private SampleModel createOriginalSampleModel() throws java.io.IOException {
-        if (originalSampleModel != null)
-            return originalSampleModel;
-
+    private SampleModel createOriginalSampleModel() throws IOException {
         if (metadata == null)
             readImageMetadata();
 
@@ -604,8 +725,8 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
                 }
         }
 
-        return createSampleModel(nc, maxDepth, bandOffsets,
-                                 isSigned, size.xtsize, size.ytsize);
+        return createSampleModel(nc, maxDepth, bandOffsets, isSigned,
+                                 tileWidth, tileHeight);
     }
 
     private SampleModel createSampleModel(int nc, int maxDepth,
@@ -632,7 +753,7 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
         return sm;
     }
 
-    private ColorModel createColorModel() throws java.io.IOException {
+    private ColorModel createColorModel() throws IOException {
         if (colorModel != null)
             return colorModel;
 
@@ -785,7 +906,7 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
         return ImageUtil.createColorModel(null, getSampleModel());
     }
 
-    public J2KMetadata readImageMetadata() throws java.io.IOException {
+    public J2KMetadata readImageMetadata() throws IOException {
         if (metadata == null) {
             metadata = new J2KMetadata();
             com.sun.medialib.codec.jp2k.Box mlibBox = null;

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:33 $
+ * $Revision: 1.2 $
+ * $Date: 2005-07-30 00:26:33 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -138,6 +138,7 @@ public class J2KImageReaderCodecLib extends ImageReader {
         super.setInput(input, seekForwardOnly, ignoreMetadata);
         this.ignoreMetadata = ignoreMetadata;
         iis = (ImageInputStream) input; // Always works
+        iis.mark(); // Mark the initial position.
         imageMetadata = null;
     }
 
@@ -264,7 +265,8 @@ public class J2KImageReaderCodecLib extends ImageReader {
 
         if (imageMetadata == null) {
             try {
-                iis.mark();
+                iis.reset(); // Reset to initial position.
+                iis.mark(); // Re-mark initial position.
                 if (image == null)
                     image = new J2KRenderedImageCodecLib(iis, this, null);
                 imageMetadata = image.readImageMetadata();
@@ -273,7 +275,8 @@ public class J2KImageReaderCodecLib extends ImageReader {
             } catch(RuntimeException re) {
                 throw re;
             } finally {
-                iis.reset();
+                iis.reset(); // Reset to initial position.
+                iis.mark(); // Re-mark initial position.
             }
         }
         return imageMetadata;
@@ -313,6 +316,9 @@ public class J2KImageReaderCodecLib extends ImageReader {
         processImageStarted(imageIndex);
 
         BufferedImage bi = param.getDestination();
+        iis.reset(); // Reset to initial position.
+        iis.mark(); // Re-mark initial position.
+        // XXX Need to add a try-catch IOException block and reset/mark iis.
         image = new J2KRenderedImageCodecLib(iis,
                                              this,
                                              param);
@@ -366,7 +372,8 @@ public class J2KImageReaderCodecLib extends ImageReader {
             return;
 
         try {
-            iis.mark();
+            iis.reset(); // Reset to initial position.
+            iis.mark(); // Re-mark initial position.
 
             if (image == null)
                 image = new J2KRenderedImageCodecLib(iis, this, null);
@@ -382,7 +389,8 @@ public class J2KImageReaderCodecLib extends ImageReader {
         } catch(RuntimeException re) {
             throw re;
         } finally {
-            iis.reset();
+            iis.reset(); // Reset to initial position.
+            iis.mark(); // Re-mark initial position.
         }
 
         this.gotHeader = true;

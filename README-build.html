@@ -48,21 +48,25 @@ or later </li>
 </ul>
 <p></p>
 <h3><span style="font-weight: bold; text-decoration: underline;">Building
-Java Advanced Imaging<br>
+Java Advanced Imaging Image I/O Tools<br>
 </span></h3>
 <p><span style="font-weight: bold; text-decoration: underline;"></span><span
  style="font-weight: bold; text-decoration: underline;"></span>Before
-you start building, your PATH must include the
-following directories:
-</p>
+you start building, your PATH must include these  directories
 <ul>
   <li>&lt;ant-root-dir&gt;/bin<br>
   </li>
   <li>&lt;jdk-root-dir&gt;/bin</li>
-  <li>Setting JAVA_HOME or JAVACMD environment variable will supersede
-&lt;jdk-root-dir&gt;/bin for ant. For further details please refer to
-the ant manual. </li>
 </ul>
+and Java Advanced Imaging (JAI) must be be referenced either by
+<ul>
+<li>JAI being installed in the J2SDK used for the build; or</li>
+<li><tt>jai_core.jar</tt> being on the <tt>CLASSPATH</tt>.</li>
+</ul>
+Setting the JAVA_HOME or JAVACMD environment variable will supersede
+&lt;jdk-root-dir&gt;/bin for ant. For further details please refer to
+the ant manual.
+</p>
 <p>The default target, jar, creates both optimized and debug jar files.
 </p>
 To build:<br>

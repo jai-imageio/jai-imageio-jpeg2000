@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:35 $
+ * $Revision: 1.2 $
+ * $Date: 2005-08-04 00:11:00 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -406,6 +406,7 @@ public class J2KMetadata extends IIOMetadata implements Cloneable {
             (BitsPerComponentBox)getElement("JPEG2000BitsPerComponentBox");
         String value = "";
         boolean signed = false;
+        boolean gotSampleInfo = false;
 
         // JPEG 2000 "B" parameter represents "bitDepth - 1" in the
         // right 7 least significant bits with the most significant
@@ -420,28 +421,38 @@ public class J2KMetadata extends IIOMetadata implements Cloneable {
                 value += (bits[i] & 0x7f) + 1;
                 if(i != numComp - 1) value += " ";
             }
+
+            gotSampleInfo = true;
         } else {
             HeaderBox header = (HeaderBox)getElement("JPEG2000HeaderBox");
-            int bits = header.getBitDepth();
-            if ((bits & 0x80) == 0x80)
-                signed = true;
-            bits = (bits & 0x7f) + 1;
-            int numComp = header.getNumComponents();
-            for (int i = 0; i < numComp; i++) {
-                value += bits;
-                if(i != numComp - 1) value += " ";
+            if(header != null) {
+                int bits = header.getBitDepth();
+                if ((bits & 0x80) == 0x80)
+                    signed = true;
+                bits = (bits & 0x7f) + 1;
+                int numComp = header.getNumComponents();
+                for (int i = 0; i < numComp; i++) {
+                    value += bits;
+                    if(i != numComp - 1) value += " ";
+                }
+
+                gotSampleInfo = true;
             }
         }
 
-        IIOMetadataNode subNode = new IIOMetadataNode("BitsPerSample");
-        subNode.setAttribute("value", value);
-        node.appendChild(subNode);
+        IIOMetadataNode subNode = null;
+
+        if(gotSampleInfo) {
+            subNode = new IIOMetadataNode("BitsPerSample");
+            subNode.setAttribute("value", value);
+            node.appendChild(subNode);
+        }
 
         subNode = new IIOMetadataNode("PlanarConfiguration");
         subNode.setAttribute("value", "TileInterleaved");
         node.appendChild(subNode);
 
-        if (!sampleFormat) {
+        if (!sampleFormat && gotSampleInfo) {
             subNode = new IIOMetadataNode("SampleFormat");
             subNode.setAttribute("value",
                              signed ? "SignedIntegral": "UnsignedIntegral");

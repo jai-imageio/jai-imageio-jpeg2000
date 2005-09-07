@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:50 $
+ * $Revision: 1.2 $
+ * $Date: 2005-09-07 22:03:18 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -175,7 +175,7 @@ public class TIFFT6Compressor extends TIFFFaxCompressor {
                       int scanlineStride) throws IOException {
         if (bitsPerSample.length != 1 || bitsPerSample[0] != 1) {
             throw new IIOException(
-                             "Bits per sample must be 1 for T4 compression!"); 
+                             "Bits per sample must be 1 for T6 compression!"); 
         }
 
 

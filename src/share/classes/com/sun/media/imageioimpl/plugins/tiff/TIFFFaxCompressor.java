@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:45 $
+ * $Revision: 1.2 $
+ * $Date: 2005-09-12 21:01:30 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -287,6 +287,11 @@ public abstract class TIFFFaxCompressor extends TIFFCompressor {
         }
 
         int next  = base + (bitOffset>>>3);
+        // If the offset is beyond the data already then the minimum of the
+        // current offset and maxOffset must be maxOffset.
+        if(next >= data.length) {
+            return maxOffset;
+        }
         int end   = base + (maxOffset>>>3);
         if(end == data.length) { // Prevents out of bounds exception below
             end--;

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:47 $
+ * $Revision: 1.2 $
+ * $Date: 2005-09-12 22:21:32 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -945,7 +945,8 @@ public class TIFFImageWriter extends ImageWriter {
             bitsPerSample[i] = (char)bitDepth;
         }
 
-        // Emit BitsPerSample if not a bilevel image
+        // Emit BitsPerSample. If the image is bilevel, emit if and only
+        // if already in the metadata and correct (count and value == 1).
         if (bitsPerSample.length != 1 || bitsPerSample[0] != 1) {
             TIFFField bitsPerSampleField =
                 new TIFFField(
@@ -954,8 +955,15 @@ public class TIFFImageWriter extends ImageWriter {
                            bitsPerSample.length,
                            bitsPerSample);
             rootIFD.addTIFFField(bitsPerSampleField);
-        } else {
-            rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE);
+        } else { // bitsPerSample.length == 1 && bitsPerSample[0] == 1
+            TIFFField bitsPerSampleField =
+                rootIFD.getTIFFField(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE);
+            if(bitsPerSampleField != null) {
+                int[] bps = bitsPerSampleField.getAsInts();
+                if(bps == null || bps.length != 1 || bps[0] != 1) {
+                    rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE);
+                }
+            }
         }
 
         // Prepare SampleFormat field.

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:45 $
+ * $Revision: 1.2 $
+ * $Date: 2005-09-13 20:17:24 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -1036,6 +1036,10 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		if (code == 0) { // Pass
                     // We always assume WhiteIsZero format for fax.
                     if (!isWhite) {
+                        if(b2 > w) {
+                            b2 = w;
+                            // XXX Warning message?
+                        }
                         setToBlack(bitOffset, b2 - bitOffset);
                     }
                     bitOffset = a0 = b2;
@@ -1055,12 +1059,20 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 			cce[currIndex++] = bitOffset;
 
 			number = decodeBlackCodeWord();
+                        if(number > w - bitOffset) {
+                            number = w - bitOffset;
+                            // XXX Warning message?
+                        }
                         setToBlack(bitOffset, number);
                         bitOffset += number;
 			cce[currIndex++] = bitOffset;
 		    } else {
 			// First a black run and then a white run follows
 			number = decodeBlackCodeWord();
+                        if(number > w - bitOffset) {
+                            number = w - bitOffset;
+                            // XXX Warning message?
+                        }
                         setToBlack(bitOffset, number);
                         bitOffset += number;
 			cce[currIndex++] = bitOffset;
@@ -1078,6 +1090,9 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		    // We write the current color till a1 - 1 pos,
 		    // since a1 is where the next color starts
                     if (!isWhite) {
+                        if(a1 > w) {
+                            a1 = w;
+                        }
                         setToBlack(bitOffset, a1 - bitOffset);
                     }
                     bitOffset = a0 = a1;
@@ -1154,7 +1169,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		} else {
                     throw new Error("Error 5");
 		}
-	    }
+	    } // while bitOffset < w
 	    
 	    // Add the changing element beyond the current scanline for the
 	    // other color too, if not already added previously
@@ -1165,7 +1180,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	    changingElemSize = currIndex;
 
             lineBitNum += bitsPerScanline;
-	}
+	} // for lines < height
     }
 
     private void setToBlack(int bitNum, int numBits) {

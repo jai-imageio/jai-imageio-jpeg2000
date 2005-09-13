@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-09-12 22:21:32 $
+ * $Revision: 1.3 $
+ * $Date: 2005-09-13 00:02:54 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -2253,6 +2253,7 @@ public class TIFFImageWriter extends ImageWriter {
 
                 if (abortRequested()) {
                     processWriteAborted();
+                    return;
                 }
             }
         }

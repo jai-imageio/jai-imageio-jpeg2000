@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:28 $
+ * $Revision: 1.2 $
+ * $Date: 2005-09-14 23:09:29 $
  * $State: Exp $
  */
 
@@ -853,7 +853,11 @@ public class GIFImageWriter extends ImageWriter {
                 byte[] data = ((DataBufferByte)tile.getDataBuffer()).getData();
                 ComponentSampleModel csm =
                     (ComponentSampleModel)tile.getSampleModel();
-                int offset = csm.getOffset(sourceXOffset, sourceYOffset, 0);
+                int offset = csm.getOffset(sourceXOffset -
+                                           tile.getSampleModelTranslateX(),
+                                           sourceYOffset -
+                                           tile.getSampleModelTranslateY(),
+                                           0);
                 int lineStride = csm.getScanlineStride();
 
                 writeRowsOpt(data, offset, lineStride, compressor,
@@ -941,7 +945,11 @@ public class GIFImageWriter extends ImageWriter {
                 byte[] data = ((DataBufferByte)tile.getDataBuffer()).getData();
                 ComponentSampleModel csm =
                     (ComponentSampleModel)tile.getSampleModel();
-                int offset = csm.getOffset(sourceXOffset, sourceYOffset, 0);
+                int offset = csm.getOffset(sourceXOffset -
+                                           tile.getSampleModelTranslateX(),
+                                           sourceYOffset -
+                                           tile.getSampleModelTranslateY(),
+                                           0);
                 int lineStride = csm.getScanlineStride();
 
                 writeRowsOpt(data, offset, lineStride, compressor,

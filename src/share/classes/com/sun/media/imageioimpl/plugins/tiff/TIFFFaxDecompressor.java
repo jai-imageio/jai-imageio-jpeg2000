@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-09-13 20:17:24 $
+ * $Revision: 1.3 $
+ * $Date: 2005-09-14 20:19:49 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -1038,7 +1038,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                     if (!isWhite) {
                         if(b2 > w) {
                             b2 = w;
-                            // XXX Warning message?
+                            warning("Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, b2 - bitOffset);
                     }
@@ -1061,7 +1061,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 			number = decodeBlackCodeWord();
                         if(number > w - bitOffset) {
                             number = w - bitOffset;
-                            // XXX Warning message?
+                            warning("Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, number);
                         bitOffset += number;
@@ -1071,7 +1071,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 			number = decodeBlackCodeWord();
                         if(number > w - bitOffset) {
                             number = w - bitOffset;
-                            // XXX Warning message?
+                            warning("Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, number);
                         bitOffset += number;
@@ -1092,6 +1092,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                     if (!isWhite) {
                         if(a1 > w) {
                             a1 = w;
+                            warning("Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, a1 - bitOffset);
                     }
@@ -1621,5 +1622,12 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	}
 	
 	return true;
+    }
+
+    // Forward warning message to reader
+    private void warning(String msg) {
+        if(this.reader instanceof TIFFImageReader) {
+            ((TIFFImageReader)reader).forwardWarningMessage(msg);
+        }
     }
 }

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:27 $
+ * $Revision: 1.2 $
+ * $Date: 2005-09-16 23:49:54 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -53,6 +53,7 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
+import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferUShort;
@@ -411,6 +412,32 @@ public abstract class CLibImageReader extends ImageReader {
         int dataOffset = mlImage.getOffset();
 
         SampleModel sampleModel = imageType.getSampleModel();
+
+        // XXX Workaround for change request 6217565 - remove when fixed.
+        // This might cause strange problems if the application retrieves
+        // the SampleModel elsewhere but it is better than read() throwing
+        // an exception.
+        boolean doStridesMatch = true;
+        if(sampleModel instanceof ComponentSampleModel) {
+            if(mlImage.getStride() !=
+               ((ComponentSampleModel)sampleModel).getScanlineStride()) {
+                doStridesMatch = false;
+            }
+        } else if(sampleModel instanceof MultiPixelPackedSampleModel) {
+            if(mlImage.getStride() !=
+               ((MultiPixelPackedSampleModel)sampleModel).getScanlineStride()) {
+                doStridesMatch = false;
+            }
+        }
+        if(!doStridesMatch) {
+            ColorModel cm = imageType.getColorModel();
+            imageType = createImageType(mlImage,
+                                        cm.getComponentSize(0),
+                                        null, null, null, null);
+            sampleModel = imageType.getSampleModel();
+            imageType = new ImageTypeSpecifier(cm, sampleModel);
+        }
+        // XXX End of workaround for CR 6217565
 
         DataBuffer db;
         int smType = sampleModel.getDataType();

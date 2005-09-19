@@ -38,12 +38,13 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:46 $
+ * $Revision: 1.2 $
+ * $Date: 2005-09-19 21:47:07 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,7 +65,8 @@ public class TIFFIFD {
     /**
      * The largest low-valued tag number in the TIFF 6.0 specification.
      */
-    private static final int MAX_LOW_FIELD_TAG_NUM = 532;
+    private static final int MAX_LOW_FIELD_TAG_NUM =
+        BaselineTIFFTagSet.TAG_REFERENCE_BLACK_WHITE;
 
     private List tagSets;
     private TIFFTag parentTag;
@@ -194,127 +196,139 @@ public class TIFFIFD {
             }
 
             Object obj = null;
-            
-            switch (type) {
-            case TIFFTag.TIFF_BYTE:
-            case TIFFTag.TIFF_SBYTE:
-            case TIFFTag.TIFF_UNDEFINED:
-            case TIFFTag.TIFF_ASCII:
-                byte[] bvalues = new byte[count];
-                stream.readFully(bvalues, 0, count);
+
+            try {
+                switch (type) {
+                case TIFFTag.TIFF_BYTE:
+                case TIFFTag.TIFF_SBYTE:
+                case TIFFTag.TIFF_UNDEFINED:
+                case TIFFTag.TIFF_ASCII:
+                    byte[] bvalues = new byte[count];
+                    stream.readFully(bvalues, 0, count);
                 
-                if (type == TIFFTag.TIFF_ASCII) {
-                    // Can be multiple strings
-                    Vector v = new Vector();
-                    boolean inString = false;
-                    int prevIndex = 0;
-                    for (int index = 0; index <= count; index++) {
-                        if (index < count && bvalues[index] != 0) {
-                            if (!inString) {
+                    if (type == TIFFTag.TIFF_ASCII) {
+                        // Can be multiple strings
+                        Vector v = new Vector();
+                        boolean inString = false;
+                        int prevIndex = 0;
+                        for (int index = 0; index <= count; index++) {
+                            if (index < count && bvalues[index] != 0) {
+                                if (!inString) {
                                 // start of string
-                                prevIndex = index;
-                                inString = true;
-                            }
-                        } else { // null or special case at end of string
-                            if (inString) {
+                                    prevIndex = index;
+                                    inString = true;
+                                }
+                            } else { // null or special case at end of string
+                                if (inString) {
                                 // end of string
-                                String s = new String(bvalues, prevIndex,
-                                                      index - prevIndex);
-                                v.add(s);
-                                inString = false;
+                                    String s = new String(bvalues, prevIndex,
+                                                          index - prevIndex);
+                                    v.add(s);
+                                    inString = false;
+                                }
                             }
                         }
-                    }
 
-                    count = v.size();
-                    String strings[] = new String[count];
-                    for (int c = 0 ; c < count; c++) {
-                        strings[c] = (String)v.elementAt(c);
-                    }
+                        count = v.size();
+                        String strings[] = new String[count];
+                        for (int c = 0 ; c < count; c++) {
+                            strings[c] = (String)v.elementAt(c);
+                        }
                     
-                    obj = strings;
-                } else {
-                    obj = bvalues;
-                }
-                break;
+                        obj = strings;
+                    } else {
+                        obj = bvalues;
+                    }
+                    break;
                 
-            case TIFFTag.TIFF_SHORT:
-                char[] cvalues = new char[count];
-                for (int j = 0; j < count; j++) {
-                    cvalues[j] = (char)(stream.readUnsignedShort());
-                }
-                obj = cvalues;
-                break;
+                case TIFFTag.TIFF_SHORT:
+                    char[] cvalues = new char[count];
+                    for (int j = 0; j < count; j++) {
+                        cvalues[j] = (char)(stream.readUnsignedShort());
+                    }
+                    obj = cvalues;
+                    break;
                 
-            case TIFFTag.TIFF_LONG:
-            case TIFFTag.TIFF_IFD_POINTER:
-                long[] lvalues = new long[count];
-                for (int j = 0; j < count; j++) {
-                    lvalues[j] = stream.readUnsignedInt();
-                }
-                obj = lvalues;
-                break;
+                case TIFFTag.TIFF_LONG:
+                case TIFFTag.TIFF_IFD_POINTER:
+                    long[] lvalues = new long[count];
+                    for (int j = 0; j < count; j++) {
+                        lvalues[j] = stream.readUnsignedInt();
+                    }
+                    obj = lvalues;
+                    break;
                 
-            case TIFFTag.TIFF_RATIONAL:
-                long[][] llvalues = new long[count][2];
-                for (int j = 0; j < count; j++) {
-                    llvalues[j][0] = stream.readUnsignedInt();
-                    llvalues[j][1] = stream.readUnsignedInt();
-                }
-                obj = llvalues;
-                break;
+                case TIFFTag.TIFF_RATIONAL:
+                    long[][] llvalues = new long[count][2];
+                    for (int j = 0; j < count; j++) {
+                        llvalues[j][0] = stream.readUnsignedInt();
+                        llvalues[j][1] = stream.readUnsignedInt();
+                    }
+                    obj = llvalues;
+                    break;
                 
-            case TIFFTag.TIFF_SSHORT:
-                short[] svalues = new short[count];
-                for (int j = 0; j < count; j++) {
-                    svalues[j] = stream.readShort();
-                }
-                obj = svalues;
-                break;
+                case TIFFTag.TIFF_SSHORT:
+                    short[] svalues = new short[count];
+                    for (int j = 0; j < count; j++) {
+                        svalues[j] = stream.readShort();
+                    }
+                    obj = svalues;
+                    break;
                 
-            case TIFFTag.TIFF_SLONG:
-                int[] ivalues = new int[count];
-                for (int j = 0; j < count; j++) {
-                    ivalues[j] = stream.readInt();
-                }
-                obj = ivalues;
-                break;
+                case TIFFTag.TIFF_SLONG:
+                    int[] ivalues = new int[count];
+                    for (int j = 0; j < count; j++) {
+                        ivalues[j] = stream.readInt();
+                    }
+                    obj = ivalues;
+                    break;
                 
-            case TIFFTag.TIFF_SRATIONAL:
-                int[][] iivalues = new int[count][2];
-                for (int j = 0; j < count; j++) {
-                    iivalues[j][0] = stream.readInt();
-                    iivalues[j][1] = stream.readInt();
-                }
-                obj = iivalues;
-                break;
+                case TIFFTag.TIFF_SRATIONAL:
+                    int[][] iivalues = new int[count][2];
+                    for (int j = 0; j < count; j++) {
+                        iivalues[j][0] = stream.readInt();
+                        iivalues[j][1] = stream.readInt();
+                    }
+                    obj = iivalues;
+                    break;
                 
-            case TIFFTag.TIFF_FLOAT:
-                float[] fvalues = new float[count];
-                for (int j = 0; j < count; j++) {
-                    fvalues[j] = stream.readFloat();
-                }
-                obj = fvalues;
-                break;
+                case TIFFTag.TIFF_FLOAT:
+                    float[] fvalues = new float[count];
+                    for (int j = 0; j < count; j++) {
+                        fvalues[j] = stream.readFloat();
+                    }
+                    obj = fvalues;
+                    break;
                 
-            case TIFFTag.TIFF_DOUBLE:
-                double[] dvalues = new double[count];
-                for (int j = 0; j < count; j++) {
-                    dvalues[j] = stream.readDouble();
-                }
-                obj = dvalues;
-                break;
+                case TIFFTag.TIFF_DOUBLE:
+                    double[] dvalues = new double[count];
+                    for (int j = 0; j < count; j++) {
+                        dvalues[j] = stream.readDouble();
+                    }
+                    obj = dvalues;
+                    break;
                 
-            default:
-                // XXX Warning
-                break;
+                default:
+                    // XXX Warning
+                    break;
+                }
+            } catch(EOFException eofe) {
+                // The TIFF 6.0 fields have tag numbers less than or equal
+                // to 532 (ReferenceBlackWhite) or equal to 33432 (Copyright).
+                // If there is an error reading a baseline tag, then re-throw
+                // the exception and fail; otherwise continue with the next
+                // field.
+                if(tag <= MAX_LOW_FIELD_TAG_NUM ||
+                   tag == BaselineTIFFTagSet.TAG_COPYRIGHT) {
+                    throw eofe;
+                }
             }
             
             if (tiffTag == null) {
                 // XXX Warning: unknown tag
             } else if (!tiffTag.isDataTypeOK(type)) {
                 // XXX Warning: bad data type
-            } else if (tiffTag.isIFDPointer()) {
+            } else if (tiffTag.isIFDPointer() && obj != null) {
                 stream.mark();
                 stream.seek(((long[])obj)[0]);
 
@@ -331,9 +345,13 @@ public class TIFFIFD {
             if (tiffTag == null) {
                 tiffTag = new TIFFTag(null, tag, 1 << type, null);
             }
-            
-            TIFFField f = new TIFFField(tiffTag, type, count, obj);
-            addTIFFField(f);
+
+            // Add the field if its contents have been initialized which
+            // will not be the case if an EOF was ignored above.
+            if(obj != null) {
+                TIFFField f = new TIFFField(tiffTag, type, count, obj);
+                addTIFFField(f);
+            }
 
             stream.seek(nextTagOffset);
         }

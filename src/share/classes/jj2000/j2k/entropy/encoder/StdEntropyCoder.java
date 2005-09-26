@@ -1,7 +1,7 @@
 /*
  * $RCSfile: StdEntropyCoder.java,v $
- * $Revision: 1.2 $
- * $Date: 2005-04-27 18:23:03 $
+ * $Revision: 1.3 $
+ * $Date: 2005-09-26 22:08:13 $
  * $State: Exp $
  *
  * Class:                   StdEntropyCoder
@@ -937,8 +937,13 @@ public class StdEntropyCoder extends EntropyCoder
 
         // Get the number of threads to use, or default to one
         try {
-            nt = Integer.parseInt(System.getProperty(THREADS_PROP_NAME,
-                                                     DEF_THREADS_NUM));
+            try {
+                nt = Integer.parseInt(System.getProperty(THREADS_PROP_NAME,
+                                                         DEF_THREADS_NUM));
+            } catch(SecurityException se) {
+                // Use the default value.
+                nt = Integer.parseInt(DEF_THREADS_NUM);
+            }
             if (nt < 0) throw new NumberFormatException();
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid number of threads "+

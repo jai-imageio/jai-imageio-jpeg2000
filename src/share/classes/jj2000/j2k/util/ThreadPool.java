@@ -1,7 +1,7 @@
 /*
  * $RCSfile: ThreadPool.java,v $
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:02:27 $
+ * $Revision: 1.2 $
+ * $Date: 2005-09-26 22:08:13 $
  * $State: Exp $
  *
  * Class:                   ThreadPool
@@ -329,7 +329,12 @@ public class ThreadPool {
         }
 
         // If requested to set concurrency try to do it
-        prop = System.getProperty(CONCURRENCY_PROP_NAME);
+        prop = null;
+        try {
+            prop = System.getProperty(CONCURRENCY_PROP_NAME);
+        } catch(SecurityException se) {
+            // Ignore it.
+        }
         if (prop == null) {
             // No concurrency to set, do nothing
         }

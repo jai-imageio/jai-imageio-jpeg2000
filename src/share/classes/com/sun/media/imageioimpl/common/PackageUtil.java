@@ -38,12 +38,14 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:23 $
+ * $Revision: 1.2 $
+ * $Date: 2005-09-26 22:15:01 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.common;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import com.sun.medialib.codec.jiio.Util;
 
 public class PackageUtil {
@@ -93,8 +95,22 @@ public class PackageUtil {
     public static final boolean isCodecLibAvailable() {
         // Retrieve value of system property here to allow this to be
         // modified dynamically.
-        boolean isCodecLibDisabled =
-            Boolean.getBoolean("com.sun.media.imageio.disableCodecLib");
+        Boolean result = (Boolean)
+            AccessController.doPrivileged(new PrivilegedAction() {
+                    public Object run() {
+                        String property = null;
+                        try {
+                            property =
+                                System.getProperty("com.sun.media.imageio.disableCodecLib");
+                        } catch(SecurityException se) {
+                            // Do nothing: leave 'property' null.
+                        }
+                        return (property != null &&
+                                property.equalsIgnoreCase("true")) ?
+                            Boolean.TRUE : Boolean.FALSE;
+                    }
+                });
+        boolean isCodecLibDisabled = result.booleanValue();
 
         return isCodecLibAvailable && !isCodecLibDisabled;
     }

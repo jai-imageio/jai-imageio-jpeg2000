@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-04-27 18:23:02 $
+ * $Revision: 1.3 $
+ * $Date: 2005-09-30 22:09:43 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -66,6 +66,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
+import com.sun.media.imageio.plugins.tiff.EXIFParentTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
 import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
 
@@ -256,7 +257,9 @@ public class TIFFImageMetadata extends IIOMetadata {
             numChannels = f.getAsInt(0);
         } else { // f == null
             f = getTIFFField(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE);
-            numChannels = f.getCount();
+            if(f != null) {
+                numChannels = f.getCount();
+            }
         }
         if(numChannels != -1) {
             node = new IIOMetadataNode("NumChannels");
@@ -429,7 +432,33 @@ public class TIFFImageMetadata extends IIOMetadata {
         }
 
         f = getTIFFField(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE);
-        int[] bitsPerSample = f != null ? f.getAsInts() : new int[] {1};
+        int[] bitsPerSample = null;
+        if(f != null) {
+            bitsPerSample = f.getAsInts();
+        } else {
+            f = getTIFFField(BaselineTIFFTagSet.TAG_COMPRESSION);
+            int compression = f != null ?
+                f.getAsInt(0) : BaselineTIFFTagSet.COMPRESSION_NONE;
+            if(getTIFFField(EXIFParentTIFFTagSet.TAG_EXIF_IFD_POINTER) !=
+               null ||
+               compression == BaselineTIFFTagSet.COMPRESSION_JPEG ||
+               compression == BaselineTIFFTagSet.COMPRESSION_OLD_JPEG ||
+               getTIFFField(BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT) !=
+               null) {
+                f = getTIFFField(BaselineTIFFTagSet.TAG_PHOTOMETRIC_INTERPRETATION);
+                if(f != null &&
+                   (f.getAsInt(0) ==
+                    BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_WHITE_IS_ZERO ||
+                    f.getAsInt(0) ==
+                    BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_BLACK_IS_ZERO)) {
+                    bitsPerSample = new int[] {8};
+                } else {
+                    bitsPerSample = new int[] {8, 8, 8};
+                }
+            } else {
+                bitsPerSample = new int[] {1};
+            }
+        }
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < bitsPerSample.length; i++) {
             if (i > 0) {

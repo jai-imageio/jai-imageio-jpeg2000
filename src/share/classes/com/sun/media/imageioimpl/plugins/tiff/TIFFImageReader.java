@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-04-21 22:19:49 $
+ * $Revision: 1.3 $
+ * $Date: 2005-10-06 01:34:38 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -80,6 +80,7 @@ import com.sun.media.imageio.plugins.tiff.TIFFColorConverter;
 import com.sun.media.imageio.plugins.tiff.TIFFDecompressor;
 import com.sun.media.imageio.plugins.tiff.TIFFImageReadParam;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
+import com.sun.media.imageioimpl.common.ImageUtil;
 import com.sun.media.imageioimpl.common.PackageUtil;
 
 public class TIFFImageReader extends ImageReader {
@@ -839,11 +840,10 @@ public class TIFFImageReader extends ImageReader {
 
         // Initialize the destination image
         Iterator imageTypes = getImageTypes(imageIndex);
-        this.theImage = getDestination(param,
-                                       imageTypes,
-                                       width, height);
+        ImageTypeSpecifier theImageType =
+            ImageUtil.getDestinationType(param, imageTypes);
 
-        int destNumBands = theImage.getSampleModel().getNumBands();
+        int destNumBands = theImageType.getSampleModel().getNumBands();
 
         this.destinationBands = param.getDestinationBands();
         if (destinationBands == null) {
@@ -1007,6 +1007,9 @@ public class TIFFImageReader extends ImageReader {
     public BufferedImage read(int imageIndex, ImageReadParam param)
         throws IOException {
         prepareRead(imageIndex, param);
+        this.theImage = getDestination(param,
+                                       getImageTypes(imageIndex),
+                                       width, height);
 
         srcXSubsampling = imageReadParam.getSourceXSubsampling();
         srcYSubsampling = imageReadParam.getSourceYSubsampling();

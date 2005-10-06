@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:49 $
+ * $Revision: 1.2 $
+ * $Date: 2005-10-06 01:10:37 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -191,21 +191,25 @@ public class TIFFOldJPEGDecompressor extends TIFFJPEGDecompressor {
         // Get the TIFF metadata object.
         TIFFImageMetadata tim = (TIFFImageMetadata)metadata;
 
+        // Get the JPEGInterchangeFormat field.
+        TIFFField JPEGInterchangeFormatField =
+            tim.getTIFFField(BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT);
+
         // Get the tile or strip offsets.
         TIFFField segmentOffsetField =
             tim.getTIFFField(BaselineTIFFTagSet.TAG_TILE_OFFSETS);
         if(segmentOffsetField == null) {
             segmentOffsetField =
                 tim.getTIFFField(BaselineTIFFTagSet.TAG_STRIP_OFFSETS);
+            if(segmentOffsetField == null) {
+                segmentOffsetField = JPEGInterchangeFormatField;
+            }
         }
         long[] segmentOffsets = segmentOffsetField.getAsLongs();
 
             // Determine whether the image has more than one strip or tile.
         boolean isTiled = segmentOffsets.length > 1;
 
-        // Get the JPEGInterchangeFormat field.
-        TIFFField JPEGInterchangeFormatField =
-            tim.getTIFFField(BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT);
         if(!isTiled) {
             //
             // If the image has only a single strip or tile and it looks

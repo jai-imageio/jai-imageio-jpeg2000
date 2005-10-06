@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2005-09-14 20:19:49 $
+ * $Revision: 1.4 $
+ * $Date: 2005-10-06 22:26:00 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -49,6 +49,7 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.io.IOException;
+import javax.imageio.IIOException;
 import javax.imageio.ImageTypeSpecifier;
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.TIFFDecompressor;
@@ -967,7 +968,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
         }
     }
 
-    public synchronized void decodeT6() {
+    public synchronized void decodeT6() throws IIOException {
         int height = h;
 
         int bufferOffset = 0;
@@ -1038,7 +1039,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                     if (!isWhite) {
                         if(b2 > w) {
                             b2 = w;
-                            warning("Decoded row too long; ignoring extra samples.");
+                            warning("Warning: Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, b2 - bitOffset);
                     }
@@ -1061,7 +1062,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 			number = decodeBlackCodeWord();
                         if(number > w - bitOffset) {
                             number = w - bitOffset;
-                            warning("Decoded row too long; ignoring extra samples.");
+                            warning("Warning: Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, number);
                         bitOffset += number;
@@ -1071,7 +1072,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 			number = decodeBlackCodeWord();
                         if(number > w - bitOffset) {
                             number = w - bitOffset;
-                            warning("Decoded row too long; ignoring extra samples.");
+                            warning("Warning: Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, number);
                         bitOffset += number;
@@ -1092,7 +1093,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                     if (!isWhite) {
                         if(a1 > w) {
                             a1 = w;
-                            warning("Decoded row too long; ignoring extra samples.");
+                            warning("Warning: Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, a1 - bitOffset);
                     }
@@ -1102,8 +1103,12 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		    updatePointer(7 - bits);
 		} else if (code == 11) {
 		    if (nextLesserThan8Bits(3) != 7) {
-                        throw new Error("Error 5");
-		    }
+                        updatePointer(3);
+                        warning("Warning: Premature EOL encountered.");
+                        continue;
+		    } else {
+                        warning("Warning: Experimental uncompressed mode implementation.");
+                    }
 
 		    int zeros = 0;
 		    boolean exit = false;
@@ -1168,7 +1173,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
 		    }
 		} else {
-                    throw new Error("Error 5");
+                    throw new IIOException("Unknown code encountered.");
 		}
 	    } // while bitOffset < w
 	    

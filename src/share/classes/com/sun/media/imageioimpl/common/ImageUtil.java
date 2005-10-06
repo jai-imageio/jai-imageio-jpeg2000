@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:22 $
+ * $Revision: 1.2 $
+ * $Date: 2005-10-06 01:33:19 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.common;
@@ -66,11 +66,13 @@ import java.awt.image.SampleModel;
 import java.awt.image.SinglePixelPackedSampleModel;
 import java.awt.image.WritableRaster;
 import java.util.Arrays;
+import java.util.Iterator;
 
 //import javax.imageio.ImageTypeSpecifier;
 
 import javax.imageio.IIOException;
 import javax.imageio.IIOImage;
+import javax.imageio.ImageReadParam;
 import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.ImageWriter;
 import javax.imageio.spi.ImageWriterSpi;
@@ -1242,5 +1244,52 @@ public class ImageUtil {
         // a MultiPixelPackedSampleModel, 1 bit per pixel, and 1 bit
         // pixel stride.
         return ImageUtil.isBinary(sm);
+    }
+
+    /**
+     * Gets the destination image type.
+     */
+    // NOTE: Code shamelessly copied from ImageReader.getDestination().
+    public static final ImageTypeSpecifier
+        getDestinationType(ImageReadParam param,
+                           Iterator imageTypes) throws IIOException {
+
+        if (imageTypes == null || !imageTypes.hasNext()) {
+            throw new IllegalArgumentException("imageTypes null or empty!");
+        }
+
+        ImageTypeSpecifier imageType = null;
+
+        // If param is non-null, use it
+        if (param != null) {
+            imageType = param.getDestinationType();
+        }
+
+        // No info from param, use fallback image type
+        if (imageType == null) {
+            Object o = imageTypes.next();
+            if (!(o instanceof ImageTypeSpecifier)) {
+                throw new IllegalArgumentException
+                    ("Non-ImageTypeSpecifier retrieved from imageTypes!");
+            }
+            imageType = (ImageTypeSpecifier)o;
+        } else {
+            boolean foundIt = false;
+            while (imageTypes.hasNext()) {
+                ImageTypeSpecifier type =
+                    (ImageTypeSpecifier)imageTypes.next();
+                if (type.equals(imageType)) {
+                    foundIt = true;
+                    break;
+                }
+            }
+
+            if (!foundIt) {
+                throw new IIOException
+                    ("Destination type from ImageReadParam does not match!");
+            }
+        }
+
+        return imageType;
     }
 }

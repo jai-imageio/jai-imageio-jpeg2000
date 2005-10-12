@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2005-10-06 22:26:00 $
+ * $Revision: 1.5 $
+ * $Date: 2005-10-12 23:14:05 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;

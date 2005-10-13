@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2005-10-12 23:14:05 $
+ * $Revision: 1.6 $
+ * $Date: 2005-10-13 00:07:02 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -681,14 +681,14 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
         }
     }
 
-    public void decode1D() {
+    public void decode1D() throws IIOException {
         for (int i = 0; i < h; i++) {
             decodeNextScanline();
             lineBitNum += bitsPerScanline;
         }
     }
 
-    public void decodeNextScanline() {
+    public void decodeNextScanline() throws IIOException {
 	int bits = 0, code = 0, isT = 0;
 	int current, entry, twoBits;
 	boolean isWhite = true;
@@ -840,7 +840,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	currChangingElems[changingElemSize++] = bitOffset;
     }
 
-    public void decode2D() {
+    public void decode2D() throws IIOException {
         int height = h;
 
 	int a0, a1, b1, b2;
@@ -852,7 +852,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	
 	// The data must start with an EOL code
 	if (readEOL(true) != 1) {
-	    throw new Error("Error 3");
+	    throw new IIOException("Error 3");
 	}
 
         int bitOffset;
@@ -951,7 +951,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                             
                         updatePointer(7 - bits);
 		    } else {
-			throw new Error("Error 4");
+			throw new IIOException("Error 4");
 		    }
 		}
                 
@@ -1103,12 +1103,17 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		    updatePointer(7 - bits);
 		} else if (code == 11) {
 		    if (nextLesserThan8Bits(3) != 7) {
+<<<<<<< TIFFFaxDecompressor.java
+                        throw new IIOException("Error 5");
+		    }
+=======
                         updatePointer(3);
                         warning("Warning: Premature EOL encountered.");
                         continue;
 		    } else {
                         warning("Warning: Experimental uncompressed mode implementation.");
                     }
+>>>>>>> 1.5
 
 		    int zeros = 0;
 		    boolean exit = false;
@@ -1173,7 +1178,11 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
 		    }
 		} else {
+<<<<<<< TIFFFaxDecompressor.java
+                    throw new IIOException("Error 5");
+=======
                     throw new IIOException("Unknown code encountered.");
+>>>>>>> 1.5
 		}
 	    } // while bitOffset < w
 	    
@@ -1225,7 +1234,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
     }
 
     // Returns run length
-    private int decodeWhiteCodeWord() {
+    private int decodeWhiteCodeWord() throws IIOException {
 	int current, entry, bits, isT, twoBits, code = -1;
         int runLength = 0;
 	boolean isWhite = true;
@@ -1249,9 +1258,9 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                 runLength += code;
 		updatePointer(4 - bits);
 	    } else if (bits == 0) {     // ERROR
-		throw new Error("Error 0");
+		throw new IIOException("Error 0");
 	    } else if (bits == 15) {    // EOL
-		throw new Error("Error 1");
+		throw new IIOException("Error 1");
 	    } else {
 		// 11 bits - 0000 0111 1111 1111 = 0x07ff
 		code = (entry >>> 5) & 0x07ff;  
@@ -1267,7 +1276,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
     }
 
     // Returns run length
-    private int decodeBlackCodeWord() {
+    private int decodeBlackCodeWord() throws IIOException {
 	int current, entry, bits, isT, twoBits, code = -1;
         int runLength = 0;
 	boolean isWhite = false;
@@ -1302,7 +1311,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		    updatePointer(4 - bits);
 		} else if (bits == 15) {
 		    // EOL code
-		    throw new Error("Error 2");
+		    throw new IIOException("Error 2");
 		} else {
                     runLength += code;
 		    updatePointer(9 - bits);
@@ -1334,7 +1343,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
     // Seeks to the next EOL in the compressed bitstream.
     // Returns 'true' if and only if an EOL is found; if 'false'
     // is returned it may be inferred that the EOF was reached first.
-    private boolean seekEOL() {
+    private boolean seekEOL() throws IIOException {
         // Set maximum and current bit index into the compressed data.
         int bitIndexMax = data.length*8 - 1;
         int bitIndex = bytePointer*8 + bitPointer;
@@ -1365,11 +1374,11 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
         return false;
     }
 
-    private int readEOL(boolean isFirstEOL) {
+    private int readEOL(boolean isFirstEOL) throws IIOException {
         if(oneD == 0) {
             // Seek to the next EOL.
             if(!seekEOL()) {
-                throw new Error("Error 9");
+                throw new IIOException("Error 9");
             }
         }
 
@@ -1391,7 +1400,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                 }
 	    }
             if(next12Bits != 1) {
-                throw new Error("Error 6");
+                throw new IIOException("Error 6");
             }
 	} else if (fillBits == 1) {
 
@@ -1402,7 +1411,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	    int bitsLeft = 8 - bitPointer;
 
 	    if (nextNBits(bitsLeft) != 0) {
-		    throw new Error("Error 8");
+		    throw new IIOException("Error 8");
 	    }
 
 	    // If the number of bitsLeft is less than 4, then to have a 12
@@ -1411,7 +1420,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	    // that.
 	    if (bitsLeft < 4) {
 		if (nextNBits(8) != 0) {
-		    throw new Error("Error 8");
+		    throw new IIOException("Error 8");
 		}
 	    }
 
@@ -1440,7 +1449,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                 while(next8 != 1) {
                     // If not all zeros
                     if (next8 != 0) {
-                        throw new Error("Error 8");
+                        throw new IIOException("Error 8");
                     }
                     next8 = nextNBits(8);
                 }
@@ -1487,7 +1496,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
         }
     }
 
-    private int nextNBits(int bitsToGet) {
+    private int nextNBits(int bitsToGet) throws IIOException {
 	byte b, next, next2next;
 	int l = data.length - 1;
         int bp = this.bytePointer;
@@ -1519,7 +1528,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		next2next = flipTable[data[bp + 2] & 0xff];
 	    }
 	} else {
-            throw new Error("Invalid FillOrder");
+            throw new IIOException("Invalid FillOrder");
 	}
 
 	int bitsLeft = 8 - bitPointer;
@@ -1556,7 +1565,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	return i;
     }
 
-    private int nextLesserThan8Bits(int bitsToGet) {
+    private int nextLesserThan8Bits(int bitsToGet) throws IIOException {
 	byte b, next;
 	int l = data.length - 1;
         int bp = this.bytePointer;
@@ -1576,7 +1585,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		next = flipTable[data[bp + 1] & 0xff];
 	    }
 	} else {
-            throw new Error("Invalid FillOrder");
+            throw new IIOException("Invalid FillOrder");
 	}
 
 	int bitsLeft = 8 - bitPointer;

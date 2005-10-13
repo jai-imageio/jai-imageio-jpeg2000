@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2005-10-13 00:07:02 $
+ * $Revision: 1.7 $
+ * $Date: 2005-10-13 00:34:19 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -1039,7 +1039,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                     if (!isWhite) {
                         if(b2 > w) {
                             b2 = w;
-                            warning("Warning: Decoded row too long; ignoring extra samples.");
+                            warning("Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, b2 - bitOffset);
                     }
@@ -1062,7 +1062,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 			number = decodeBlackCodeWord();
                         if(number > w - bitOffset) {
                             number = w - bitOffset;
-                            warning("Warning: Decoded row too long; ignoring extra samples.");
+                            warning("Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, number);
                         bitOffset += number;
@@ -1072,7 +1072,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 			number = decodeBlackCodeWord();
                         if(number > w - bitOffset) {
                             number = w - bitOffset;
-                            warning("Warning: Decoded row too long; ignoring extra samples.");
+                            warning("Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, number);
                         bitOffset += number;
@@ -1093,7 +1093,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                     if (!isWhite) {
                         if(a1 > w) {
                             a1 = w;
-                            warning("Warning: Decoded row too long; ignoring extra samples.");
+                            warning("Decoded row too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, a1 - bitOffset);
                     }
@@ -1103,17 +1103,8 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		    updatePointer(7 - bits);
 		} else if (code == 11) {
 		    if (nextLesserThan8Bits(3) != 7) {
-<<<<<<< TIFFFaxDecompressor.java
                         throw new IIOException("Error 5");
 		    }
-=======
-                        updatePointer(3);
-                        warning("Warning: Premature EOL encountered.");
-                        continue;
-		    } else {
-                        warning("Warning: Experimental uncompressed mode implementation.");
-                    }
->>>>>>> 1.5
 
 		    int zeros = 0;
 		    boolean exit = false;
@@ -1178,11 +1169,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
 		    }
 		} else {
-<<<<<<< TIFFFaxDecompressor.java
                     throw new IIOException("Error 5");
-=======
-                    throw new IIOException("Unknown code encountered.");
->>>>>>> 1.5
 		}
 	    } // while bitOffset < w
 	    
@@ -1466,7 +1453,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	}
     }
 
-    private void getNextChangingElement(int a0, boolean isWhite, int[] ret) {
+    private void getNextChangingElement(int a0, boolean isWhite, int[] ret) throws IIOException {
         // Local copies of instance variables
         int[] pce = this.prevChangingElems;
         int ces = this.changingElemSize;

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:17 $
+ * $Revision: 1.2 $
+ * $Date: 2005-10-27 22:42:46 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -61,6 +61,9 @@ public class EXIFParentTIFFTagSet extends TIFFTagSet {
     // 34665 - EXIF IFD Pointer                   (LONG/1)
     /** Tag pointing to the EXIF IFD (type LONG). */
     public static final int TAG_EXIF_IFD_POINTER = 34665;
+
+    /** A tag pointing to a GPS info IFD (type LONG). */
+    public static final int TAG_GPS_INFO_IFD_POINTER = 34853;
 
     // To be inserted into parent (root) TIFFTagSet
     static class EXIFIFDPointer extends TIFFTag {

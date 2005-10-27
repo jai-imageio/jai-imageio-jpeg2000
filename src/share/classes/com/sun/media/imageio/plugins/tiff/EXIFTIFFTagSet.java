@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:17 $
+ * $Revision: 1.2 $
+ * $Date: 2005-10-27 22:23:34 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -213,10 +213,18 @@ public class EXIFTIFFTagSet extends TIFFTagSet {
     public static final int TAG_PIXEL_Y_DIMENSION = 40963;
 
     /**
-     * A tag indicating a manufacturer-defined marker note (type
+     * A tag indicating a manufacturer-defined maker note (type
      * UNDEFINED).
      */
-    public static final int TAG_MARKER_NOTE = 37500;
+    public static final int TAG_MAKER_NOTE = 37500;
+
+    /**
+     * A tag indicating a manufacturer-defined marker note (type
+     * UNDEFINED).
+     *
+     * @deprecated Superseded by {@link #TAG_MAKER_NOTE}.
+     */
+    public static final int TAG_MARKER_NOTE = TAG_MAKER_NOTE;
 
     /**
      * A tag indicating a user comment (type UNDEFINED).  The first 8
@@ -1337,11 +1345,11 @@ public class EXIFTIFFTagSet extends TIFFTagSet {
         }
     }
 
-    static class MarkerNote extends TIFFTag {
+    static class MakerNote extends TIFFTag {
 
-        public MarkerNote() {
-            super("MarkerNote",
-                  TAG_MARKER_NOTE,
+        public MakerNote() {
+            super("MakerNote",
+                  TAG_MAKER_NOTE,
                   1 << TIFFTag.TIFF_UNDEFINED);
         }
     }
@@ -1890,7 +1898,7 @@ public class EXIFTIFFTagSet extends TIFFTagSet {
         tags.add(new EXIFTIFFTagSet.CompressedBitsPerPixel());
         tags.add(new EXIFTIFFTagSet.PixelXDimension());
         tags.add(new EXIFTIFFTagSet.PixelYDimension());
-        tags.add(new EXIFTIFFTagSet.MarkerNote());
+        tags.add(new EXIFTIFFTagSet.MakerNote());
         tags.add(new EXIFTIFFTagSet.UserComment());
         tags.add(new EXIFTIFFTagSet.RelatedSoundFile());
         tags.add(new EXIFTIFFTagSet.DateTimeOriginal());

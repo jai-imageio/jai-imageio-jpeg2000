@@ -1,5 +1,5 @@
 /*
- * $RCSfile: EXIFParentTIFFTagSet.java,v $
+ * $RCSfile: EXIFInteroperabilityTagSet.java,v $
  *
  * 
  * Copyright (c) 2005 Sun Microsystems, Inc. All  Rights Reserved.
@@ -38,76 +38,83 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
+ * $Revision: 1.1 $
  * $Date: 2005-10-28 16:56:45 $
  * $State: Exp $
  */
+
 package com.sun.media.imageio.plugins.tiff;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A class containing the TIFF tag used to reference an EXIF IFD.
- * This tag set should be added to the root tag set by means of the 
- * {@link TIFFImageReadParam#addAllowedTagSet(TIFFTagSet)
- * <code>TIFFImageReadParam.addAllowedTagSet</code>} method if EXIF
- * support is desired.
+ * A class representing the tags found in an EXIF Interoperability IFD.
+ *
+ * @see EXIFTIFFTagSet
  */
-public class EXIFParentTIFFTagSet extends TIFFTagSet {
+public class EXIFInteroperabilityTagSet extends TIFFTagSet {
+    /**
+     * A tag indicating the identification of the Interoperability rule
+     * (type ASCII).
+     *
+     * @see #INTEROPERABILITY_INDEX_R98
+     * @see #INTEROPERABILITY_INDEX_THM
+     */
+    public static final int TAG_INTEROPERABILITY_INDEX = 1;
 
-    private static EXIFParentTIFFTagSet theInstance = null;
+    /**
+     * A value to be used with the "InteroperabilityIndex" tag. Indicates
+     * a file conforming to the R98 file specification of Recommended Exif
+     * Interoperability Rules (ExifR98) or to the DCF basic file stipulated
+     * by the Design Rule for Camera File System (type ASCII).
+     *
+     * @see #TAG_INTEROPERABILITY_INDEX
+     */
+    public static final String INTEROPERABILITY_INDEX_R98 = "R98";
 
-    // 34665 - EXIF IFD Pointer                   (LONG/1)
-    /** Tag pointing to the EXIF IFD (type LONG). */
-    public static final int TAG_EXIF_IFD_POINTER = 34665;
+    /**
+     * A value to be used with the "InteroperabilityIndex" tag. Indicates
+     * a file conforming to the DCF thumbnail file stipulated by the Design
+     * rule for Camera File System (type ASCII).
+     *
+     * @see #TAG_INTEROPERABILITY_INDEX
+     */
+    public static final String INTEROPERABILITY_INDEX_THM = "THM";
 
-    /** Tag pointing to a GPS info IFD (type LONG). */
-    public static final int TAG_GPS_INFO_IFD_POINTER = 34853;
+    private static EXIFInteroperabilityTagSet theInstance = null;
 
-    // To be inserted into parent (root) TIFFTagSet
-    static class EXIFIFDPointer extends TIFFTag {
-        
-        public EXIFIFDPointer() {
-            super("EXIFIFDPointer",
-                  TAG_EXIF_IFD_POINTER,
-                  1 << TIFFTag.TIFF_LONG,
-                  EXIFTIFFTagSet.getInstance());
-        }
-    }
+    static class InteroperabilityIndex extends TIFFTag {
 
-    // To be inserted into parent (root) TIFFTagSet
-    static class GPSInfoIFDPointer extends TIFFTag {
-        
-        public GPSInfoIFDPointer() {
-            super("GPSInfoIFDPointer",
-                  TAG_GPS_INFO_IFD_POINTER,
-                  1 << TIFFTag.TIFF_LONG,
-                  EXIFGPSTagSet.getInstance());
+        public InteroperabilityIndex() {
+            super("InteroperabilityIndex",
+                  TAG_INTEROPERABILITY_INDEX,
+                  1 << TIFFTag.TIFF_ASCII);
         }
     }
 
     private static List tags;
 
     private static void initTags() {
-        tags = new ArrayList(1);
-        tags.add(new EXIFParentTIFFTagSet.EXIFIFDPointer());
-        tags.add(new EXIFParentTIFFTagSet.GPSInfoIFDPointer());
+        tags = new ArrayList(42);
+
+        tags.add(new EXIFInteroperabilityTagSet.InteroperabilityIndex());
     }
 
-    private EXIFParentTIFFTagSet() {
+    private EXIFInteroperabilityTagSet() {
         super(tags);
     }
 
     /**
-     * Returns a shared instance of an <code>EXIFParentTIFFTagSet</code>.
+     * Returns the shared instance of
+     * <code>EXIFInteroperabilityTagSet</code>.
      *
-     * @return an <code>EXIFParentTIFFTagSet</code> instance.
+     * @return the <code>EXIFInteroperabilityTagSet</code> instance.
      */
-    public synchronized static EXIFParentTIFFTagSet getInstance() {
+    public synchronized static EXIFInteroperabilityTagSet getInstance() {
         if (theInstance == null) {
             initTags();
-            theInstance = new EXIFParentTIFFTagSet();
+            theInstance = new EXIFInteroperabilityTagSet();
             tags = null;
         }
         return theInstance;

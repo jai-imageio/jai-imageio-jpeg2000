@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2005-10-27 22:42:59 $
+ * $Revision: 1.4 $
+ * $Date: 2005-10-28 16:56:45 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -1891,6 +1891,15 @@ public class EXIFTIFFTagSet extends TIFFTagSet {
         }
     }
 
+    static class InteroperabilityIFD extends TIFFTag {
+        public InteroperabilityIFD() {
+            super("InteroperabilityIFD",
+                  TAG_INTEROPERABILITY_IFD_POINTER,
+                  1 << TIFFTag.TIFF_LONG,
+                  EXIFInteroperabilityTagSet.getInstance());
+        }
+    }
+
     private static List tags;
 
     private static void initTags() {
@@ -1952,6 +1961,7 @@ public class EXIFTIFFTagSet extends TIFFTagSet {
         tags.add(new EXIFTIFFTagSet.DeviceSettingDescription());
         tags.add(new EXIFTIFFTagSet.SubjectDistanceRange());
         tags.add(new EXIFTIFFTagSet.ImageUniqueID());
+        tags.add(new EXIFTIFFTagSet.InteroperabilityIFD());
     }
 
     private EXIFTIFFTagSet() {

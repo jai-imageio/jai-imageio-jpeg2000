@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-09-16 23:49:54 $
+ * $Revision: 1.3 $
+ * $Date: 2005-11-03 01:54:59 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -238,14 +238,14 @@ public abstract class CLibImageReader extends ImageReader {
                     alphaPalette = alphaTmp;
                 }
 
-                colorModel = new IndexColorModel(8,
+                colorModel = new IndexColorModel(bitDepth, //XXX 8
                                                  paletteLength,
                                                  redPalette,
                                                  greenPalette,
                                                  bluePalette,
                                                  alphaPalette);
             } else {
-                colorModel = new IndexColorModel(8,
+                colorModel = new IndexColorModel(bitDepth, //XXX 8
                                                  paletteLength,
                                                  redPalette,
                                                  greenPalette,

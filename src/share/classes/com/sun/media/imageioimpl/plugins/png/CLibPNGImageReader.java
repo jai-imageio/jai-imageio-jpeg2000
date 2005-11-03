@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:38 $
+ * $Revision: 1.2 $
+ * $Date: 2005-11-03 01:54:59 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.png;
@@ -148,19 +148,10 @@ final class CLibPNGImageReader extends CLibImageReader {
                     }
                 }
 
-                imageType = createImageType(image, 8, r, g, b, a);
+                imageType = createImageType(image, decoder.getBitDepth(),
+                                            r, g, b, a);
             } else {
-                int bitDepth;
-                switch(image.getType()) {
-                case mediaLibImage.MLIB_BIT:
-                    bitDepth = 1;
-                    break;
-                case mediaLibImage.MLIB_BYTE:
-                    bitDepth = 8;
-                    break;
-                default:
-                    bitDepth = 16;
-                }
+                int bitDepth = decoder.getBitDepth();
 
                 imageType = createImageType(image, bitDepth,
                                             null, null, null, null);

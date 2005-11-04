@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2005-11-03 01:54:59 $
+ * $Revision: 1.4 $
+ * $Date: 2005-11-04 17:08:25 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -299,9 +299,11 @@ public abstract class CLibImageReader extends ImageReader {
         int b = src.getSampleModel().getNumBands();
         int t = src.getSampleModel().getDataType();
 
+        int numSubSamples = (sw + subX - 1)/subX;
+
         if(t == DataBuffer.TYPE_FLOAT || t == DataBuffer.TYPE_DOUBLE) {
             float[] fsamples = new float[sw];
-            float[] fsubsamples = new float[sw/subX];
+            float[] fsubsamples = new float[numSubSamples];
 
             for(int k = 0; k < b; k++) {
                 for(int sy = sy0, dy = dy0; sy < syUB; sy += subY, dy++) {
@@ -314,7 +316,7 @@ public abstract class CLibImageReader extends ImageReader {
             }
         } else {
             int[] samples = new int[sw];
-            int[] subsamples = new int[sw/subX];
+            int[] subsamples = new int[numSubSamples];
 
             for(int k = 0; k < b; k++) {
                 for(int sy = sy0, dy = dy0; sy < syUB; sy += subY, dy++) {

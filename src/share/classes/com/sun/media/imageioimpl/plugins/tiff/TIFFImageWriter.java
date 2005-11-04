@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2005-09-13 00:02:54 $
+ * $Revision: 1.4 $
+ * $Date: 2005-11-04 21:50:22 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -2044,6 +2044,10 @@ public class TIFFImageWriter extends ImageWriter {
         }
         if (iioimage == null) {
             throw new IllegalArgumentException("image == null!");
+        }
+        if(iioimage.hasRaster() && !canWriteRasters()) {
+            throw new UnsupportedOperationException
+                ("TIFF ImageWriter cannot write Rasters!");
         }
 
         this.image = iioimage.getRenderedImage();

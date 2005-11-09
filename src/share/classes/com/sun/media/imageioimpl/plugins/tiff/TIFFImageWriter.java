@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2005-11-04 21:50:22 $
+ * $Revision: 1.5 $
+ * $Date: 2005-11-09 01:37:31 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -1031,7 +1031,8 @@ public class TIFFImageWriter extends ImageWriter {
 
             // mapSize is determined by BitsPerSample, not by incoming ICM.
             int mapSize = 1 << bitsPerSample[0];
-            for (int i = 0; i < mapSize; i++) {
+            int indexBound = Math.min(mapSize, icm.getMapSize());
+            for (int i = 0; i < indexBound; i++) {
                 colorMap[i] = (char)((icm.getRed(i)*65535)/255);
                 colorMap[mapSize + i] = (char)((icm.getGreen(i)*65535)/255);
                 colorMap[2*mapSize + i] = (char)((icm.getBlue(i)*65535)/255);

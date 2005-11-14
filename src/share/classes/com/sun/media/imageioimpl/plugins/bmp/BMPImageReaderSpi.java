@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:24 $
+ * $Revision: 1.2 $
+ * $Date: 2005-11-14 23:22:19 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.bmp;
@@ -61,7 +61,7 @@ public class BMPImageReaderSpi extends ImageReaderSpi {
     private static String[] formatNames = {"bmp", "BMP"};
     private static String[] extensions = {"bmp"};
     private static String[] mimeTypes = {
-        "image/bmp, image/x-bmp, image/x-windows-bmp"
+        "image/bmp", "image/x-bmp", "image/x-windows-bmp"
     };
     private boolean registered = false;
 

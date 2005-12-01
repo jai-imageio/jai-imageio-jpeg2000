@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:54 $
+ * $Revision: 1.2 $
+ * $Date: 2005-12-01 00:39:04 $
  * $State: Exp $
  */
 package com.sun.media.jai.imageioimpl;
@@ -96,6 +96,10 @@ public final class ImageReadCRIF extends CRIFImpl {
      * is cast and returned.</li>
      * <li>If <code>input</code> is a <code>String</code> it is converted
      * to a read-only <code>RandomAccessFile</code>.</li>
+     * <li>If conversion to a <code>RandomAccessFile</code> fails, the 
+     * <code>String</code> <code>input</code> is converted to an 
+     * <code>InputStream</code> by accessing it as a resource bundled 
+     * in a JAR file.</li>
      * <li>If <code>input</code> is a <code>URL</code> it is converted
      * to an <code>InputStream</code>.</li>
      * <li>If <code>input</code> is a <code>Socket</code> it is converted
@@ -129,8 +133,13 @@ public final class ImageReadCRIF extends CRIFImpl {
                     // in the OperationDescriptor.
                     input = new RandomAccessFile((String)input, "r");
                 } catch(Exception e) {
-                    throw new RuntimeException
-                        (I18N.getString("ImageReadCRIF0")+" "+input);
+		    // Try to get the file as an InputStream resource. This 
+		    // would happen when the application and image file are 
+		    // packaged in a JAR file
+		    input = ImageReadCRIF.class.getClassLoader().getResourceAsStream((String)input);
+		    if (input == null) 
+			throw new RuntimeException
+			    (I18N.getString("ImageReadCRIF0")+" "+input);
                 }
             } else if(input instanceof URL) {
                 // If the input is a URL replace it with an InputStream.

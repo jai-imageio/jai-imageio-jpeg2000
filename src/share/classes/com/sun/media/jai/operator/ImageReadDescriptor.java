@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:56 $
+ * $Revision: 1.2 $
+ * $Date: 2005-12-01 00:40:32 $
  * $State: Exp $
  */
 package com.sun.media.jai.operator;
@@ -50,6 +50,7 @@ import java.awt.image.renderable.ContextualRenderedImageFactory;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderableImage;
 import java.io.File;
+import java.io.InputStream;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.EventListener;
@@ -179,7 +180,9 @@ import com.sun.media.jai.util.PropertyGeneratorImpl;
  *   set as the input of the ImageReader; otherwise the original value of
  *   Input will be used. Before attempting to apply createImageInputStream(),
  *   if Input is a String it will be converted to a RandomAccessFile, or if it
- *   is a Socket or a URL to an InputStream.</li></p>
+ *   is a Socket or a URL to an InputStream. If the conversion of the Input
+ *   String to RandomAccessFile fails, it will be converted to an
+ *   InputStream by accessing it as a resource bundled in a JAR file.</li></p>
  * 
  * <p><li><a name="ParamImageChoice"</a>
  * If ImageChoice is negative an exception will be thrown when the
@@ -203,11 +206,14 @@ import com.sun.media.jai.util.PropertyGeneratorImpl;
  * If VerifyInput is TRUE and Input is either a File or a String which
  *   specifies a file path, then canRead() will be invoked on Input or a
  *   derived File object as appropriate. If canRead() returns 'false' an
- *   exception will be thrown. This option is useful to suppress verifying
+ *   exception will be thrown. Note that the canRead() method can not be
+ *   invoked in the case of the Input being a String specifying a file path
+ *   which can be accessed only as an InputStream resource from a JAR file.
+ *   This option is useful to suppress verifying
  *   the existence of a file on the local file system when this operation is
  *   created as the local portion of a remote operation which will be
  *   rendered on a remote peer. This verification will occur when the
- *   operation is created.</li></p>
+ *   operation is created. </li></p>
  * 
  * <p><li>If VerifyInput is TRUE and Input is a Socket, then an exception will
  *   be thrown if the socket is not bound, not connected, is closed, or its
@@ -905,6 +911,10 @@ public class ImageReadDescriptor extends OperationDescriptorImpl {
      * is a <code>File</code> or <code>String</code>, whether the
      * corresponding physical file exists and is readable; and</li>
      * <li>if <i>VerifyInput</i> is <code>TRUE</code> and <i>Input</i>
+     * is a <code>String</code>, converting which to a 
+     * corresponding physical file failed, whether it can be converted
+     * to an InputStream accessed as a resource from a JAR file; and</li>
+     * <li>if <i>VerifyInput</i> is <code>TRUE</code> and <i>Input</i>
      * is a <code>Socket</code>, whether it is bound, connected, open,
      * and the read-half is not shut down.</li>
      * </ul>
@@ -974,11 +984,17 @@ public class ImageReadDescriptor extends OperationDescriptorImpl {
                 // If input is a verify that it exists and is readable.
                 if(file != null) {
                     if (!file.exists()) {
-                        msg.append("\"" + path + "\": " + 
-                                   I18N.getString("ImageReadDescriptor11"));
-                        return false;
-                    }
-                    if (!file.canRead()) {
+			// Check if the file is accessible as an InputStream
+			// resource. This would be the case if the application
+			// and the image file are packaged in a JAR file
+			InputStream is = 
+			    getClass().getClassLoader().getResourceAsStream((String)input);
+			if(is == null) {
+			    msg.append("\"" + path + "\": " + 
+				       I18N.getString("ImageReadDescriptor11"));
+			    return false;
+			}
+                    } else if (!file.canRead()) {
                         msg.append("\"" + path + "\": " + 
                                    I18N.getString("ImageReadDescriptor12"));
                         return false;

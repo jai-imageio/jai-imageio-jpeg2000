@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:30 $
+ * $Revision: 1.2 $
+ * $Date: 2006-01-11 01:43:09 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -149,7 +149,7 @@ public class CLibJPEGImageReaderSpi extends ImageReaderSpi {
             int length = iis.read() << 8;
             length += iis.read();
             length -= 2;
-            for(; length > 0; length--) byte1 = iis.read();
+	    while (length > 0) length -= iis.skipBytes(length);
         } while(true);
         iis.reset();
         return true;

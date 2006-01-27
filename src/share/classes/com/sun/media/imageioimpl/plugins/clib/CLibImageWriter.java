@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-05-11 00:37:01 $
+ * $Revision: 1.3 $
+ * $Date: 2006-01-27 16:51:55 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -49,6 +49,7 @@ import java.awt.Rectangle;
 import java.awt.color.ColorSpace;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
+import java.awt.image.ColorModel;
 import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
@@ -68,6 +69,7 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.spi.ImageWriterSpi;
+import com.sun.medialib.codec.jiio.Constants;
 import com.sun.medialib.codec.jiio.mediaLibImage;
 
 public abstract class CLibImageWriter extends ImageWriter {
@@ -112,6 +114,139 @@ public abstract class CLibImageWriter extends ImageWriter {
         }
 
         return mlibType;
+    }
+
+    /**
+     * Returns the mediaLib format enum given the <code>SampleModel</code>
+     * and <code>ColorModel</code> of an image. If the format cannot be
+     * determined to be anything more specific, the value
+     * <code>Constants.MLIB_FORMAT_UNKNOWN</code> will be returned.
+     *
+     * @param sampleModel The <code>SampleModel</code> describing the
+     * layout of the <code>DataBuffer</code>; may be <code>null</code>.
+     * @param colorModel The <code>ColorModel</code> describing the
+     * mapping of the samples in a pixel to a color.
+     *
+     * @throws IllegalArgumentExcaption if <code>sampleModel</code> is
+     * <code>null</code>.
+     *
+     * @return One of the <code>Constants.MLIB_FORMAT</code> constants.
+     */
+    private static final int getMediaLibFormat(SampleModel sampleModel,
+                                               ColorModel colorModel) {
+        if(sampleModel == null) {
+            throw new IllegalArgumentException("sampleModel == null!");
+        }
+
+        int mlibFormat = Constants.MLIB_FORMAT_UNKNOWN;
+
+        if(sampleModel instanceof SinglePixelPackedSampleModel &&
+           sampleModel.getNumBands() == 4 &&
+           colorModel != null &&
+           colorModel.hasAlpha()) {
+            int[] masks =
+                ((SinglePixelPackedSampleModel)sampleModel).getBitMasks();
+            if(masks[3] == 0xff000000) {
+                if(masks[0] == 0xff &&
+                   masks[1] == 0xff00 &&
+                   masks[2] == 0xff0000) {
+                    mlibFormat = Constants.MLIB_FORMAT_PACKED_ABGR;
+                } else if(masks[0] == 0xff0000 &&
+                          masks[1] == 0xff00 &&
+                          masks[2] == 0xff) {
+                    mlibFormat = Constants.MLIB_FORMAT_PACKED_ARGB;
+                }
+            }
+        } else if(sampleModel instanceof ComponentSampleModel) {
+            ComponentSampleModel csm = (ComponentSampleModel)sampleModel;
+            int bandOffsets[] = csm.getBandOffsets();
+            int pixelStride = csm.getPixelStride();
+
+            if (pixelStride == bandOffsets.length) {
+                int numBands = pixelStride; // for clarity
+
+                boolean hasOneBank = true;
+                int bankIndices[] = csm.getBankIndices();
+                for (int i = 1; i < bankIndices.length; i++) {
+                    if(bankIndices[i] != bankIndices[0]) {
+                        hasOneBank = false;
+                    }
+                }
+
+                if(hasOneBank) {
+                    if(colorModel instanceof IndexColorModel) {
+                        mlibFormat = Constants.MLIB_FORMAT_INDEXED;
+                    } else if(numBands == 1) {
+                        mlibFormat = Constants.MLIB_FORMAT_GRAYSCALE;
+                    } else if(numBands == 2 &&
+                              bandOffsets[0] == 0 &&
+                              bandOffsets[1] == 1) {
+                        mlibFormat = Constants.MLIB_FORMAT_GRAYSCALE_ALPHA;
+                    } else if(numBands == 3) {
+                        int csType = colorModel != null ?
+                            colorModel.getColorSpace().getType() :
+                            ColorSpace.TYPE_RGB;
+                        if(csType == ColorSpace.TYPE_RGB) {
+                            if(bandOffsets[0] == 2 &&
+                               bandOffsets[1] == 1 &&
+                               bandOffsets[2] == 0) {
+                                mlibFormat = Constants.MLIB_FORMAT_BGR;
+                            } else if(bandOffsets[0] == 0 &&
+                                      bandOffsets[1] == 1 &&
+                                      bandOffsets[2] == 2) {
+                                mlibFormat = Constants.MLIB_FORMAT_RGB;
+                            }
+                        } else if(csType == ColorSpace.TYPE_Yxy &&
+                                  bandOffsets[0] == 0 &&
+                                  bandOffsets[1] == 1 &&
+                                  bandOffsets[2] == 2) {
+                            mlibFormat = Constants.MLIB_FORMAT_YCC;
+                        }
+                    } else if(numBands == 4) {
+                        int csType = colorModel != null ?
+                            colorModel.getColorSpace().getType() :
+                            ColorSpace.TYPE_RGB;
+                        if(csType == ColorSpace.TYPE_RGB) {
+                            if(bandOffsets[3] == 0) {
+                                if(bandOffsets[0] == 3 &&
+                                   bandOffsets[1] == 2 &&
+                                   bandOffsets[2] == 1) {
+                                    mlibFormat = Constants.MLIB_FORMAT_ABGR;
+                                } else if(bandOffsets[0] == 1 &&
+                                          bandOffsets[1] == 2 &&
+                                          bandOffsets[2] == 3) {
+                                    mlibFormat = Constants.MLIB_FORMAT_ARGB;
+                                }
+                            } else if(bandOffsets[0] == 0 &&
+                                      bandOffsets[1] == 1 &&
+                                      bandOffsets[2] == 2 &&
+                                      bandOffsets[3] == 3) {
+                                mlibFormat = Constants.MLIB_FORMAT_RGBA;
+                            }
+                        } else if(csType == ColorSpace.TYPE_CMYK &&
+                                  bandOffsets[0] == 0 &&
+                                  bandOffsets[1] == 1 &&
+                                  bandOffsets[2] == 2 &&
+                                  bandOffsets[3] == 3) {
+                            mlibFormat = Constants.MLIB_FORMAT_CMYK;
+                        } else if(csType == ColorSpace.TYPE_Yxy &&
+                                  bandOffsets[0] == 0 &&
+                                  bandOffsets[1] == 1 &&
+                                  bandOffsets[2] == 2 &&
+                                  bandOffsets[3] == 3) {
+                            if(colorModel != null &&
+                               colorModel.hasAlpha()) {
+                                mlibFormat = Constants.MLIB_FORMAT_YCCA;
+                            } else {
+                                mlibFormat = Constants.MLIB_FORMAT_YCCK;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return mlibFormat;
     }
 
     /**
@@ -333,9 +468,33 @@ public abstract class CLibImageWriter extends ImageWriter {
         return sourceRegion;
     }
 
+    /**
+     * Returns a <code>mediaLibImage</code> for a specific encoder to use
+     * to encode <code>image</code>.
+     *
+     * @param image The image to encode.
+     * @param param The write parameters.
+     * @param allowBilevel Whether bilevel images are allowed. A bilevel
+     * image must have one 1-bit sample per pixel, have data type
+     * <code>DataBuffer.TYE_BYTE</code>, and have a
+     * <code>MultiPixelPackedSampleModel</code>.
+     * @param supportedFormats An array containing constan values from
+     * the set of <code>mediaLibImage.MLIB_FORMAT</code> enums.
+     *
+     * @throws IllegalArgumentException if <code>supportedFormats</code>
+     * is <code>null</code>.
+     *
+     * @return A <code>mediaLibImage in a format capable of being written
+     * by the encoder.
+     */
     protected mediaLibImage getMediaLibImage(RenderedImage image,
                                              ImageWriteParam param,
-                                             boolean allowBilevel) {
+                                             boolean allowBilevel,
+                                             int[] supportedFormats) {
+        if(supportedFormats == null) {
+            throw new IllegalArgumentException("supportedFormats == null!");
+        }
+
         // Determine the source region.
         Rectangle sourceRegion = getSourceRegion(param,
                                                  image.getMinX(),
@@ -355,6 +514,9 @@ public abstract class CLibImageWriter extends ImageWriter {
 
         // Flag indicating bilevel data.
         boolean isBilevel = false;
+
+        // Value indicating the mediaLib image format.
+        int mediaLibFormat = Constants.MLIB_FORMAT_UNKNOWN;
 
         // Get the SampleModel.
         SampleModel sampleModel = image.getSampleModel();
@@ -394,27 +556,11 @@ public abstract class CLibImageWriter extends ImageWriter {
 
         // If sub-banding does not dictate reformatting check SampleModel.
         if(!reformatData) {
-            if(sampleModel instanceof ComponentSampleModel) {
-                ComponentSampleModel csm = (ComponentSampleModel)sampleModel;
-
-                if(csm.getPixelStride() != numSourceBands) {
-                    // Need each row to be contiguous samples.
-                    reformatData = true;
-                } else {
-                    // Need band offsets to increase from zero.
-                    int[] bandOffsets = csm.getBandOffsets();
-                    for(int i = 0; i < numSourceBands; i++) {
-                        if(bandOffsets[i] != i) {
-                            reformatData = true;
-                            break;
-                        }
-                    }
-                }
-            } else if(allowBilevel &&
-                      sampleModel.getNumBands() == 1 &&
-                      sampleModel.getSampleSize(0) == 1 &&
-                      sampleModel instanceof MultiPixelPackedSampleModel &&
-                      sampleModel.getDataType() == DataBuffer.TYPE_BYTE) {
+            if(allowBilevel &&
+               sampleModel.getNumBands() == 1 &&
+               sampleModel.getSampleSize(0) == 1 &&
+               sampleModel instanceof MultiPixelPackedSampleModel &&
+               sampleModel.getDataType() == DataBuffer.TYPE_BYTE) {
                 // Need continguous packed bits.
                 MultiPixelPackedSampleModel mppsm =
                     (MultiPixelPackedSampleModel)sampleModel;
@@ -424,8 +570,19 @@ public abstract class CLibImageWriter extends ImageWriter {
                     reformatData = true;
                 }
             } else {
-                // All other cases.
+                // Set the mediaLib format flag.
+                mediaLibFormat = getMediaLibFormat(sampleModel,
+                                                   image.getColorModel());
+
+                // Set the data reformatting flag.
                 reformatData = true;
+                int len = supportedFormats.length;
+                for(int i = 0; i < len; i++) {
+                    if(mediaLibFormat == supportedFormats[i]) {
+                        reformatData = false;
+                        break;
+                    }
+                }
             }
         }
 
@@ -596,17 +753,43 @@ public abstract class CLibImageWriter extends ImageWriter {
             // Get the line stride.
             int stride = csm.getScanlineStride();
 
+            // Determine the offset of the first sample from the offset
+            // indicated by the (x,y) coordinates. This offset is the
+            // minimum valued offset, not the offset of, e.g., red (index 0)
+            // as the Raster is by now in a contiguous format that
+            // the encoder is guaranteed to handle regardless of whether
+            // the smallest offset is to the, e.g., red band.
+            int[] bandOffsets = csm.getBandOffsets();
+            int minBandOffset = bandOffsets[0];
+            for(int i = 1; i < bandOffsets.length; i++) {
+                if(bandOffsets[i] < minBandOffset) {
+                    minBandOffset = bandOffsets[i];
+                }
+            }
+
             // Determine the offset to the start of the data. The
             // sampleModelTranslate parameters are the translations from
             // Raster to SampleModel coordinates and must be subtracted
             // from the Raster coordinates.
-            int offset = csm.getOffset(raster.getMinX() -
-                                       raster.getSampleModelTranslateX(),
-                                       raster.getMinY() -
-                                       raster.getSampleModelTranslateY());
+            int offset =
+                (raster.getMinY() -
+                 raster.getSampleModelTranslateY())*stride +
+                (raster.getMinX() -
+                 raster.getSampleModelTranslateX())*numSourceBands +
+                minBandOffset;
 
             // Create the image.
             mlibImage =
+                !reformatData &&
+                mediaLibFormat != Constants.MLIB_FORMAT_UNKNOWN ?
+                new mediaLibImage(mlibDataType,
+                                  numSourceBands,
+                                  raster.getWidth(),
+                                  raster.getHeight(),
+                                  stride,
+                                  offset,
+                                  mediaLibFormat,
+                                  data) :
                 new mediaLibImage(mlibDataType,
                                   numSourceBands,
                                   raster.getWidth(),

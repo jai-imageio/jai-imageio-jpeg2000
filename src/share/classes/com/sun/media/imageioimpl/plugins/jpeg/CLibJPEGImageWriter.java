@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-05-10 01:18:45 $
+ * $Revision: 1.3 $
+ * $Date: 2006-01-27 16:51:55 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -67,6 +67,7 @@ import com.sun.media.imageioimpl.common.ImageUtil;
 import com.sun.media.imageioimpl.plugins.clib.CLibImageWriter;
 import com.sun.media.imageioimpl.plugins.clib.OutputStreamAdapter;
 import com.sun.medialib.codec.jpeg.Encoder;
+import com.sun.medialib.codec.jiio.Constants;
 import com.sun.medialib.codec.jiio.mediaLibImage;
 
 final class CLibJPEGImageWriter extends CLibImageWriter {
@@ -223,22 +224,17 @@ final class CLibJPEGImageWriter extends CLibImageWriter {
             }
         }
 
+        int[] supportedFormats =
+            param == null || !param.isCompressionLossless() ?
+            new int [] {Constants.MLIB_FORMAT_GRAYSCALE,
+                        Constants.MLIB_FORMAT_BGR,
+                        Constants.MLIB_FORMAT_RGB} : // baseline
+            new int [] {Constants.MLIB_FORMAT_GRAYSCALE,
+                        Constants.MLIB_FORMAT_RGB};  // lossless & LS
         mediaLibImage mlibImage = getMediaLibImage(renderedImage,
                                                    param,
-                                                   false);
-
-        int imgFormat;
-        switch(mlibImage.getChannels()) {
-        case 1:
-            imgFormat = mediaLibImage.MLIB_FORMAT_GRAYSCALE;
-            break;
-        case 3:
-            imgFormat = mediaLibImage.MLIB_FORMAT_RGB;
-            break;
-        default:
-            imgFormat = mediaLibImage.MLIB_FORMAT_UNKNOWN;
-        }
-        mlibImage.setFormat(imgFormat);
+                                                   false,
+                                                   supportedFormats);
 
         try {
             encoder.encode(stream, mlibImage);

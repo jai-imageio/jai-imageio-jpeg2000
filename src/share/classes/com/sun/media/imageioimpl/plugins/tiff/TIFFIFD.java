@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-09-19 21:47:07 $
+ * $Revision: 1.3 $
+ * $Date: 2006-01-28 00:52:46 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -415,10 +415,11 @@ public class TIFFIFD {
                 if (tag.isIFDPointer()) {
                     TIFFIFD subIFD = (TIFFIFD)f.getData();
                     subIFD.writeToStream(stream);
+                    nextSpace = subIFD.lastPosition;
                 } else {
                     f.writeData(stream);
+                    nextSpace = stream.getStreamPosition();
                 }
-                nextSpace = stream.getStreamPosition();
             } else {
                 pos = stream.getStreamPosition();
                 f.writeData(stream);

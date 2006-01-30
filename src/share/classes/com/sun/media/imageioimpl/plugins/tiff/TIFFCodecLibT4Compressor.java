@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:44 $
+ * $Revision: 1.2 $
+ * $Date: 2006-01-30 23:22:03 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -86,9 +86,8 @@ public class TIFFCodecLibT4Compressor extends TIFFT4Compressor {
                               int height,
                               byte[] compData) {
 
-        // Defer to superclass if bit offset is not byte-aligned or
-        // EOL alignment is requested.
-        if(isEOLAligned || colOffset % 8 != 0) {
+        // Defer to superclass if bit offset is not byte-aligned.
+        if(colOffset % 8 != 0) {
             return super.encodeT4(is1DMode, isEOLAligned,
                                   data, lineStride, colOffset,
                                   width, height, compData);
@@ -116,6 +115,8 @@ public class TIFFCodecLibT4Compressor extends TIFFT4Compressor {
         com.sun.medialib.codec.g3fax.Encoder clibEncoder =
             (com.sun.medialib.codec.g3fax.Encoder)encoder;
         //System.out.println("Using codecLib G3 encoder");
+
+        // Set encoding flags.
         int encodingFlags =
             is1DMode ?
             com.sun.medialib.codec.g3fax.Constants.G3FAX_HORIZONTAL_CODING :
@@ -124,6 +125,11 @@ public class TIFFCodecLibT4Compressor extends TIFFT4Compressor {
             encodingFlags |=
                 com.sun.medialib.codec.g3fax.Constants.G3FAX_EOLPADDING;
         }
+        if(inverseFill) {
+            encodingFlags |=
+                com.sun.medialib.codec.g3fax.Constants.G3FAX_LSB2MSB;
+        }
+
         int result =
             com.sun.medialib.codec.g3fax.Constants.G3FAX_FAILURE;
         try {
@@ -149,12 +155,6 @@ public class TIFFCodecLibT4Compressor extends TIFFT4Compressor {
             result = super.encodeT4(is1DMode, isEOLAligned,
                                     data, lineStride, colOffset,
                                     width, height, compData);
-        } else if(inverseFill) {
-            // Flip the bytes if inverse fill was requested.
-            byte[] flipTable =  TIFFFaxDecompressor.flipTable;
-            for(int i = 0; i < result; i++) {
-                compData[i] = flipTable[compData[i]&0xff];
-            }
         }
 
         return result;

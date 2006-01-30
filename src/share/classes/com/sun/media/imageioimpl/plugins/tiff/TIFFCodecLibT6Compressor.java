@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:44 $
+ * $Revision: 1.2 $
+ * $Date: 2006-01-30 23:22:34 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -110,13 +110,19 @@ public class TIFFCodecLibT6Compressor extends TIFFT6Compressor {
         com.sun.medialib.codec.g4fax.Encoder clibEncoder =
             (com.sun.medialib.codec.g4fax.Encoder)encoder;
         //System.out.println("Using codecLib G4 encoder");
+
+        // Set encoding flags.
+        int encodingFlags = inverseFill ?
+            com.sun.medialib.codec.g4fax.Constants.G4FAX_LSB2MSB : 0;
+
         int result =
             com.sun.medialib.codec.g4fax.Constants.G4FAX_FAILURE;
         try {
             if(DEBUG) {
                 System.out.println("Using MediaLib G4 encoder");
             }
-            result = clibEncoder.encode(compData, image, width, height, 0);
+            result = clibEncoder.encode(compData, image, width, height,
+                                        encodingFlags);
         } catch(Throwable t) {
             if(DEBUG) {
                 System.out.println("MediaLib G4 encoder failed: "+t);
@@ -132,12 +138,6 @@ public class TIFFCodecLibT6Compressor extends TIFFT6Compressor {
             }
             result = super.encodeT6(data, lineStride, colOffset,
                                     width, height, compData);
-        } else if(inverseFill) {
-            // Flip the bytes if inverse fill was requested.
-            byte[] flipTable =  TIFFFaxDecompressor.flipTable;
-            for(int i = 0; i < result; i++) {
-                compData[i] = flipTable[compData[i]&0xff];
-            }
         }
 
         return result;

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2005-11-04 17:08:25 $
+ * $Revision: 1.5 $
+ * $Date: 2006-01-31 00:13:23 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -414,32 +414,6 @@ public abstract class CLibImageReader extends ImageReader {
         int dataOffset = mlImage.getOffset();
 
         SampleModel sampleModel = imageType.getSampleModel();
-
-        // XXX Workaround for change request 6217565 - remove when fixed.
-        // This might cause strange problems if the application retrieves
-        // the SampleModel elsewhere but it is better than read() throwing
-        // an exception.
-        boolean doStridesMatch = true;
-        if(sampleModel instanceof ComponentSampleModel) {
-            if(mlImage.getStride() !=
-               ((ComponentSampleModel)sampleModel).getScanlineStride()) {
-                doStridesMatch = false;
-            }
-        } else if(sampleModel instanceof MultiPixelPackedSampleModel) {
-            if(mlImage.getStride() !=
-               ((MultiPixelPackedSampleModel)sampleModel).getScanlineStride()) {
-                doStridesMatch = false;
-            }
-        }
-        if(!doStridesMatch) {
-            ColorModel cm = imageType.getColorModel();
-            imageType = createImageType(mlImage,
-                                        cm.getComponentSize(0),
-                                        null, null, null, null);
-            sampleModel = imageType.getSampleModel();
-            imageType = new ImageTypeSpecifier(cm, sampleModel);
-        }
-        // XXX End of workaround for CR 6217565
 
         DataBuffer db;
         int smType = sampleModel.getDataType();

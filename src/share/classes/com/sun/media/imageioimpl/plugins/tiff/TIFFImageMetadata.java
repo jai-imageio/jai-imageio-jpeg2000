@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2005-09-30 22:09:43 $
+ * $Revision: 1.4 $
+ * $Date: 2006-01-31 01:53:51 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -1311,6 +1311,9 @@ public class TIFFImageMetadata extends IIOMetadata {
                 }
             } else if (name.equals("Text")) {
                 Node child = node.getFirstChild();
+                String theAuthor = null;
+                String theDescription = null;
+                String theTitle = null;
                 while (child != null) {
                     String childName = child.getNodeName();
                     if(childName.equals("TextEntry")) {
@@ -1351,6 +1354,12 @@ public class TIFFImageMetadata extends IIOMetadata {
                                 } else if(keyword.equalsIgnoreCase("Copyright")) {
                                     tagNumber =
                                         BaselineTIFFTagSet.TAG_COPYRIGHT;
+                                } else if(keyword.equalsIgnoreCase("author")) {
+                                    theAuthor = value;
+                                } else if(keyword.equalsIgnoreCase("description")) {
+                                    theDescription = value;
+                                } else if(keyword.equalsIgnoreCase("title")) {
+                                    theTitle = value;
                                 }
                                 if(tagNumber != -1) {
                                     f = new TIFFField(rootIFD.getTag(tagNumber),
@@ -1363,6 +1372,30 @@ public class TIFFImageMetadata extends IIOMetadata {
                         }
                     }
                     child = child.getNextSibling();
+                } // child != null
+                if(theAuthor != null &&
+                   getTIFFField(BaselineTIFFTagSet.TAG_ARTIST) == null) {
+                    f = new TIFFField(rootIFD.getTag(BaselineTIFFTagSet.TAG_ARTIST),
+                                      TIFFTag.TIFF_ASCII,
+                                      1,
+                                      new String[] {theAuthor});
+                    rootIFD.addTIFFField(f);
+                }
+                if(theDescription != null &&
+                   getTIFFField(BaselineTIFFTagSet.TAG_IMAGE_DESCRIPTION) == null) {
+                    f = new TIFFField(rootIFD.getTag(BaselineTIFFTagSet.TAG_IMAGE_DESCRIPTION),
+                                      TIFFTag.TIFF_ASCII,
+                                      1,
+                                      new String[] {theDescription});
+                    rootIFD.addTIFFField(f);
+                }
+                if(theTitle != null &&
+                   getTIFFField(BaselineTIFFTagSet.TAG_DOCUMENT_NAME) == null) {
+                    f = new TIFFField(rootIFD.getTag(BaselineTIFFTagSet.TAG_DOCUMENT_NAME),
+                                      TIFFTag.TIFF_ASCII,
+                                      1,
+                                      new String[] {theTitle});
+                    rootIFD.addTIFFField(f);
                 }
             } else if (name.equals("Transparency")) {
                  Node child = node.getFirstChild();

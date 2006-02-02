@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-01-27 16:51:56 $
+ * $Revision: 1.4 $
+ * $Date: 2006-02-02 22:36:21 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.png;
@@ -152,7 +152,9 @@ final class CLibPNGImageWriter extends CLibImageWriter {
             Constants.MLIB_FORMAT_GRAYSCALE,
             Constants.MLIB_FORMAT_GRAYSCALE_ALPHA,
             Constants.MLIB_FORMAT_INDEXED,
+            Constants.MLIB_FORMAT_BGR,
             Constants.MLIB_FORMAT_RGB,
+            Constants.MLIB_FORMAT_BGRA,
             Constants.MLIB_FORMAT_RGBA
         };
         mediaLibImage mlImage = getMediaLibImage(renderedImage, param, true,

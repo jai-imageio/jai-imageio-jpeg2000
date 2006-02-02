@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-01-27 16:51:55 $
+ * $Revision: 1.4 $
+ * $Date: 2006-02-02 22:36:21 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -217,11 +217,16 @@ public abstract class CLibImageWriter extends ImageWriter {
                                           bandOffsets[2] == 3) {
                                     mlibFormat = Constants.MLIB_FORMAT_ARGB;
                                 }
-                            } else if(bandOffsets[0] == 0 &&
-                                      bandOffsets[1] == 1 &&
-                                      bandOffsets[2] == 2 &&
-                                      bandOffsets[3] == 3) {
-                                mlibFormat = Constants.MLIB_FORMAT_RGBA;
+                            } else if(bandOffsets[3] == 3) {
+                                if(bandOffsets[0] == 0 &&
+                                   bandOffsets[1] == 1 &&
+                                   bandOffsets[2] == 2) {
+                                    mlibFormat = Constants.MLIB_FORMAT_RGBA;
+                                } else if(bandOffsets[0] == 2 &&
+                                          bandOffsets[1] == 1 &&
+                                          bandOffsets[2] == 0) {
+                                    mlibFormat = Constants.MLIB_FORMAT_BGRA;
+                                }
                             }
                         } else if(csType == ColorSpace.TYPE_CMYK &&
                                   bandOffsets[0] == 0 &&

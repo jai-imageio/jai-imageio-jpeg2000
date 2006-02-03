@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-09-15 21:32:14 $
+ * $Revision: 1.3 $
+ * $Date: 2006-02-03 22:37:45 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -151,13 +151,10 @@ final class CLibJPEGImageReader extends CLibImageReader {
             // Mark the input.
             iis.mark();
 
-            // Create an InputStream from the ImageInputStream.
-            InputStream stream = new InputStreamAdapter(iis);
-
             Decoder decoder = null;
             try {
                 // Create the decoder
-                decoder = new Decoder(stream);
+                decoder = new Decoder(iis);
 
                 // Set the informational image.
                 infoImage = decoder.getSize();

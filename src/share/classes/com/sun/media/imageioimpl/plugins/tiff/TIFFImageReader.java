@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2005-10-06 01:34:38 $
+ * $Revision: 1.4 $
+ * $Date: 2006-02-03 01:45:18 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -47,7 +47,11 @@ package com.sun.media.imageioimpl.plugins.tiff;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.color.ColorSpace;
+import java.awt.color.ICC_ColorSpace;
+import java.awt.color.ICC_Profile;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
 import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
@@ -113,6 +117,7 @@ public class TIFFImageReader extends ImageReader {
     int numImages = -1;
 
     // The ImageTypeSpecifiers of the images in the stream.
+    // Contains a map of Integers to Lists.
     HashMap imageTypeMap = new HashMap();
 
     BufferedImage theImage = null;
@@ -650,17 +655,20 @@ public class TIFFImageReader extends ImageReader {
     }
 
     public Iterator getImageTypes(int imageIndex) throws IIOException {
-        ArrayList l = new ArrayList(1); // List of ImageTypeSpecifiers
+        List l; // List of ImageTypeSpecifiers
 
         Integer imageIndexInteger = new Integer(imageIndex);
         if(imageTypeMap.containsKey(imageIndexInteger)) {
-            // Return the cached ITS.
-            l.add(imageTypeMap.get(imageIndexInteger));
+            // Return the cached ITS List.
+            l = (List)imageTypeMap.get(imageIndexInteger);
         } else {
+            // Create a new ITS List.
+            l = new ArrayList(1);
+
             // Create the ITS and cache if for later use so that this method
-            // always returns an Iterator containing the same ITS object.
+            // always returns an Iterator containing the same ITS objects.
             seekToImage(imageIndex);
-            ImageTypeSpecifier its = 
+            ImageTypeSpecifier itsRaw = 
                 TIFFDecompressor.getRawImageTypeSpecifier
                     (photometricInterpretation,
                      compression,
@@ -669,8 +677,55 @@ public class TIFFImageReader extends ImageReader {
                      sampleFormat,
                      extraSamples,
                      colorMap);
-            l.add(its);
-            imageTypeMap.put(imageIndexInteger, l.get(0));
+
+            // Check for an ICCProfile field.
+            TIFFField iccProfileField =
+                imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_ICC_PROFILE);
+            if(iccProfileField != null) {
+                // Create a ColorSpace from the profile.
+                byte[] iccProfileValue = iccProfileField.getAsBytes();
+                ICC_Profile iccProfile =
+                    ICC_Profile.getInstance(iccProfileValue);
+                ICC_ColorSpace iccColorSpace =
+                    new ICC_ColorSpace(iccProfile);
+
+                // Get the raw ColorSpace.
+                ColorModel cmRaw = itsRaw.getColorModel();
+                ColorSpace csRaw = cmRaw.getColorSpace();
+
+                // If the raw ColorModel is for component-based pixels
+                // and the color space type and number of color components
+                // are the same as for the ICC color space then create
+                // a new ITS.
+                if(cmRaw instanceof ComponentColorModel &&
+                   csRaw.getType() == iccColorSpace.getType() &&
+                   csRaw.getNumComponents() ==
+                   iccColorSpace.getNumComponents()) {
+                    // Create a ColorModel identical to the ColorModel
+                    // from the raw ITS but using the ICC color space.
+                    ColorModel iccColorModel =
+                        new ComponentColorModel(iccColorSpace,
+                                                cmRaw.getComponentSize(),
+                                                cmRaw.hasAlpha(),
+                                                cmRaw.isAlphaPremultiplied(),
+                                                cmRaw.getTransparency(),
+                                                cmRaw.getTransferType());
+
+                    // Prepend the ICC profile-based ITS to the List. The
+                    // ColorModel and SampleModel are guaranteed to be
+                    // compatible as the old and new ColorModels are both
+                    // ComponentColorModels with the same transfer type
+                    // and the same number of components.
+                    l.add(new ImageTypeSpecifier(iccColorModel,
+                                                 itsRaw.getSampleModel()));
+                }
+            }
+
+            // Append the raw ITS to the List.
+            l.add(itsRaw);
+
+            // Cache the ITS List.
+            imageTypeMap.put(imageIndexInteger, l);
         }
 
         return l.iterator();

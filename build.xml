@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.3 $
-$Date: 2005-04-25 20:56:12 $
+$Revision: 1.4 $
+$Date: 2006-02-04 00:02:39 $
 $State: Exp $
 -->
 <project name="jai_imageio" default="jar" basedir=".">
@@ -71,6 +71,41 @@ $State: Exp $
     build, then 64-bit mode should be selected by including "-d64" in the
     list of values passed to the JVM in the "ANT_OPTS" environment variable.
 
+    A build of JAI Image I/O Tools is one of the following four types:
+    daily build, stable build, beta build (or release candidate) and fcs
+    build. Daily builds are named as (dr refers to developer's release) 
+
+    jai-imageio-{version}-pre-dr-bNN-{os}-{arch}-DD_MMM_YYYY.zip
+
+    Stable builds are named as
+
+    jai-imageio-{version}-dr-bNN-{os}-{arch}.zip
+
+    Beta builds are named as either
+
+    jai-imageio-{version}-betaN-{os}-{arch}-.zip
+
+    or
+
+    jai-imageio-{version}-rcN-{os}-{arch}-.zip
+
+    FCS builds are simply
+
+    jai-imageio-{version}-{os}-{arch}-.zip 
+
+    The default is to do a daily build. This may be overriden by setting
+    the BUILD_TYPE property on the command line to do a different kind
+    of build:
+  
+      BUILD_TYPE=daily   Do a daily build (default)
+      BUILD_TYPE=stable  Do a stable build : -bNN
+      BUILD_TYPE=beta    Do a beta or RC production build : -betaN or -rcN
+      BUILD_TYPE=fcs     Do an FCS production build : [no suffix]
+  
+    For example:
+  
+      ant -DBUILD_TYPE=stable ...
+
     The "CLIB_DIR" property may be used via the ant "-D" command line
     option to specify the directory containing clibwrapper_jiio.jar;
     the default value is src/share/jclib4jai.
@@ -93,17 +128,20 @@ $State: Exp $
     The distribution lib bundle is created in dist/${platform}/lib.
 
     The distribution javadoc bundle is created in dist/${platform}/javadocs.
+
+    Creating the distribution bundles requires specification of the
+    BUILD_TYPE property, with the value being either "beta" or
+    "fcs". For example,
+
+      ant -DBUILD_TYPE=beta dist
+
+      OR
+
+      ant -DBUILD_TYPE=fcs dist
   </description>
 
-  <!-- Set global version properties for this build -->
-
-  <!-- Version strings -->
-  <property name="verspec" value="1.0-mr"/>
-  <property name="verimpl" value="1.1-alpha"/>
-
-  <!-- Version strings as used in file names -->
-  <property name="verspecfile" value="1_0-mr"/>
-  <property name="verimplfile" value="1_0-alpha"/>
+  <!-- Import properties from file. -->
+  <property file="build.properties"/>
 
   <!-- Javadoc properties -->
   <property name="packageListLoc" value="build-tools"/>
@@ -114,10 +152,9 @@ $State: Exp $
   <property name="build"   value="build"/>
   <property name="dist"    value="dist"/>
   <property name="textdir" value="."/>
-  <property name="pkgname" value="jai_imageio-${verimplfile}-lib"/>
   <property name="docname" value="jai_imageio-${verspecfile}-doc"/>
 
-  <!-- Sets a simgle property if a target is specified. -->
+  <!-- Sets a single property if a target is specified. -->
   <target name="selectPlatform" if="BUILD_TARGET">
     <condition property="isLinuxOnAMD64">
         <equals arg1="${BUILD_TARGET}" arg2="linux-amd64" trim="true"/>
@@ -237,9 +274,78 @@ $State: Exp $
     <property name="jrenativesubdir" value="bin"/>
   </target>
 
+  <target name="setupBuildType" depends="initBuildType, setupBuildFcs, setupBuildBeta, setupBuildStable, setupBuildDaily, checkBuildType">
+    <echo message="BUILD_TYPE = ${BUILD_TYPE}"/>
+  </target>
+
+  <target name="initBuildType">
+    <!-- Default value is "daily", overridden on command line -->
+    <property name="BUILD_TYPE" value="daily"/>
+    <property name="buildType_${BUILD_TYPE}" value="true"/>
+  </target>
+
+  <!-- Set properties for FCS build -->
+  <target name="setupBuildFcs" if="buildType_fcs">
+    <property name="buildTypeSet" value="true"/>
+
+    <property name="version_build" value="b${version_buildnum}"/>
+    <property name="version_suffix" value=""/>
+
+    <property name="version" value="${version_base}"/>
+    <property name="version_file" value="${version_base_file}-lib"/>
+    <property name="buildtime" value=""/>
+  </target>
+
+  <!-- Set properties for BETA build -->
+  <target name="setupBuildBeta" if="buildType_beta">
+    <property name="buildTypeSet" value="true"/>
+
+    <property name="version_build" value="b${version_buildnum}"/>
+    <property name="version_suffix" value="${version_betastr}"/>
+
+    <property name="version" value="${version_base}-${version_suffix}"/>
+    <property name="version_file" value="${version_base_file}-${version_suffix}-lib"/>
+    <property name="buildtime" value=""/>
+  </target>
+
+  <!-- Set properties for STABLE build -->
+  <target name="setupBuildStable" if="buildType_stable">
+    <property name="buildTypeSet" value="true"/>
+
+    <property name="version_build" value="b${version_buildnum}"/>
+    <property name="version_suffix" value="dr-${version_build}"/>
+
+    <property name="version" value="${version_base}-${version_suffix}"/>
+    <property name="version_file" value="${version_base_file}-${version_suffix}-lib"/>
+    <property name="buildtime" value=""/>
+  </target>
+
+  <!-- Set properties for DAILY build -->
+  <target name="setupBuildDaily" if="buildType_daily">
+    <property name="buildTypeSet" value="true"/>
+
+    <property name="version_build" value="b${version_buildnum}"/>
+    <property name="version_suffix" value="pre-dr-${version_build}"/>
+
+    <tstamp>
+      <!-- Set build time property -->
+      <format property="btime" pattern="dd_MMM_yyyy"/>
+    </tstamp>    
+
+    <property name="version" value="${version_base}-${version_suffix}"/>
+    <property name="version_file" value="${version_base_file}-${version_suffix}-lib"/>
+    <property name="buildtime" value="-${btime}"/>
+  </target>
+
+  <!-- Check buildType -->
+  <target name="checkBuildType" unless="buildTypeSet">
+    <fail message="Unknown BUILD_TYPE = ${BUILD_TYPE}"/>
+  </target>
+
   <!-- Set properties as a function of the type of platform. -->
   <target name="setupPlatform"
-	  depends="determinePlatform,
+	  depends="setupBuildType,
+		   determinePlatform,
 		   selectPlatform,
 		   setupLinuxAMD64,
 		   setupLinuxX86,
@@ -274,6 +380,7 @@ $State: Exp $
       <format property="datestamp" pattern="yyyy.MM.dd"/>
       <format property="timestamp" pattern="yyyy-MM-dd HH:mm:ss.SZ"/>
       <format property="filestamp" pattern="yyyy_MM_dd_HH_mm_ss"/>
+      <format property="btime" pattern="dd_MMM_yyyy"/>
     </tstamp>
   </target>
 
@@ -297,9 +404,7 @@ $State: Exp $
     <echo message=""/>
 
     <echo message="verspec         = ${verspec}"/>
-    <echo message="verimpl         = ${verimpl}"/>
     <echo message="verspecfile     = ${verspecfile}"/>
-    <echo message="verimplfile     = ${verimplfile}"/>
 
     <echo message=""/>
 
@@ -310,8 +415,16 @@ $State: Exp $
     <echo message="docurl          = ${docurl}"/>
     <echo message="build           = ${build}"/>
     <echo message="dist            = ${dist}"/>
-    <echo message="pkgname         = ${pkgname}"/>
     <echo message="docname         = ${docname}"/>
+
+    <echo message=""/>
+
+    <echo message="BUILD_TYPE      = ${BUILD_TYPE}"/>
+    <echo message="version_build   = ${version_build}"/>
+    <echo message="version_suffix  = ${version_suffix}"/>
+
+    <echo message="version         = ${version}"/>
+    <echo message="version_file    = ${version_file}"/>
   </target>
 
   <!-- Sets compilation mode dependent properties to debug values and
@@ -444,7 +557,7 @@ $State: Exp $
       <attribute name="Implementation-Title"
                  value="com.sun.media.imageio"/>
       <attribute name="Implementation-Version"
-                 value="${verimpl}"/> 
+                 value="${version}"/> 
       <attribute name="Implementation-Vendor"
                  value="Sun Microsystems, Inc."/>
       <attribute name="Extension-Name"
@@ -453,7 +566,7 @@ $State: Exp $
     </manifest>
   </target>
 
-  <!-- Create jai_core.jar. -->
+  <!-- Create jai_imageio.jar. -->
   <target name="jar-core" depends="compile,manifest">
     <jar jarfile="${jardir}/jai_imageio.jar"
          manifest="${builddir}/Manifest" update="yes">
@@ -542,34 +655,39 @@ $State: Exp $
   <target name="docs" depends="docs-jcp,docs-private,docs-public"
 	  description="Builds javadoc for all access types."/>
 
-  <target name="dist" depends="init,docs-jcp,jar-opt"
+  <target name="dist" depends="release,docs-jcp"
 	  description="Creates the lib and javadoc distribution zip files.">
     <property name="distdir" value="${dist}/${platform}"/>
 
-    <mkdir dir="${distdir}"/>
     <mkdir dir="${distdir}/javadocs"/>
-    <mkdir dir="${distdir}/lib"/>
     
-    <!-- Create the lib Zip archive -->
-    <zip zipfile="${distdir}/lib/${pkgname}-${platform}-${filestamp}.zip"
-	 basedir="${distdir}"
-	 filesonly="true">
-      <fileset file="${build}/${platform}/opt/COPYRIGHT.txt"/>
-      <fileset file="${build}/${platform}/opt/LICENSE.txt"/>
-      <fileset file="${build}/${platform}/opt/LICENSE-codecLibJIIO.txt"/>
-      <fileset dir="${build}/${platform}/opt"
-	       includes="lib/**,bin/**"/>
-    </zip>
-
     <!-- Create a Zip doc bundle -->
-    <zip zipfile="${distdir}/javadocs/${docname}-${platform}-${filestamp}.zip"
+    <zip destfile="${distdir}/javadocs/${docname}-${platform}-${btime}.zip"
 	 basedir="${build}/${platform}/javadocs/docs-jcp"
 	 includes="**"
 	 filesonly="true"/>
   </target>
 
-  <target name="all" depends="jar-debug,dist"
-	  description="Executes targets jar-debug and dist."/>
+  <target name="release" depends="init,jar-debug"
+	  description="Package distribution for release">
+    <property name="distdir" value="${dist}/${platform}"/>
+
+    <mkdir dir="${distdir}"/>
+    <mkdir dir="${distdir}/lib"/>
+    
+    <!-- Create the lib Zip archive -->
+    <zip destfile="${distdir}/lib/jai-imageio-${version_file}-${platform}${buildtime}.zip"
+	 filesonly="true">
+      <fileset file="${build}/${platform}/debug/COPYRIGHT.txt"/>
+      <fileset file="${build}/${platform}/debug/LICENSE.txt"/>
+      <fileset file="${build}/${platform}/debug/LICENSE-codecLibJIIO.txt"/>
+      <fileset dir="${build}/${platform}/debug"
+	       includes="lib/**,bin/**"/>
+    </zip>
+  </target>
+
+  <target name="all" depends="jar-opt,dist"
+	  description="Executes targets jar-opt and dist."/>
 
   <target name="clean" depends="init"
 	  description="Deletes entities created by all targets on current platform.">

@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.5 $
-$Date: 2006-02-04 02:01:24 $
+$Revision: 1.6 $
+$Date: 2006-02-04 02:08:27 $
 $State: Exp $
 -->
 <project name="jai_imageio" default="jar" basedir=".">
@@ -518,6 +518,7 @@ $State: Exp $
            classpath="${clib}/clibwrapper_jiio.jar"
            debug="${debugsetting}"
            deprecation="off"
+           source="1.4"
 	   target="1.4">
       <exclude name="**/com/sun/media/jai/test/*.java"/>
     </javac>

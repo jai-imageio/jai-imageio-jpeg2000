@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.1 $
-$Date: 2005-02-11 05:01:19 $
+$Revision: 1.2 $
+$Date: 2006-02-08 19:21:23 $
 $State: Exp $
 -->
 
@@ -119,16 +119,27 @@ sample.</li>
 <p><a name="DefaultCMYK"/>The normalized color coordinate transformations
 used for the default CMYK color space are defined as follows:
 
+<ul>
+<li>CMYK to RGB
 <pre>
-R = 1.0 - (C - K)
-G = 1.0 - (M - K)
-B = 1.0 - (Y - K)
-
-C = 1.0 - R
-M = 1.0 - G
-Y = 1.0 - B
-K = min{C,M,Y}
+R = (1 - K)*(1 - C)
+G = (1 - K)*(1 - M)
+B = (1 - K)*(1 - Y)
 </pre>
+</li>
+<li>RGB to CMYK
+<pre>
+K = min{1 - R, 1 - G, 1 - B}
+if(K == 1) {
+    C = M = Y = 1
+} else {
+    C = (1 - R - K)/(1 - K)
+    M = (1 - G - K)/(1 - K)
+    Y = (1 - B - K)/(1 - K)
+}
+</pre>
+</li>
+</ul>
 </p>
 
 <p><a name="GenericCS"/>The generic color space used when no other color space

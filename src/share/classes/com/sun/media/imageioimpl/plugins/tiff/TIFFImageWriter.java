@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2005-11-09 01:37:31 $
+ * $Revision: 1.6 $
+ * $Date: 2006-02-10 18:58:29 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -47,6 +47,7 @@ package com.sun.media.imageioimpl.plugins.tiff;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.color.ColorSpace;
+import java.awt.color.ICC_ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentSampleModel;
@@ -1049,8 +1050,22 @@ public class TIFFImageWriter extends ImageWriter {
             rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_COLOR_MAP);
         }
 
-        // Always emit XResolution and YResolution.
+        // Emit ICCProfile if there is no ICCProfile field already in the
+        // metadata and the ColorSpace is non-standard ICC.
+        if(cm != null &&
+           rootIFD.getTIFFField(BaselineTIFFTagSet.TAG_ICC_PROFILE) == null &&
+           ImageUtil.isNonStandardICCColorSpace(cm.getColorSpace())) {
+            ICC_ColorSpace iccColorSpace = (ICC_ColorSpace)cm.getColorSpace();
+            byte[] iccProfileData = iccColorSpace.getProfile().getData();
+            TIFFField iccProfileField =
+                new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_ICC_PROFILE),
+                              TIFFTag.TIFF_UNDEFINED,
+                              iccProfileData.length,
+                              iccProfileData);
+            rootIFD.addTIFFField(iccProfileField);
+        }
 
+        // Always emit XResolution and YResolution.
         TIFFField XResolutionField =
             rootIFD.getTIFFField(BaselineTIFFTagSet.TAG_X_RESOLUTION);
         TIFFField YResolutionField =

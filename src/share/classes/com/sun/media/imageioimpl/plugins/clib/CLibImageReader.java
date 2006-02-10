@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2006-01-31 00:13:23 $
+ * $Revision: 1.6 $
+ * $Date: 2006-02-10 22:44:59 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -102,48 +102,6 @@ public abstract class CLibImageReader extends ImageReader {
 
         return false;
     }
-
-    protected CLibImageReader(ImageReaderSpi originatingProvider) {
-        super(originatingProvider);
-    }
-
-    /**
-     * An <code>Iterator</code> over a single element.
-     */
-    private class SoloIterator implements Iterator {
-        Object theObject;
-
-        SoloIterator(Object o) {
-            if(o == null) {
-                new IllegalArgumentException
-                    (I18N.getString("CLibImageReader0"));
-            }
-            theObject = o;
-        }
-
-        public boolean hasNext() {
-            return theObject != null;
-        }
-
-        public Object next() {
-            if(theObject == null) {
-                throw new NoSuchElementException();
-            }
-            Object theNextObject = theObject;
-            theObject = null;
-            return theNextObject;
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    /**
-     * Decodes an image from the supplied <code>InputStream</code>.
-     */
-    protected abstract mediaLibImage decode(InputStream stream)
-        throws IOException;
 
     /**
      * Creates a <code>ImageTypeSpecifier</code> corresponding to a
@@ -329,6 +287,48 @@ public abstract class CLibImageReader extends ImageReader {
             }
         }
     }                                 
+
+    protected CLibImageReader(ImageReaderSpi originatingProvider) {
+        super(originatingProvider);
+    }
+
+    /**
+     * An <code>Iterator</code> over a single element.
+     */
+    private class SoloIterator implements Iterator {
+        Object theObject;
+
+        SoloIterator(Object o) {
+            if(o == null) {
+                new IllegalArgumentException
+                    (I18N.getString("CLibImageReader0"));
+            }
+            theObject = o;
+        }
+
+        public boolean hasNext() {
+            return theObject != null;
+        }
+
+        public Object next() {
+            if(theObject == null) {
+                throw new NoSuchElementException();
+            }
+            Object theNextObject = theObject;
+            theObject = null;
+            return theNextObject;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    /**
+     * Decodes an image from the supplied <code>InputStream</code>.
+     */
+    protected abstract mediaLibImage decode(InputStream stream)
+        throws IOException;
 
     /**
      * Returns the <code>mlibImage</code> instance variable initializing

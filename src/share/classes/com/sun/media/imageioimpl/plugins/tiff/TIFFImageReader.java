@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-02-03 01:45:18 $
+ * $Revision: 1.5 $
+ * $Date: 2006-02-10 16:38:59 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -681,7 +681,11 @@ public class TIFFImageReader extends ImageReader {
             // Check for an ICCProfile field.
             TIFFField iccProfileField =
                 imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_ICC_PROFILE);
-            if(iccProfileField != null) {
+
+            // If an ICCProfile field is present change the ImageTypeSpecifier
+            // to use it if the data layout is component type.
+            if(iccProfileField != null &&
+               itsRaw.getColorModel() instanceof ComponentColorModel) {
                 // Create a ColorSpace from the profile.
                 byte[] iccProfileValue = iccProfileField.getAsBytes();
                 ICC_Profile iccProfile =
@@ -689,25 +693,32 @@ public class TIFFImageReader extends ImageReader {
                 ICC_ColorSpace iccColorSpace =
                     new ICC_ColorSpace(iccProfile);
 
-                // Get the raw ColorSpace.
+                // Get the raw sample and color information.
                 ColorModel cmRaw = itsRaw.getColorModel();
                 ColorSpace csRaw = cmRaw.getColorSpace();
+                SampleModel smRaw = itsRaw.getSampleModel();
 
-                // If the raw ColorModel is for component-based pixels
-                // and the color space type and number of color components
-                // are the same as for the ICC color space then create
-                // a new ITS.
-                if(cmRaw instanceof ComponentColorModel &&
-                   csRaw.getType() == iccColorSpace.getType() &&
-                   csRaw.getNumComponents() ==
-                   iccColorSpace.getNumComponents()) {
-                    // Create a ColorModel identical to the ColorModel
-                    // from the raw ITS but using the ICC color space.
+                // Get the number of samples per pixel and the number
+                // of color components.
+                int numBands = smRaw.getNumBands();
+                int numComponents = iccColorSpace.getNumComponents();
+
+                // Replace the ColorModel with the ICC ColorModel if the
+                // numbers of samples and color components are amenable.
+                if(numBands == numComponents ||
+                   numBands == numComponents + 1) {
+                    // Set alpha flags.
+                    boolean hasAlpha = numComponents != numBands;
+                    boolean isAlphaPre =
+                        hasAlpha && cmRaw.isAlphaPremultiplied();
+
+                    // Create a ColorModel of the same class and with
+                    // the same transfer type.
                     ColorModel iccColorModel =
                         new ComponentColorModel(iccColorSpace,
                                                 cmRaw.getComponentSize(),
-                                                cmRaw.hasAlpha(),
-                                                cmRaw.isAlphaPremultiplied(),
+                                                hasAlpha,
+                                                isAlphaPre,
                                                 cmRaw.getTransparency(),
                                                 cmRaw.getTransferType());
 
@@ -716,13 +727,24 @@ public class TIFFImageReader extends ImageReader {
                     // compatible as the old and new ColorModels are both
                     // ComponentColorModels with the same transfer type
                     // and the same number of components.
-                    l.add(new ImageTypeSpecifier(iccColorModel,
-                                                 itsRaw.getSampleModel()));
-                }
-            }
+                    l.add(new ImageTypeSpecifier(iccColorModel, smRaw));
 
-            // Append the raw ITS to the List.
-            l.add(itsRaw);
+                    // Append the raw ITS to the List if and only if its
+                    // ColorSpace has the same type and number of components
+                    // as the ICC ColorSpace.
+                    if(csRaw.getType() == iccColorSpace.getType() &&
+                       csRaw.getNumComponents() ==
+                       iccColorSpace.getNumComponents()) {
+                        l.add(itsRaw);
+                    }
+                } else { // ICCProfile not compatible with SampleModel.
+                    // Append the raw ITS to the List.
+                    l.add(itsRaw);
+                }
+            } else { // No ICCProfile field or raw ColorModel not component.
+                // Append the raw ITS to the List.
+                l.add(itsRaw);
+            }
 
             // Cache the ITS List.
             imageTypeMap.put(imageIndexInteger, l);

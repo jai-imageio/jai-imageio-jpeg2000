@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-10-06 01:33:19 $
+ * $Revision: 1.3 $
+ * $Date: 2006-02-10 18:47:50 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.common;
@@ -48,6 +48,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
+import java.awt.color.ICC_ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
@@ -1291,5 +1292,34 @@ public class ImageUtil {
         }
 
         return imageType;
+    }
+
+    /**
+     * Returns <code>true</code> if the given <code>ColorSpace</code> object
+     * is an instance of <code>ICC_ColorSpace</code> but is not one of the
+     * standard <code>ColorSpace</code>s returned by
+     * <code>ColorSpace.getInstance()</code>.
+     *
+     * @param cs The <code>ColorSpace</code> to test.
+     */
+    public static boolean isNonStandardICCColorSpace(ColorSpace cs) {
+        boolean retval = false;
+
+        try {
+            // Check the standard ColorSpaces in decreasing order of
+            // likelihood except check CS_PYCC last as in some JREs
+            // PYCC.pf used not to be installed.
+            retval =
+                (cs instanceof ICC_ColorSpace) &&
+                !(cs.isCS_sRGB() ||
+                  cs.equals(ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB)) ||
+                  cs.equals(ColorSpace.getInstance(ColorSpace.CS_GRAY)) ||
+                  cs.equals(ColorSpace.getInstance(ColorSpace.CS_CIEXYZ)) ||
+                  cs.equals(ColorSpace.getInstance(ColorSpace.CS_PYCC)));
+        } catch(IllegalArgumentException e) {
+            // PYCC.pf not installed: ignore it - 'retval' is still 'false'.
+        }
+
+        return retval;
     }
 }

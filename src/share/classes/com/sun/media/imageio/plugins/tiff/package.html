@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.4 $
-$Date: 2006-02-10 18:26:17 $
+$Revision: 1.5 $
+$Date: 2006-02-10 19:05:17 $
 $State: Exp $
 -->
 
@@ -92,7 +92,7 @@ user-supplied {@link javax.imageio.ImageTypeSpecifier}, will be
 the first among the following which applies:
 
 <ul>
-<li>A color space created from the <a href="#ICCProfiles">ICCProfile</a>
+<li>A color space created from the <a href="#ICCProfilesRead">ICCProfile</a>
 metadata field if it is present and compatible with the image data
 layout.</li>
 <a name="nonICCProfile"><li>sRGB if the image is monochrome/bilevel
@@ -154,7 +154,7 @@ foregoing, then an {@link javax.imageio.ImageTypeSpecifier} should be supplied
 to the reader and should be derived from a color space which is correct for
 the data in question.</p>
 
-<h4><a name="ICCProfiles"/>ICC Profiles</h4>
+<h4><a name="ICCProfilesRead"/>ICC Profiles</h4>
 
 If an ICC profile is contained in the image metadata
 ({@link com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet#TAG_ICC_PROFILE},
@@ -370,6 +370,19 @@ convert from RGB to the color space of the output image.
 color space type is RGB, and the destination photometric type is CIE L*a*b* or
 YCbCr, then the source image data will be automatically converted from
 RGB using an internal color converter.</p>
+
+<h4><a name="ICCProfilesWrite"/>ICC Profiles</h4>
+
+An <tt>ICCProfile</tt> field will be written if either:
+<ul>
+<li>one is present in the native metadata
+{@link javax.imageio.metadata.IIOMetadata} instance supplied to the writer,
+or</li>
+<li>the {@link java.awt.color.ColorSpace} of the image is an instance of
+{@link java.awt.color.ICC_ColorSpace} which is not one of the standard
+color spaces defined by the <tt>CS_*</tt> constants in <code>ColorSpace</tt>.
+</li>
+</ul>
 
 <h4>Metadata Issues</h4>
 

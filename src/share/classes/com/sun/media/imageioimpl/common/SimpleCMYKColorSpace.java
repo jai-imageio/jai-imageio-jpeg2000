@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-02-08 19:21:23 $
+ * $Revision: 1.3 $
+ * $Date: 2006-02-10 16:17:49 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.common;
@@ -84,6 +84,8 @@ public final class SimpleCMYKColorSpace extends ColorSpace {
             C = (C - K)/K1;
             M = (M - K)/K1;
             Y = (Y - K)/K1;
+        } else {
+            C = M = Y = 0.0F;
         }
 
         return new float[] {C, M, Y, K};

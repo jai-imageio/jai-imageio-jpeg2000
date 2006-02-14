@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2006-02-10 22:44:59 $
+ * $Revision: 1.7 $
+ * $Date: 2006-02-14 02:14:28 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -65,8 +65,10 @@ import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import javax.imageio.IIOException;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageReadParam;
 import javax.imageio.ImageTypeSpecifier;
@@ -76,8 +78,26 @@ import javax.imageio.stream.ImageInputStream;
 import com.sun.medialib.codec.jiio.Constants;
 import com.sun.medialib.codec.jiio.mediaLibImage;
 
+// XXX Need to verify compliance of all methods with ImageReader specificaiton.
 public abstract class CLibImageReader extends ImageReader {
-    protected mediaLibImage mlibImage = null;
+    // The current image index.
+    private int currIndex = -1;
+
+    // The position of the byte after the last byte read so far.
+    private long highWaterMark = 0L;
+
+    // An <code>ArrayList</code> of <code>Long</code>s indicating the stream
+    // positions of the start of each image. Entries are added as needed.
+    private ArrayList imageStartPosition = new ArrayList();
+
+    // The number of images in the stream, if known, otherwise -1.
+    private int numImages = -1;
+
+    // The image returned by the codecLib Decoder.
+    private mediaLibImage mlibImage = null;
+
+    // The index of the cached image.
+    private int mlibImageIndex = -1;
 
     /**
      * Returns true if and only if both arguments are null or
@@ -324,6 +344,118 @@ public abstract class CLibImageReader extends ImageReader {
         }
     }
 
+    // Stores the location of the image at the specified index in the
+    // imageStartPosition List.
+    private int locateImage(int imageIndex) throws IIOException {
+        if (imageIndex < 0) {
+            throw new IndexOutOfBoundsException("imageIndex < 0!");
+        }
+
+        try {
+            // Find closest known index (which can be -1 if none read before).
+            int index = Math.min(imageIndex, imageStartPosition.size() - 1);
+
+            ImageInputStream stream = (ImageInputStream)input;
+
+            // Seek unless at beginning of stream 
+            if(index >= 0) { // index == -1
+                if(index == imageIndex) {
+                    // Seek to previously identified position and return.
+                    Long l = (Long)imageStartPosition.get(index);
+                    stream.seek(l.longValue());
+                    return imageIndex;
+                } else { // index >= imageStartPosition.size()
+                    // Seek to first unread byte.
+                    stream.seek(highWaterMark);
+                }
+            }
+
+            // Get the reader SPI.
+            ImageReaderSpi provider = getOriginatingProvider();
+
+            // Search images until at desired index or last image found.
+            do {
+                try {
+                    if(provider.canDecodeInput(stream)) {
+                        // Append the image position.
+                        long offset = stream.getStreamPosition();
+                        imageStartPosition.add(new Long(offset));
+                    } else {
+                        return index;
+                    }
+                } catch(IOException e) {
+                    // Ignore it.
+                    return index;
+                } 
+
+                // Incrememt the index.
+                if(++index == imageIndex) break;
+
+                // Skip the image.
+                if(!skipImage()) return index - 1;
+            } while(true);
+        } catch (IOException e) {
+            throw new IIOException("IOException", e);
+        }
+
+        currIndex = imageIndex;
+
+        return imageIndex;
+    }
+
+    // Verify that imageIndex is in bounds and find the image position.
+    protected void seekToImage(int imageIndex) throws IIOException {
+        // Check lower bound.
+        if (imageIndex < minIndex) {
+            throw new IndexOutOfBoundsException("imageIndex < minIndex!");
+        }
+
+        // Update lower bound if cannot seek back.
+        if (seekForwardOnly) {
+            minIndex = imageIndex;
+        }
+
+        // Locate the image.
+        int index = locateImage(imageIndex);
+
+        // If the located is not the one sought => exception.
+        if (index != imageIndex) {
+            throw new IndexOutOfBoundsException("imageIndex out of bounds!");
+        }
+    }
+
+    /**
+     * Skip the current image. If possible subclasses should override
+     * this method with a more efficient implementation.
+     *
+     * @return Whether the image was successfully skipped.
+     */
+    protected boolean skipImage() throws IOException {
+        boolean retval = false;
+
+        if(input == null) {
+            throw new IllegalStateException("input == null");
+        }
+        InputStream stream = null;
+        if(input instanceof ImageInputStream) {
+            stream = new InputStreamAdapter((ImageInputStream)input);
+        } else {
+            throw new IllegalArgumentException
+                ("!(input instanceof ImageInputStream)");
+        }
+
+        retval = decode(stream) != null;
+
+        if(retval) {
+            long pos = ((ImageInputStream)input).getStreamPosition();
+            if(pos > highWaterMark) {
+                highWaterMark = pos;
+            }
+        }
+
+        return retval;
+    }
+
     /**
      * Decodes an image from the supplied <code>InputStream</code>.
      */
@@ -334,11 +466,13 @@ public abstract class CLibImageReader extends ImageReader {
      * Returns the <code>mlibImage</code> instance variable initializing
      * it first if it is <code>null</code>.
      */
-    protected synchronized mediaLibImage getImage() throws IOException {
-        if(mlibImage == null) {
+    protected synchronized mediaLibImage getImage(int imageIndex)
+        throws IOException {
+        if(mlibImage == null || imageIndex != mlibImageIndex) {
             if(input == null) {
                 throw new IllegalStateException("input == null");
             }
+            seekToImage(imageIndex);
             InputStream stream = null;
             if(input instanceof ImageInputStream) {
                 stream = new InputStreamAdapter((ImageInputStream)input);
@@ -347,34 +481,51 @@ public abstract class CLibImageReader extends ImageReader {
                     ("!(input instanceof ImageInputStream)");
             }
             mlibImage = decode(stream);
+            if(mlibImage != null) {
+                mlibImageIndex = imageIndex;
+                long pos = ((ImageInputStream)input).getStreamPosition();
+                if(pos > highWaterMark) {
+                    highWaterMark = pos;
+                }
+            } else {
+                mlibImageIndex = -1;
+            }
         }
         return mlibImage;
     }
 
     public int getNumImages(boolean allowSearch) throws IOException {
-        return 1;
+        if (input == null) {
+            throw new IllegalStateException("input == null");
+        }
+        if (seekForwardOnly && allowSearch) {
+            throw new IllegalStateException
+                ("seekForwardOnly && allowSearch!");
+        }
+
+        if (numImages > 0) {
+            return numImages;
+        }
+        if (allowSearch) {
+            this.numImages = locateImage(Integer.MAX_VALUE) + 1;
+        }
+        return numImages;
     }
 
     public int getWidth(int imageIndex) throws IOException {
-        if(imageIndex != 0) {
-            throw new IllegalArgumentException("imageIndex != 0");
-        }
+        seekToImage(imageIndex);
 
-        return getImage().getWidth();
+        return getImage(imageIndex).getWidth();
     }
 
     public int getHeight(int imageIndex) throws IOException {
-        if(imageIndex != 0) {
-            throw new IllegalArgumentException("imageIndex != 0");
-        }
+        seekToImage(imageIndex);
 
-        return getImage().getHeight();
+        return getImage(imageIndex).getHeight();
     }
 
     public Iterator getImageTypes(int imageIndex) throws IOException {
-        if(imageIndex != 0) {
-            throw new IllegalArgumentException("imageIndex != 0");
-        }
+        seekToImage(imageIndex);
 
         ImageTypeSpecifier type = getRawImageType(imageIndex);
 
@@ -386,9 +537,7 @@ public abstract class CLibImageReader extends ImageReader {
     }
 
     public IIOMetadata getImageMetadata(int imageIndex) throws IOException {
-        if(imageIndex != 0) {
-            throw new IllegalArgumentException("imageIndex != 0");
-        }
+        seekToImage(imageIndex);
 
         return null;
     }
@@ -403,6 +552,8 @@ public abstract class CLibImageReader extends ImageReader {
 
         processImageStarted(imageIndex);
 
+        seekToImage(imageIndex);
+
         processImageProgress(0.0F);
         processImageProgress(0.5F);
 
@@ -410,7 +561,7 @@ public abstract class CLibImageReader extends ImageReader {
 
         processImageProgress(0.95F);
 
-        mediaLibImage mlImage = getImage();
+        mediaLibImage mlImage = getImage(imageIndex);
         int dataOffset = mlImage.getOffset();
 
         SampleModel sampleModel = imageType.getSampleModel();
@@ -539,7 +690,12 @@ public abstract class CLibImageReader extends ImageReader {
     }
 
     protected void resetLocal() {
+        currIndex = -1;
+        highWaterMark = 0L;
+        imageStartPosition.clear();
+        numImages = -1;
         mlibImage = null;
+        mlibImageIndex = -1;
     }
 
     public void setInput(Object input,
@@ -547,6 +703,7 @@ public abstract class CLibImageReader extends ImageReader {
                          boolean ignoreMetadata) {
         super.setInput(input, seekForwardOnly, ignoreMetadata);
         if (input != null) {
+            // Check the class type.
             if (!(input instanceof ImageInputStream)) {
                 throw new IllegalArgumentException
                     ("!(input instanceof ImageInputStream)");

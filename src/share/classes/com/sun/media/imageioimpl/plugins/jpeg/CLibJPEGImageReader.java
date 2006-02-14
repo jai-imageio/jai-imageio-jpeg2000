@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-02-03 22:37:45 $
+ * $Revision: 1.4 $
+ * $Date: 2006-02-14 02:14:28 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -73,6 +73,7 @@ final class CLibJPEGImageReader extends CLibImageReader {
     private static final boolean DEBUG = false; // XXX false for release
 
     private mediaLibImage infoImage = null;
+    private int infoImageIndex = -1;
     private ImageTypeSpecifier imageType = null;
     private int bitDepth;
 
@@ -132,9 +133,10 @@ final class CLibJPEGImageReader extends CLibImageReader {
     // Retrieve mediaLibImage containing everything except possibly the
     // decoded image data. If the real image has already been decoded
     // then it will be returned.
-    private synchronized mediaLibImage getInfoImage() throws IOException {
+    private synchronized mediaLibImage getInfoImage(int imageIndex)
+        throws IOException {
         if(DEBUG) System.out.println("In getInfoImage()");
-        if(infoImage == null) {
+        if(infoImage == null || imageIndex != infoImageIndex) {
             if(input == null) {
                 throw new IllegalStateException("input == null");
             }
@@ -147,6 +149,8 @@ final class CLibJPEGImageReader extends CLibImageReader {
                 throw new IllegalArgumentException
                     ("!(input instanceof ImageInputStream)");
             }
+
+            seekToImage(imageIndex);
 
             // Mark the input.
             iis.mark();
@@ -165,6 +169,8 @@ final class CLibJPEGImageReader extends CLibImageReader {
             if(infoImage == null) {
                 throw new IIOException(I18N.getString("CLibJPEGImageReader0"));
             }
+
+            infoImageIndex = imageIndex;
 
             try {
                 // Set variable indicating bit depth.
@@ -193,32 +199,23 @@ final class CLibJPEGImageReader extends CLibImageReader {
 
     public int getWidth(int imageIndex) throws IOException {
         if(DEBUG) System.out.println("In getWidth()");
-        if(imageIndex != 0) {
-            throw new IllegalArgumentException("imageIndex != 0");
-        }
 
-        return getInfoImage().getWidth();
+        return getInfoImage(imageIndex).getWidth();
     }
 
     public int getHeight(int imageIndex) throws IOException {
         if(DEBUG) System.out.println("In getHeight()");
-        if(imageIndex != 0) {
-            throw new IllegalArgumentException("imageIndex != 0");
-        }
 
-        return getInfoImage().getHeight();
+        return getInfoImage(imageIndex).getHeight();
     }
 
     // Implement abstract method defined in superclass.
     public synchronized ImageTypeSpecifier getRawImageType(int imageIndex)
         throws IOException {
         if(DEBUG) System.out.println("In getRawImageType()");
-        if(imageIndex != 0) {
-            throw new IndexOutOfBoundsException("imageIndex != 0");
-        }
 
-        if(imageType == null) {
-            mediaLibImage mlImage = getInfoImage();
+        if(imageType == null || imageIndex != infoImageIndex) {
+            mediaLibImage mlImage = getInfoImage(imageIndex);
             imageType = createImageType(mlImage, bitDepth,
                                         null, null, null, null);
         }
@@ -229,6 +226,7 @@ final class CLibJPEGImageReader extends CLibImageReader {
     // Override superclass method.
     protected void resetLocal() {
         infoImage = null;
+        infoImageIndex = -1;
         imageType = null;
         super.resetLocal();
     }

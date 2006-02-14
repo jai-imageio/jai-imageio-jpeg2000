@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-11-03 01:54:59 $
+ * $Revision: 1.3 $
+ * $Date: 2006-02-14 02:14:28 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.png;
@@ -57,6 +57,7 @@ import com.sun.medialib.codec.jiio.mediaLibImage;
 final class CLibPNGImageReader extends CLibImageReader {
     private Decoder decoder;
     private ImageTypeSpecifier imageType = null;
+    private int imageTypeIndex = -1;
 
     CLibPNGImageReader(ImageReaderSpi originatingProvider) {
         super(originatingProvider);
@@ -99,13 +100,11 @@ final class CLibPNGImageReader extends CLibImageReader {
     // Implement abstract method defined in superclass.
     public synchronized ImageTypeSpecifier getRawImageType(int imageIndex)
         throws IOException {
-        if(imageIndex != 0) {
-            throw new IndexOutOfBoundsException("imageIndex != 0");
-        }
+        seekToImage(imageIndex);
 
-        if(imageType == null) {
+        if(imageType == null || imageIndex != imageTypeIndex) {
             // Get the mediaLibImage from the Decoder.
-            mediaLibImage image = getImage();
+            mediaLibImage image = getImage(imageIndex);
 
             // Get the palette.
             byte[] rgbPalette = null;
@@ -163,6 +162,8 @@ final class CLibPNGImageReader extends CLibImageReader {
             // See PNGImageDecoder or the PNG ImageReader for more info.
             // Looks like this needs to be set as a metadata entry. It is
             // obtained from the decoder using getBackground().
+
+            imageTypeIndex = imageIndex;
         }
 
         return imageType;
@@ -172,6 +173,7 @@ final class CLibPNGImageReader extends CLibImageReader {
     protected void resetLocal() {
         decoder = null;
         imageType = null;
+        imageTypeIndex = -1;
         super.resetLocal();
     }
 
@@ -180,13 +182,11 @@ final class CLibPNGImageReader extends CLibImageReader {
         if(input == null) {
             throw new IllegalStateException("input == null");
         }
-        if(imageIndex != 0) {
-            throw new IndexOutOfBoundsException("imageIndex != 0");
-        }
+        seekToImage(imageIndex);
 
         CLibPNGMetadata im = new CLibPNGMetadata();
         try {
-            getImage();
+            getImage(imageIndex);
         } catch(IOException e) {
             throw new IIOException("codecLib error", e);
         }

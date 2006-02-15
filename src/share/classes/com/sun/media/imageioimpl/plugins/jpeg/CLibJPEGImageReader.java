@@ -38,12 +38,13 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2006-02-15 21:14:17 $
+ * $Revision: 1.7 $
+ * $Date: 2006-02-15 23:48:17 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
 
+import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
@@ -64,6 +65,7 @@ import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.stream.ImageInputStream;
+import com.sun.media.imageioimpl.common.SimpleCMYKColorSpace;
 import com.sun.media.imageioimpl.plugins.clib.CLibImageReader;
 import com.sun.media.imageioimpl.plugins.clib.InputStreamAdapter;
 import com.sun.medialib.codec.jpeg.Decoder;
@@ -139,6 +141,9 @@ final class CLibJPEGImageReader extends CLibImageReader {
         if(infoImage == null || imageIndex != infoImageIndex) {
             // Use the cached image if it has the correct index.
             if(imageIndex == getImageIndex()) {
+                if(DEBUG) {
+                    System.out.println("Using cached image.");
+                }
                 infoImage = getImage(imageIndex);
                 infoImageIndex = imageIndex;
                 return infoImage;
@@ -173,7 +178,12 @@ final class CLibJPEGImageReader extends CLibImageReader {
                 throw new IIOException("codecLib error", t);
             }
 
-            if(infoImage == null) {
+            // XXX The lines marked "XXX" are a workaround for getSize()
+            // not correctly setting the format of infoImage.
+            if(infoImage == null ||
+               (infoImage.getFormat() == // XXX
+                mediaLibImage.MLIB_FORMAT_UNKNOWN && // XXX
+                ((infoImage = getImage(imageIndex)) == null))) { // XXX
                 throw new IIOException(I18N.getString("CLibJPEGImageReader0"));
             }
 
@@ -225,8 +235,21 @@ final class CLibJPEGImageReader extends CLibImageReader {
         if(DEBUG) System.out.println("In getRawImageType()");
 
         if(imageType == null || imageIndex != infoImageIndex) {
+            // Get the informational image.
             mediaLibImage mlImage = getInfoImage(imageIndex);
-            imageType = createImageType(mlImage, bitDepth,
+
+            // Set the ColorSpace.
+            ColorSpace colorSpace = null;
+
+            // XXX If an APP2 ICC profile is available, use it.
+
+            if(mlImage.getFormat() == mediaLibImage.MLIB_FORMAT_CMYK) {
+                // Use the default CMYK color space.
+                colorSpace = new SimpleCMYKColorSpace();
+            }
+
+            // Create the type.
+            imageType = createImageType(mlImage, colorSpace, bitDepth,
                                         null, null, null, null);
         }
 

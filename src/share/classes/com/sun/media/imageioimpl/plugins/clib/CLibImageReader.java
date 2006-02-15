@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.7 $
- * $Date: 2006-02-14 02:14:28 $
+ * $Revision: 1.8 $
+ * $Date: 2006-02-15 20:47:17 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -84,7 +84,7 @@ public abstract class CLibImageReader extends ImageReader {
     private int currIndex = -1;
 
     // The position of the byte after the last byte read so far.
-    private long highWaterMark = 0L;
+    private long highWaterMark = Long.MIN_VALUE;
 
     // An <code>ArrayList</code> of <code>Long</code>s indicating the stream
     // positions of the start of each image. Entries are added as needed.
@@ -463,8 +463,8 @@ public abstract class CLibImageReader extends ImageReader {
         throws IOException;
 
     /**
-     * Returns the <code>mlibImage</code> instance variable initializing
-     * it first if it is <code>null</code>.
+     * Returns the value of the private <code>mlibImage</code> instance
+     * variable initializing it first if it is <code>null</code>.
      */
     protected synchronized mediaLibImage getImage(int imageIndex)
         throws IOException {
@@ -487,11 +487,20 @@ public abstract class CLibImageReader extends ImageReader {
                 if(pos > highWaterMark) {
                     highWaterMark = pos;
                 }
-            } else {
+            } else { // mlibImage == null
                 mlibImageIndex = -1;
             }
         }
         return mlibImage;
+    }
+
+    /**
+     * Returns the index of the image cached in the private
+     * <code>mlibImage</code> instance variable or -1 if no
+     * image is currently cached.
+     */
+    protected int getImageIndex() {
+        return mlibImageIndex;
     }
 
     public int getNumImages(boolean allowSearch) throws IOException {
@@ -691,7 +700,7 @@ public abstract class CLibImageReader extends ImageReader {
 
     protected void resetLocal() {
         currIndex = -1;
-        highWaterMark = 0L;
+        highWaterMark = Long.MIN_VALUE;
         imageStartPosition.clear();
         numImages = -1;
         mlibImage = null;

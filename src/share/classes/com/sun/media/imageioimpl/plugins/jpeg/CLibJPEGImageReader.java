@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-02-14 02:14:28 $
+ * $Revision: 1.5 $
+ * $Date: 2006-02-15 20:49:40 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -106,9 +106,6 @@ final class CLibJPEGImageReader extends CLibImageReader {
             throw new IIOException(I18N.getString("CLibJPEGImageReader0"));
         }
 
-        // Set informational image to the real one.
-        infoImage = mlImage;
-
         // Set variable indicating bit depth.
         try {
             bitDepth = decoder.getDepth();
@@ -137,6 +134,13 @@ final class CLibJPEGImageReader extends CLibImageReader {
         throws IOException {
         if(DEBUG) System.out.println("In getInfoImage()");
         if(infoImage == null || imageIndex != infoImageIndex) {
+            // Use the cached image if it has the correct index.
+            if(imageIndex == getImageIndex()) {
+                infoImage = getImage(imageIndex);
+                infoImageIndex = imageIndex;
+                return infoImage;
+            }
+
             if(input == null) {
                 throw new IllegalStateException("input == null");
             }

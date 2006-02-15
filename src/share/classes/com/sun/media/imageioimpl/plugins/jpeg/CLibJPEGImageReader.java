@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2006-02-15 20:49:40 $
+ * $Revision: 1.6 $
+ * $Date: 2006-02-15 21:14:17 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -113,6 +113,9 @@ final class CLibJPEGImageReader extends CLibImageReader {
             throw new IIOException("codecLib error", t);
         }
 
+        // Free native resources.
+        decoder.dispose();
+
         if(DEBUG) {
             System.out.println("type = "+mlImage.getType());
             System.out.println("channels = "+mlImage.getChannels());
@@ -185,6 +188,9 @@ final class CLibJPEGImageReader extends CLibImageReader {
 
             // Reset the input to the marked position.
             iis.reset();
+
+            // Free native resources.
+            decoder.dispose();
 
             if(DEBUG) {
                 System.out.println("type = "+infoImage.getType());

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.8 $
- * $Date: 2006-02-15 20:47:17 $
+ * $Revision: 1.9 $
+ * $Date: 2006-02-15 22:52:23 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -132,6 +132,7 @@ public abstract class CLibImageReader extends ImageReader {
      */
     protected static final ImageTypeSpecifier
         createImageType(mediaLibImage mlImage,
+                        ColorSpace colorSpace,
                         int bitDepth,
                         byte[] redPalette,
                         byte[] greenPalette,
@@ -234,11 +235,26 @@ public abstract class CLibImageReader extends ImageReader {
             byte[] cmap = new byte[] { (byte)0x00, (byte)0xFF };
             colorModel = new IndexColorModel(1, 2, cmap, cmap, cmap);
         } else {
-            // RGB if more than 2 bands.
-            ColorSpace colorSpace =
-                ColorSpace.getInstance(mlibBands < 3 ?
-                                       ColorSpace.CS_GRAY :
-                                       ColorSpace.CS_sRGB);
+            // Set the color space and the alpha flag.
+            ColorSpace cs;
+            boolean hasAlpha;
+            if(colorSpace != null &&
+               (colorSpace.getNumComponents() == mlibBands ||
+                colorSpace.getNumComponents() == mlibBands - 1)) {
+                // Use the provided ColorSpace.
+                cs = colorSpace;
+
+                // Set alpha if numBands == numColorComponents + 1.
+                hasAlpha = colorSpace.getNumComponents() != mlibBands;
+            } else {
+                // RGB if more than 2 bands.
+                cs = ColorSpace.getInstance(mlibBands < 3 ?
+                                            ColorSpace.CS_GRAY :
+                                            ColorSpace.CS_sRGB);
+
+                // Alpha if band count is even.
+                hasAlpha = mlibBands % 2 == 0;
+            }
 
             // All bands have same depth.
             int[] bits = new int[mlibBands];
@@ -246,11 +262,8 @@ public abstract class CLibImageReader extends ImageReader {
                 bits[i] = bitDepth;
             }
 
-            // Alpha if band count is even.
-            boolean hasAlpha = mlibBands % 2 == 0;
-
             colorModel =
-                new ComponentColorModel(colorSpace,
+                new ComponentColorModel(cs,
                                         bits,
                                         hasAlpha,
                                         false,

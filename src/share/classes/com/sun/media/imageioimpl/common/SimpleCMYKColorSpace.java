@@ -38,18 +38,29 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-02-10 16:17:49 $
+ * $Revision: 1.4 $
+ * $Date: 2006-02-16 00:18:53 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.common;
 
 import java.awt.color.ColorSpace;
 
+/**
+ * Singleton class represent a simple, mathematically defined CMYK color space.
+ */
 public final class SimpleCMYKColorSpace extends ColorSpace {
+    private static ColorSpace theInstance = null;
     private ColorSpace csRGB;
 
-    public SimpleCMYKColorSpace() {
+    public static final synchronized ColorSpace getInstance() {
+        if(theInstance == null) {
+            theInstance = new SimpleCMYKColorSpace();
+        }
+        return theInstance;
+    }
+
+    private SimpleCMYKColorSpace() {
         super(TYPE_CMYK, 4);
         csRGB = ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB);
     }

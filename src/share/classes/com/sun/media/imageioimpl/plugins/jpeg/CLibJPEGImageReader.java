@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.7 $
- * $Date: 2006-02-15 23:48:17 $
+ * $Revision: 1.8 $
+ * $Date: 2006-02-16 00:18:54 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -245,7 +245,7 @@ final class CLibJPEGImageReader extends CLibImageReader {
 
             if(mlImage.getFormat() == mediaLibImage.MLIB_FORMAT_CMYK) {
                 // Use the default CMYK color space.
-                colorSpace = new SimpleCMYKColorSpace();
+                colorSpace = SimpleCMYKColorSpace.getInstance();
             }
 
             // Create the type.

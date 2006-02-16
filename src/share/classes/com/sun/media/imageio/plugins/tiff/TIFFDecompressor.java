@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:18 $
+ * $Revision: 1.2 $
+ * $Date: 2006-02-16 00:18:55 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -988,7 +988,7 @@ public abstract class TIFFDecompressor {
             boolean alphaPremultiplied = false;
             if(photometricInterpretation ==
                BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_CMYK) {
-                theColorSpace = new SimpleCMYKColorSpace();
+                theColorSpace = SimpleCMYKColorSpace.getInstance();
                 hasAlpha = false;
             } else {
                 theColorSpace = rgb;

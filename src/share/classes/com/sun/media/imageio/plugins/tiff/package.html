@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.6 $
-$Date: 2006-02-10 19:06:59 $
+$Revision: 1.7 $
+$Date: 2006-02-17 21:22:26 $
 $State: Exp $
 -->
 
@@ -123,14 +123,14 @@ sample.</li>
 used for the default CMYK color space are defined as follows:
 
 <ul>
-<li>CMYK to RGB
+<li>CMYK to linear RGB
 <pre>
 R = (1 - K)*(1 - C)
 G = (1 - K)*(1 - M)
 B = (1 - K)*(1 - Y)
 </pre>
 </li>
-<li>RGB to CMYK
+<li>Linear RGB to CMYK
 <pre>
 K = min{1 - R, 1 - G, 1 - B}
 if(K != 1) {

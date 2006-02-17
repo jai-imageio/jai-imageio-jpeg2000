@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-02-16 00:18:53 $
+ * $Revision: 1.5 $
+ * $Date: 2006-02-17 19:08:24 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.common;
@@ -47,11 +47,15 @@ package com.sun.media.imageioimpl.common;
 import java.awt.color.ColorSpace;
 
 /**
- * Singleton class represent a simple, mathematically defined CMYK color space.
+ * Singleton class representing a simple, mathematically defined CMYK
+ * color space.
  */
 public final class SimpleCMYKColorSpace extends ColorSpace {
     private static ColorSpace theInstance = null;
     private ColorSpace csRGB;
+
+    /** The exponent for gamma correction. */
+    private static final double power1 = 1.0 / 2.4;
 
     public static final synchronized ColorSpace getInstance() {
         if(theInstance == null) {
@@ -77,12 +81,41 @@ public final class SimpleCMYKColorSpace extends ColorSpace {
 
         float K1 = 1.0F - K;
 
-        return new float[] {K1*(1.0F - C),
-                            K1*(1.0F - M),
-                            K1*(1.0F - Y)};
+        // Convert from CMYK to linear RGB.
+        float[] rgbvalue = new float[] {K1*(1.0F - C),
+                                        K1*(1.0F - M),
+                                        K1*(1.0F - Y)};
+
+        // Convert from linear RGB to sRGB.
+        for (int i = 0; i < 3; i++) {
+            float v = rgbvalue[i];
+
+            if (v < 0.0F) v = 0.0F;
+
+            if (v < 0.0031308F) {
+                rgbvalue[i] = 12.92F * v;
+            } else {
+                if (v > 1.0F) v = 1.0F;
+
+                rgbvalue[i] = (float)(1.055 * Math.pow(v, power1) - 0.055);
+            }
+        }
+
+        return rgbvalue;
     }
 
     public float[] fromRGB(float[] rgbvalue) {
+        // Convert from sRGB to linear RGB.
+        for (int i = 0; i < 3; i++) {
+            if (rgbvalue[i] < 0.040449936F) {
+                rgbvalue[i] /= 12.92F;
+            } else {
+                rgbvalue[i] =
+                (float)(Math.pow((rgbvalue[i] + 0.055)/1.055, 2.4));
+            }
+        }
+
+        // Convert from linear RGB to CMYK.
         float C = 1.0F - rgbvalue[0];
         float M = 1.0F - rgbvalue[1];
         float Y = 1.0F - rgbvalue[2];

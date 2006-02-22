@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2006-02-10 16:38:59 $
+ * $Revision: 1.6 $
+ * $Date: 2006-02-22 22:03:12 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -863,7 +863,6 @@ public class TIFFImageReader extends ImageReader {
 //         throws IOException {
 //     }
 
-    private WritableRaster destination;
     private int[] sourceBands;
     private int[] destinationBands;
 

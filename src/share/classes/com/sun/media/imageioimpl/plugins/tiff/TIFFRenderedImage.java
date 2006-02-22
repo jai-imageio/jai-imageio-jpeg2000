@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:49 $
+ * $Revision: 1.2 $
+ * $Date: 2006-02-22 22:06:23 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -53,16 +53,17 @@ import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 import javax.imageio.ImageReadParam;
 import javax.imageio.ImageTypeSpecifier;
 import com.sun.media.imageio.plugins.tiff.TIFFImageReadParam;
+import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
 
 public class TIFFRenderedImage implements RenderedImage {
 
     TIFFImageReader reader;
     int imageIndex;
-    ImageReadParam readParam;
     ImageReadParam tileParam;
 
     int subsampleX;
@@ -83,8 +84,7 @@ public class TIFFRenderedImage implements RenderedImage {
                              int width, int height) throws IOException {
         this.reader = reader;
         this.imageIndex = imageIndex;
-        this.readParam = readParam;
-        this.tileParam = cloneImageReadParam(readParam);
+        this.tileParam = cloneImageReadParam(readParam, false);
 
         this.subsampleX = tileParam.getSourceXSubsampling();
         this.subsampleY = tileParam.getSourceYSubsampling();
@@ -104,13 +104,25 @@ public class TIFFRenderedImage implements RenderedImage {
         tileParam.setDestinationType(its);
     }
 
-    private ImageReadParam cloneImageReadParam(ImageReadParam param) {
-        // XXX This doesn't account for TIFF-specific settings that could
-        // affect decoding.
-        ImageReadParam newParam = null;
+    /**
+     * Creates a copy of <code>param</code>. The source subsampling and
+     * and bands settings and the destination bands and offset settings
+     * are copied. If <code>param</code> is a <code>TIFFImageReadParam</code>
+     * then the <code>TIFFDecompressor</code> and
+     * <code>TIFFColorConverter</code> settings are also copied; otherwise
+     * they are explicitly set to <code>null</code>.
+     *
+     * @param param the parameters to be copied.
+     * @param copyTagSets whether the <code>TIFFTagSet</code> settings
+     * should be copied if set.
+     * @return copied parameters.
+     */
+    private ImageReadParam cloneImageReadParam(ImageReadParam param,
+                                               boolean copyTagSets) {
+        // Create a new TIFFImageReadParam.
+        TIFFImageReadParam newParam = new TIFFImageReadParam();
 
-        newParam = new ImageReadParam();
-
+        // Copy the basic settings.
         newParam.setSourceSubsampling(param.getSourceXSubsampling(),
                                       param.getSourceYSubsampling(),
                                       param.getSubsamplingXOffset(),
@@ -118,6 +130,31 @@ public class TIFFRenderedImage implements RenderedImage {
         newParam.setSourceBands(param.getSourceBands());
         newParam.setDestinationBands(param.getDestinationBands());
         newParam.setDestinationOffset(param.getDestinationOffset());
+
+        // Set the decompressor and color converter.
+        if(param instanceof TIFFImageReadParam) {
+            // Copy the settings from the input parameter.
+            TIFFImageReadParam tparam = (TIFFImageReadParam)param;
+            newParam.setTIFFDecompressor(tparam.getTIFFDecompressor());
+            newParam.setColorConverter(tparam.getColorConverter());
+
+            if(copyTagSets) {
+                List tagSets = tparam.getAllowedTagSets();
+                if(tagSets != null) {
+                    Iterator tagSetIter = tagSets.iterator();
+                    if(tagSetIter != null) {
+                        while(tagSetIter.hasNext()) {
+                            TIFFTagSet tagSet = (TIFFTagSet)tagSetIter.next();
+                            newParam.addAllowedTagSet(tagSet);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Set the decompressor and color converter to null.
+            newParam.setTIFFDecompressor(null);
+            newParam.setColorConverter(null);
+        }
 
         return newParam;
     }

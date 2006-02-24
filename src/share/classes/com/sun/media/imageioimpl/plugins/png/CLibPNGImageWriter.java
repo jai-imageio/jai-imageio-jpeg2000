@@ -38,14 +38,16 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-02-02 22:36:21 $
+ * $Revision: 1.5 $
+ * $Date: 2006-02-24 23:23:05 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.png;
 
 import java.awt.Color;
 import java.awt.color.ColorSpace;
+import java.awt.color.ICC_ColorSpace;
+import java.awt.color.ICC_Profile;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
 import java.awt.image.RenderedImage;
@@ -273,6 +275,33 @@ final class CLibPNGImageWriter extends CLibImageWriter {
 
         if(colorModel == null) {
             colorModel = renderedImage.getColorModel();
+        }
+
+        // If no iCCP chunk is already in the metadata and the color space
+        // is a non-standard ICC color space, the write it to iCCP chunk.
+        if(!((CLibPNGMetadata)imageMetadata).iCCP_present
+           && colorModel != null &&
+           ImageUtil.isNonStandardICCColorSpace(colorModel.getColorSpace())) {
+            // Get the profile data.
+            ICC_ColorSpace iccColorSpace =
+                (ICC_ColorSpace)colorModel.getColorSpace();
+            ICC_Profile iccProfile = iccColorSpace.getProfile();
+            byte[] iccProfileData = iccColorSpace.getProfile().getData();
+
+            // Get the profile name.
+            byte[] desc =
+                iccProfile.getData(ICC_Profile.icSigProfileDescriptionTag);
+            String profileName;
+            if(desc != null) {
+                long len = ((desc[8]&0xff) << 24) | ((desc[9]&0xff) << 16) |
+                    ((desc[10]&0xff) << 8) | (desc[11]&0xff);
+                profileName = new String(desc, 12, (int)len);
+            } else {
+                profileName = "ICCProfile";
+            }
+
+            // Set the profile on the Encoder.
+            encoder.setEmbeddedICCProfile(profileName, iccProfileData);
         }
 
         try {

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:39 $
+ * $Revision: 1.2 $
+ * $Date: 2006-02-24 23:09:26 $
  * $State: Exp $
  */
 
@@ -58,7 +58,9 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
+import java.util.zip.Inflater;
 import javax.imageio.IIOException;
 import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.ImageWriteParam;
@@ -2602,7 +2604,6 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
             throw new IIOException("Error reading PNG metadata", e);
         } finally {
             this.reader = null;
@@ -2678,8 +2679,37 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
         }
 
         if(iCCP_present) {
-            encoder.setEmbeddedICCProfile(iCCP_profileName,
-                                          iCCP_compressedProfile);
+            // Encoder expects an uncompressed profile so decompress.
+            Inflater decompresser = new Inflater();
+            decompresser.setInput(iCCP_compressedProfile);
+            byte[] result = new byte[2*decompresser.getRemaining()];
+
+            int off = 0;
+            try {
+                do {
+                    off +=
+                        decompresser.inflate(result, off, result.length - off);
+                    if(off == result.length && !decompresser.finished()) {
+                        byte[] tmpbuf = new byte[2*result.length];
+                        System.arraycopy(result, 0, tmpbuf, 0, result.length);
+                        result = tmpbuf;
+                    }
+                } while(!decompresser.finished());
+                decompresser.end();
+
+                byte[] uncompressedProfile;
+                if(off == result.length) {
+                    uncompressedProfile = result;
+                } else {
+                    uncompressedProfile = new byte[off];
+                    System.arraycopy(result, 0, uncompressedProfile, 0, off);
+                }
+
+                encoder.setEmbeddedICCProfile(iCCP_profileName,
+                                              uncompressedProfile);
+            } catch(DataFormatException e) {
+                // XXX warning message?
+            }
         }
 
         if(iTXt_keyword.size() > 0) {

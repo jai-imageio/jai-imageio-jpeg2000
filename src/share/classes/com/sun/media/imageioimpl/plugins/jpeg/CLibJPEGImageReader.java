@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.8 $
- * $Date: 2006-02-16 00:18:54 $
+ * $Revision: 1.9 $
+ * $Date: 2006-02-24 01:03:28 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -56,6 +56,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import javax.imageio.IIOException;
 import javax.imageio.IIOImage;
@@ -76,8 +77,8 @@ final class CLibJPEGImageReader extends CLibImageReader {
 
     private mediaLibImage infoImage = null;
     private int infoImageIndex = -1;
-    private ImageTypeSpecifier imageType = null;
-    private int bitDepth;
+    private HashMap imageTypes = new HashMap();
+    private int bitDepth; // XXX Should depend on imageIndex.
 
     CLibJPEGImageReader(ImageReaderSpi originatingProvider) {
         super(originatingProvider);
@@ -229,38 +230,44 @@ final class CLibJPEGImageReader extends CLibImageReader {
         return getInfoImage(imageIndex).getHeight();
     }
 
-    // Implement abstract method defined in superclass.
-    public synchronized ImageTypeSpecifier getRawImageType(int imageIndex)
-        throws IOException {
-        if(DEBUG) System.out.println("In getRawImageType()");
+    public Iterator getImageTypes(int imageIndex) throws IOException {
+        if(DEBUG) System.out.println("In getImageTypes()");
+        seekToImage(imageIndex);
 
-        if(imageType == null || imageIndex != infoImageIndex) {
-            // Get the informational image.
-            mediaLibImage mlImage = getInfoImage(imageIndex);
+        ArrayList types = null;
+        synchronized(imageTypes) {
+            Integer key = new Integer(imageIndex);
+            if(imageTypes.containsKey(key)) {
+                types = (ArrayList)imageTypes.get(key);
+            } else {
+                types = new ArrayList();
 
-            // Set the ColorSpace.
-            ColorSpace colorSpace = null;
+                // Get the informational image.
+                mediaLibImage mlImage = getInfoImage(imageIndex);
 
-            // XXX If an APP2 ICC profile is available, use it.
+                // XXX If an APP2 ICC profile is available, add its type first.
 
-            if(mlImage.getFormat() == mediaLibImage.MLIB_FORMAT_CMYK) {
-                // Use the default CMYK color space.
-                colorSpace = SimpleCMYKColorSpace.getInstance();
+                if(mlImage.getFormat() == mediaLibImage.MLIB_FORMAT_CMYK) {
+                    // Use the default CMYK color space.
+                    ColorSpace cmyk = SimpleCMYKColorSpace.getInstance();
+                    types.add(createImageType(mlImage, cmyk, bitDepth,
+                                              null, null, null, null));
+                } else {
+                    // Create the type.
+                    types.add(createImageType(mlImage, null, bitDepth,
+                                              null, null, null, null));
+                }
             }
-
-            // Create the type.
-            imageType = createImageType(mlImage, colorSpace, bitDepth,
-                                        null, null, null, null);
         }
 
-        return imageType;
+        return types.iterator();
     }
 
     // Override superclass method.
     protected void resetLocal() {
         infoImage = null;
         infoImageIndex = -1;
-        imageType = null;
+        imageTypes.clear();
         super.resetLocal();
     }
 }

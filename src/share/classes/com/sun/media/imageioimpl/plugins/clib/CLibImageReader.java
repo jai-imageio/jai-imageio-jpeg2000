@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.9 $
- * $Date: 2006-02-15 22:52:23 $
+ * $Revision: 1.10 $
+ * $Date: 2006-02-24 01:03:28 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -377,7 +377,8 @@ public abstract class CLibImageReader extends ImageReader {
                     Long l = (Long)imageStartPosition.get(index);
                     stream.seek(l.longValue());
                     return imageIndex;
-                } else { // index >= imageStartPosition.size()
+                } else if(highWaterMark >= 0) {
+                    // index >= imageStartPosition.size()
                     // Seek to first unread byte.
                     stream.seek(highWaterMark);
                 }
@@ -546,14 +547,6 @@ public abstract class CLibImageReader extends ImageReader {
         return getImage(imageIndex).getHeight();
     }
 
-    public Iterator getImageTypes(int imageIndex) throws IOException {
-        seekToImage(imageIndex);
-
-        ImageTypeSpecifier type = getRawImageType(imageIndex);
-
-        return type != null ? new SoloIterator(type) : null;
-    }
-
     public IIOMetadata getStreamMetadata() throws IOException {
         return null;
     }
@@ -563,10 +556,6 @@ public abstract class CLibImageReader extends ImageReader {
 
         return null;
     }
-
-    // Override non-abstract superclass definition.
-    public abstract ImageTypeSpecifier getRawImageType(int imageIndex)
-        throws IOException;
 
     public synchronized BufferedImage read(int imageIndex,
                                            ImageReadParam param)
@@ -579,17 +568,17 @@ public abstract class CLibImageReader extends ImageReader {
         processImageProgress(0.0F);
         processImageProgress(0.5F);
 
-        ImageTypeSpecifier imageType = getRawImageType(imageIndex);
+        ImageTypeSpecifier rawImageType = getRawImageType(imageIndex);
 
         processImageProgress(0.95F);
 
         mediaLibImage mlImage = getImage(imageIndex);
         int dataOffset = mlImage.getOffset();
 
-        SampleModel sampleModel = imageType.getSampleModel();
+        SampleModel rawSampleModel = rawImageType.getSampleModel();
 
         DataBuffer db;
-        int smType = sampleModel.getDataType();
+        int smType = rawSampleModel.getDataType();
         switch(smType) {
         case DataBuffer.TYPE_BYTE:
             byte[] byteData = mlImage.getType() == mediaLibImage.MLIB_BIT ?
@@ -613,15 +602,15 @@ public abstract class CLibImageReader extends ImageReader {
                 (I18N.getString("Generic0")+" "+smType);
         }
 
-        WritableRaster raster =
-            Raster.createWritableRaster(sampleModel, db, null);
+        WritableRaster rawRaster =
+            Raster.createWritableRaster(rawSampleModel, db, null);
 
-        ColorModel colorModel = imageType.getColorModel();
+        ColorModel rawColorModel = rawImageType.getColorModel();
 
         BufferedImage image =
-            new BufferedImage(colorModel,
-                              raster,
-                              colorModel.isAlphaPremultiplied(),
+            new BufferedImage(rawColorModel,
+                              rawRaster,
+                              rawColorModel.isAlphaPremultiplied(),
                               null); // XXX getDestination()?
 
         Rectangle destRegion = new Rectangle(image.getWidth(),
@@ -692,6 +681,48 @@ public abstract class CLibImageReader extends ImageReader {
                 }
 
                 image = destination;
+            } else {
+                // Check for image type other than raw image type.
+                ImageTypeSpecifier destImageType = param.getDestinationType();
+                ColorSpace rawColorSpace = rawColorModel.getColorSpace();
+                ColorSpace destColorSpace =
+                    destImageType.getColorModel().getColorSpace();
+                if(destImageType != null &&
+                   (!destColorSpace.equals(rawColorSpace) ||
+                    !destImageType.equals(rawImageType))) {
+                    // Look for destination type in legal types list.
+                    Iterator imageTypes = getImageTypes(imageIndex);
+                    boolean isLegalType = false;
+                    while(imageTypes.hasNext()) {
+                        ImageTypeSpecifier imageType =
+                            (ImageTypeSpecifier)imageTypes.next();
+                        if(imageType.equals(destImageType)) {
+                            isLegalType = true;
+                            break;
+                        }
+                    }
+
+                    if(isLegalType) {
+                        // Set the destination raster.
+                        WritableRaster raster;
+                        if(rawSampleModel.equals(destImageType.getSampleModel())) {
+                            // Re-use the raw raster.
+                            raster = rawRaster;
+                        } else {
+                            // Create a new raster and copy the data.
+                            SampleModel sm = destImageType.getSampleModel();
+                            raster = Raster.createWritableRaster(sm, null);
+                            raster.setRect(rawRaster);
+                        }
+
+                        // Replace the output image.
+                        ColorModel cm = destImageType.getColorModel();
+                        image = new BufferedImage(cm,
+                                                  raster,
+                                                  cm.isAlphaPremultiplied(),
+                                                  null);
+                    }
+                }
             }
         }
 

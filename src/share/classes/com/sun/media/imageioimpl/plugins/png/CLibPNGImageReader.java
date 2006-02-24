@@ -38,14 +38,20 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-02-15 23:48:52 $
+ * $Revision: 1.5 $
+ * $Date: 2006-02-24 01:03:28 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.png;
 
+import java.awt.color.ColorSpace;
+import java.awt.color.ICC_ColorSpace;
+import java.awt.color.ICC_Profile;
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import javax.imageio.IIOException;
 import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.metadata.IIOMetadata;
@@ -56,8 +62,7 @@ import com.sun.medialib.codec.jiio.mediaLibImage;
 
 final class CLibPNGImageReader extends CLibImageReader {
     private Decoder decoder;
-    private ImageTypeSpecifier imageType = null;
-    private int imageTypeIndex = -1;
+    private HashMap imageTypes = new HashMap();
 
     CLibPNGImageReader(ImageReaderSpi originatingProvider) {
         super(originatingProvider);
@@ -97,18 +102,25 @@ final class CLibPNGImageReader extends CLibImageReader {
         return mlImage;
     }
 
-    // Implement abstract method defined in superclass.
-    public synchronized ImageTypeSpecifier getRawImageType(int imageIndex)
+    public synchronized Iterator getImageTypes(int imageIndex)
         throws IOException {
         seekToImage(imageIndex);
 
-        if(imageType == null || imageIndex != imageTypeIndex) {
+        ArrayList types = null;
+        Integer key = new Integer(imageIndex);
+        if(imageTypes.containsKey(key)) {
+            types = (ArrayList)imageTypes.get(key);
+        } else {
+            types = new ArrayList();
+
             // Get the mediaLibImage from the Decoder.
             mediaLibImage image = getImage(imageIndex);
 
             // Get the palette.
             byte[] rgbPalette = null;
             try {
+                // Note: the 'decoder' instance variable is set by
+                // decode() which is called by getImage() above.
                 rgbPalette = decoder.getPalette();
             } catch(Throwable t) {
                 throw new IIOException("codecLib error", t);
@@ -147,33 +159,67 @@ final class CLibPNGImageReader extends CLibImageReader {
                     }
                 }
 
-                imageType = createImageType(image, null, decoder.getBitDepth(),
-                                            r, g, b, a);
+                types.add(createImageType(image, null, decoder.getBitDepth(),
+                                          r, g, b, a));
             } else {
+                // Attempt to use the iCCP chunk if present, no sRGB
+                // chunk is present, and the ICC color space type matches
+                // the image type.
+                ColorSpace cs = null;
+                if(decoder.getStandardRGB() ==
+                   Decoder.PNG_sRGB_NOT_DEFINED) {
+                    // Get the profile data.
+                    byte[] iccProfileData =
+                        decoder.getEmbeddedICCProfile();
+                    if(iccProfileData != null) {
+                        // Create the ColorSpace.
+                        ICC_Profile iccProfile =
+                            ICC_Profile.getInstance(iccProfileData);
+                        ICC_ColorSpace icccs =
+                            new ICC_ColorSpace(iccProfile);
+
+                        // Check the color space type against the
+                        // number of bands and the palette.
+                        int numBands = image.getChannels();
+                        if((icccs.getType() == ColorSpace.TYPE_RGB &&
+                            (numBands >= 3 || rgbPalette != null)) ||
+                           (icccs.getType() == ColorSpace.TYPE_GRAY &&
+                            numBands < 3 && rgbPalette == null)) {
+                            cs = icccs;
+                        }
+                    }
+                }
+
                 int bitDepth = decoder.getBitDepth();
 
-                imageType = createImageType(image, null, bitDepth,
-                                            null, null, null, null);
+                ImageTypeSpecifier type =
+                    createImageType(image, cs, bitDepth,
+                                    null, null, null, null);
+                types.add(type);
+
+                if(type.getColorModel().getColorSpace().equals(cs)) {
+                    types.add(createImageType(image, null, bitDepth,
+                                              null, null, null, null));
+                }
             }
 
-            // XXX Need also to use getBackground() to save the background
-            // color somewhere, eventually as an image property with the
-            // name "background_color" and with a java.awt.Color value.
-            // See PNGImageDecoder or the PNG ImageReader for more info.
-            // Looks like this needs to be set as a metadata entry. It is
-            // obtained from the decoder using getBackground().
-
-            imageTypeIndex = imageIndex;
+            imageTypes.put(key, types);
         }
 
-        return imageType;
+        // XXX Need also to use getBackground() to save the background
+        // color somewhere, eventually as an image property with the
+        // name "background_color" and with a java.awt.Color value.
+        // See PNGImageDecoder or the PNG ImageReader for more info.
+        // Looks like this needs to be set as a metadata entry. It is
+        // obtained from the decoder using getBackground().
+
+        return types.iterator();
     }
 
     // Override superclass method.
     protected void resetLocal() {
         decoder = null;
-        imageType = null;
-        imageTypeIndex = -1;
+        imageTypes.clear();
         super.resetLocal();
     }
 

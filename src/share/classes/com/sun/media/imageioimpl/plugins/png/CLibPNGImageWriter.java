@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2006-02-24 23:23:05 $
+ * $Revision: 1.6 $
+ * $Date: 2006-02-27 17:25:04 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.png;
@@ -279,8 +279,8 @@ final class CLibPNGImageWriter extends CLibImageWriter {
 
         // If no iCCP chunk is already in the metadata and the color space
         // is a non-standard ICC color space, the write it to iCCP chunk.
-        if(!((CLibPNGMetadata)imageMetadata).iCCP_present
-           && colorModel != null &&
+        if(!((CLibPNGMetadata)imageMetadata).iCCP_present &&
+           colorModel != null &&
            ImageUtil.isNonStandardICCColorSpace(colorModel.getColorSpace())) {
             // Get the profile data.
             ICC_ColorSpace iccColorSpace =
@@ -301,6 +301,7 @@ final class CLibPNGImageWriter extends CLibImageWriter {
             }
 
             // Set the profile on the Encoder.
+            profileName = CLibPNGMetadata.toPrintableLatin1(profileName);
             encoder.setEmbeddedICCProfile(profileName, iccProfileData);
         }
 

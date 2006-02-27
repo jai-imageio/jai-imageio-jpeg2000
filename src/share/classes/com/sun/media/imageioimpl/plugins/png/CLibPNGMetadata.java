@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-02-24 23:09:26 $
+ * $Revision: 1.3 $
+ * $Date: 2006-02-27 17:25:04 $
  * $State: Exp $
  */
 
@@ -51,6 +51,7 @@ import java.awt.image.SampleModel;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -325,6 +326,50 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
     // Unknown chunks
     public ArrayList unknownChunkType = new ArrayList(); // Strings
     public ArrayList unknownChunkData = new ArrayList(); // byte arrays
+
+    /**
+     * Converts its parameter to another <code>String</code> which contains
+     * only printable Latin-1 characters but not leading, trailing, or
+     * consecutive spaces.
+     *
+     * @param s the <code>String</code> to convert.
+     * @return a printable Latin-1 <code>String</code> sans superfluous spaces.
+     */
+    static String toPrintableLatin1(String s) {
+        // Pass a null right back.
+        if(s == null) return null;
+
+        // Get Latin-1 characters.
+        byte[] data = null;
+        try {
+            data = s.getBytes("ISO-8859-1");
+        } catch(UnsupportedEncodingException e) {
+            // In theory this should not happen (assert).
+            data = s.getBytes();
+        }
+
+        // Copy printable characters omitting leading spaces and
+        // all but first trailing space.
+	int len = 0;
+	int prev = 0;
+	for (int i = 0; i < data.length; i++) {
+	    int d = data[i] & 0xFF;
+	    if (prev == 32 && d == 32)
+		continue; 
+	    if ((d > 32 && d <=126) || (d >= 161 && d <=255) ||
+                (d == 32 && len != 0))
+		data[len++] = (byte)d;
+	    prev = d;
+	}
+
+        // Return an empty string if no acceptable characters.
+        if(len == 0) return "";
+
+        // Omit trailing space, if any.
+        if(data[len - 1] == 32) len--;
+
+	return new String(data, 0, len);
+    }
 
     public CLibPNGMetadata() {
         super(true, 
@@ -1458,7 +1503,8 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
                 
                 hIST_present = true;
             } else if (name.equals("iCCP")) {
-                iCCP_profileName = getAttribute(node, "profileName");
+                iCCP_profileName =
+                    toPrintableLatin1(getAttribute(node, "profileName"));
                 iCCP_compressionMethod =
                     getEnumeratedAttribute(node, "compressionMethod",
                                            iCCP_compressionMethodNames);
@@ -1483,7 +1529,8 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
                               "Only an iTXtEntry may be a child of an iTXt!");
                     }
                     
-                    String keyword = getAttribute(iTXt_node, "keyword");
+                    String keyword =
+                        toPrintableLatin1(getAttribute(iTXt_node, "keyword"));
                     iTXt_keyword.add(keyword);
                     
                     boolean compressionFlag =
@@ -1556,7 +1603,8 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
 
                 sBIT_present = true;
             } else if (name.equals("sPLT")) {
-                sPLT_paletteName = getAttribute(node, "name");
+                sPLT_paletteName =
+                    toPrintableLatin1(getAttribute(node, "name"));
                 sPLT_sampleDepth = getIntAttribute(node, "sampleDepth");
                 
                 int[] red = new int[256];
@@ -1623,7 +1671,8 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
                               "Only an tEXtEntry may be a child of an tEXt!");
                     }
                     
-                    String keyword = getAttribute(tEXt_node, "keyword");
+                    String keyword =
+                        toPrintableLatin1(getAttribute(tEXt_node, "keyword"));
                     tEXt_keyword.add(keyword);
                     
                     String text = getAttribute(tEXt_node, "value");
@@ -1706,7 +1755,8 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
                               "Only an zTXtEntry may be a child of an zTXt!");
                     }
                     
-                    String keyword = getAttribute(zTXt_node, "keyword");
+                    String keyword =
+                        toPrintableLatin1(getAttribute(zTXt_node, "keyword"));
                     zTXt_keyword.add(keyword);
                     
                     int compressionMethod =
@@ -2009,12 +2059,12 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
                         if (isISOLatin(value)) {
                             if (compression.equals("zip")) {
                                 // Use a zTXt node
-                                zTXt_keyword.add(keyword);
+                                zTXt_keyword.add(toPrintableLatin1(keyword));
                                 zTXt_text.add(value);
                                 zTXt_compressionMethod.add(new Integer(0));
                             } else {
                                 // Use a tEXt node
-                                tEXt_keyword.add(keyword);
+                                tEXt_keyword.add(toPrintableLatin1(keyword));
                                 tEXt_text.add(value);
                             }
                         } else {
@@ -2022,7 +2072,7 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
                                 1 : 0;
 
                             // Use an iTXt node
-                            iTXt_keyword.add(keyword);
+                            iTXt_keyword.add(toPrintableLatin1(keyword));
                             iTXt_compressionFlag.add(new Integer(flag));
                             iTXt_compressionMethod.add(new Integer(0));
                             iTXt_languageTag.add(language);
@@ -2705,8 +2755,8 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
                     System.arraycopy(result, 0, uncompressedProfile, 0, off);
                 }
 
-                encoder.setEmbeddedICCProfile(iCCP_profileName,
-                                              uncompressedProfile);
+                String iCCPName = toPrintableLatin1(iCCP_profileName);
+                encoder.setEmbeddedICCProfile(iCCPName, uncompressedProfile);
             } catch(DataFormatException e) {
                 // XXX warning message?
             }
@@ -2774,7 +2824,8 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
                     frequency[i] = (short)(sPLT_frequency[i]&0xffff);
                 }
 
-                encoder.setSuggestedPalette(sPLT_paletteName,
+                String sPLTName = toPrintableLatin1(sPLT_paletteName);
+                encoder.setSuggestedPalette(sPLTName,
                                             red, green, blue, alpha,
                                             frequency);
             } else {
@@ -2793,7 +2844,8 @@ public class CLibPNGMetadata extends IIOMetadata implements Cloneable {
                     frequency[i] = (short)(sPLT_frequency[i]&0xffff);
                 }
 
-                encoder.setSuggestedPalette(sPLT_paletteName,
+                String sPLTName = toPrintableLatin1(sPLT_paletteName);
+                encoder.setSuggestedPalette(sPLTName,
                                             red, green, blue, alpha,
                                             frequency);
             }

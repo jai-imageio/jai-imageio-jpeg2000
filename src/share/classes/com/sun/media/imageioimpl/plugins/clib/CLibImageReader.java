@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.10 $
- * $Date: 2006-02-24 01:03:28 $
+ * $Revision: 1.11 $
+ * $Date: 2006-02-28 01:33:31 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -681,15 +681,14 @@ public abstract class CLibImageReader extends ImageReader {
                 }
 
                 image = destination;
-            } else {
+            } else if(param.getDestinationType() != null) {
                 // Check for image type other than raw image type.
                 ImageTypeSpecifier destImageType = param.getDestinationType();
                 ColorSpace rawColorSpace = rawColorModel.getColorSpace();
                 ColorSpace destColorSpace =
                     destImageType.getColorModel().getColorSpace();
-                if(destImageType != null &&
-                   (!destColorSpace.equals(rawColorSpace) ||
-                    !destImageType.equals(rawImageType))) {
+                if(!destColorSpace.equals(rawColorSpace) ||
+                   !destImageType.equals(rawImageType)) {
                     // Look for destination type in legal types list.
                     Iterator imageTypes = getImageTypes(imageIndex);
                     boolean isLegalType = false;

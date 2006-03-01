@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.6 $
-$Date: 2006-02-04 02:08:27 $
+$Revision: 1.7 $
+$Date: 2006-03-01 23:44:55 $
 $State: Exp $
 -->
 <project name="jai_imageio" default="jar" basedir=".">
@@ -152,7 +152,6 @@ $State: Exp $
   <property name="build"   value="build"/>
   <property name="dist"    value="dist"/>
   <property name="textdir" value="."/>
-  <property name="docname" value="jai_imageio-${verspecfile}-doc"/>
 
   <!-- Sets a single property if a target is specified. -->
   <target name="selectPlatform" if="BUILD_TARGET">
@@ -293,6 +292,7 @@ $State: Exp $
 
     <property name="version" value="${version_base}"/>
     <property name="version_file" value="${version_base_file}-lib"/>
+    <property name="doc_file" value="${version_base_file}-doc"/>
     <property name="buildtime" value=""/>
   </target>
 
@@ -305,6 +305,7 @@ $State: Exp $
 
     <property name="version" value="${version_base}-${version_suffix}"/>
     <property name="version_file" value="${version_base_file}-${version_suffix}-lib"/>
+    <property name="doc_file" value="${version_base_file}-${version_suffix}-doc"/>
     <property name="buildtime" value=""/>
   </target>
 
@@ -317,6 +318,7 @@ $State: Exp $
 
     <property name="version" value="${version_base}-${version_suffix}"/>
     <property name="version_file" value="${version_base_file}-${version_suffix}-lib"/>
+    <property name="doc_file" value="${version_base_file}-${version_suffix}-doc"/>
     <property name="buildtime" value=""/>
   </target>
 
@@ -334,6 +336,7 @@ $State: Exp $
 
     <property name="version" value="${version_base}-${version_suffix}"/>
     <property name="version_file" value="${version_base_file}-${version_suffix}-lib"/>
+    <property name="doc_file" value="${version_base_file}-${version_suffix}-doc"/>
     <property name="buildtime" value="-${btime}"/>
   </target>
 
@@ -403,11 +406,6 @@ $State: Exp $
 
     <echo message=""/>
 
-    <echo message="verspec         = ${verspec}"/>
-    <echo message="verspecfile     = ${verspecfile}"/>
-
-    <echo message=""/>
-
     <echo message="src             = ${src}"/>
     <echo message="clib            = ${clib}"/>
     <echo message="textdir         = ${textdir}"/>
@@ -415,7 +413,6 @@ $State: Exp $
     <echo message="docurl          = ${docurl}"/>
     <echo message="build           = ${build}"/>
     <echo message="dist            = ${dist}"/>
-    <echo message="docname         = ${docname}"/>
 
     <echo message=""/>
 
@@ -425,6 +422,7 @@ $State: Exp $
 
     <echo message="version         = ${version}"/>
     <echo message="version_file    = ${version_file}"/>
+    <echo message="doc_file        = ${doc_file}"/>
   </target>
 
   <!-- Sets compilation mode dependent properties to debug values and
@@ -553,7 +551,7 @@ $State: Exp $
       <attribute name="Specification-Title"
                  value="Java Advanced Imaging Image I/O Tools"/>
       <attribute name="Specification-Version"
-                 value="${verspec}"/>
+                 value="${version}"/>
       <attribute name="Specification-Vendor"
                  value="Sun Microsystems, Inc."/>
       <attribute name="Implementation-Title"
@@ -622,7 +620,7 @@ $State: Exp $
                            com.sun.media.jai.operator.*"
 	     maxmemory="128m"
              destdir="${docbuilddir}"
-             windowtitle="Java Advanced Imaging Image I/O Tools ${verspecfile}"
+             windowtitle="Java Advanced Imaging Image I/O Tools ${version}"
              overview="${src}/overview.html">
       <link offline="true"
 	    href="${docurl}"
@@ -664,7 +662,7 @@ $State: Exp $
     <mkdir dir="${distdir}/javadocs"/>
     
     <!-- Create a Zip doc bundle -->
-    <zip destfile="${distdir}/javadocs/${docname}-${platform}-${btime}.zip"
+    <zip destfile="${distdir}/javadocs/jai-imageio-${doc_file}-${btime}.zip"
 	 basedir="${build}/${platform}/javadocs/docs-jcp"
 	 includes="**"
 	 filesonly="true"/>

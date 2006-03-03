@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2006-02-10 18:58:29 $
+ * $Revision: 1.7 $
+ * $Date: 2006-03-03 17:11:02 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -2287,6 +2287,9 @@ public class TIFFImageWriter extends ImageWriter {
 
     public void prepareWriteSequence(IIOMetadata streamMetadata)
 	throws IOException {
+        if (getOutput() == null) {
+            throw new IllegalStateException("getOutput() == null!");
+        }
 	if (streamMetadata != null &&
 	    streamMetadata instanceof TIFFStreamMetadata) {
 	    this.streamMetadata = (TIFFStreamMetadata)streamMetadata;

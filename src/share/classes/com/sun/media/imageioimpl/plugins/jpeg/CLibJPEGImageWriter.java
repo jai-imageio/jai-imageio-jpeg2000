@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-01-27 16:51:55 $
+ * $Revision: 1.4 $
+ * $Date: 2006-03-03 17:05:01 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -183,7 +183,9 @@ final class CLibJPEGImageWriter extends CLibImageWriter {
 
         // Test for baseline.
         int bitDepth = renderedImage.getColorModel().getComponentSize(0);
-        if((param == null || !param.isCompressionLossless()) &&
+        if((param == null ||
+            (param.getCompressionMode() == ImageWriteParam.MODE_EXPLICIT &&
+             !param.isCompressionLossless())) &&
            bitDepth > 12) {
             throw new IIOException
                 ("JPEG baseline encoding is limited to 12 bits: "+this);
@@ -225,7 +227,9 @@ final class CLibJPEGImageWriter extends CLibImageWriter {
         }
 
         int[] supportedFormats =
-            param == null || !param.isCompressionLossless() ?
+            param == null ||
+            (param.getCompressionMode() == ImageWriteParam.MODE_EXPLICIT &&
+             !param.isCompressionLossless()) ?
             new int [] {Constants.MLIB_FORMAT_GRAYSCALE,
                         Constants.MLIB_FORMAT_BGR,
                         Constants.MLIB_FORMAT_RGB} : // baseline

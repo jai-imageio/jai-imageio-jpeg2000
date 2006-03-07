@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-01-28 00:52:46 $
+ * $Revision: 1.4 $
+ * $Date: 2006-03-07 20:44:27 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -75,9 +75,9 @@ public class TIFFIFD {
     private int numLowFields = 0;
     private Map highFields = new TreeMap();
 
-    private long stripOrTileByteCountsPosition;
-    private long stripOrTileOffsetsPosition;
-    private long lastPosition;
+    private long stripOrTileByteCountsPosition = -1;
+    private long stripOrTileOffsetsPosition = -1;
+    private long lastPosition = -1;
 
     public TIFFIFD(List tagSets, TIFFTag parentTag) {
         this.tagSets = tagSets;
@@ -186,11 +186,13 @@ public class TIFFIFD {
             }
             
             if (tag == BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS ||
-                tag == BaselineTIFFTagSet.TAG_TILE_BYTE_COUNTS) {
+                tag == BaselineTIFFTagSet.TAG_TILE_BYTE_COUNTS ||
+                tag == BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT_LENGTH) {
                 this.stripOrTileByteCountsPosition =
                     stream.getStreamPosition();
             } else if (tag == BaselineTIFFTagSet.TAG_STRIP_OFFSETS ||
-                       tag == BaselineTIFFTagSet.TAG_TILE_OFFSETS) {
+                       tag == BaselineTIFFTagSet.TAG_TILE_OFFSETS ||
+                       tag == BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT) {
                 this.stripOrTileOffsetsPosition =
                     stream.getStreamPosition();
             }
@@ -427,16 +429,20 @@ public class TIFFIFD {
 
             // If we are writing the data for the
             // StripByteCounts, TileByteCounts, StripOffsets,
-            // or TileOffsets fields, record the current stream
+            // TileOffsets, JPEGInterchangeFormat, or
+            // JPEGInterchangeFormatLength fields, record the current stream
             // position for backpatching
             if (tagNumber ==
                 BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS ||
-                tagNumber == BaselineTIFFTagSet.TAG_TILE_BYTE_COUNTS) {
+                tagNumber == BaselineTIFFTagSet.TAG_TILE_BYTE_COUNTS ||
+                tagNumber == BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT_LENGTH) {
                 this.stripOrTileByteCountsPosition = pos;
             } else if (tagNumber ==
                        BaselineTIFFTagSet.TAG_STRIP_OFFSETS ||
                        tagNumber ==
-                       BaselineTIFFTagSet.TAG_TILE_OFFSETS) {
+                       BaselineTIFFTagSet.TAG_TILE_OFFSETS ||
+                       tagNumber ==
+                       BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT) {
                 this.stripOrTileOffsetsPosition = pos;
             }
 

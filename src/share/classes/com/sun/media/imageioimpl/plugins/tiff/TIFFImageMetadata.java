@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-01-31 01:53:51 $
+ * $Revision: 1.5 $
+ * $Date: 2006-03-08 16:43:10 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -1627,7 +1627,7 @@ public class TIFFImageMetadata extends IIOMetadata {
     }
 
     public void removeTIFFField(int tagNumber) {
-        rootIFD.getTIFFField(tagNumber);
+        rootIFD.removeTIFFField(tagNumber);
     }
 
     /**

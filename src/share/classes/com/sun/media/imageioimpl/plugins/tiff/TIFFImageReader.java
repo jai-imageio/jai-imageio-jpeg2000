@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2006-02-22 22:03:12 $
+ * $Revision: 1.7 $
+ * $Date: 2006-03-08 23:44:11 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -71,6 +71,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import javax.imageio.IIOException;
+import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageReadParam;
 import javax.imageio.ImageTypeSpecifier;
@@ -340,21 +341,15 @@ public class TIFFImageReader extends ImageReader {
     }
 
     private int getWidth() {
-        TIFFField f =
-            imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_IMAGE_WIDTH);
-        return f.getAsInt(0);
+        return this.width;
     }
 
     private int getHeight() {
-        TIFFField f =
-            imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_IMAGE_LENGTH);
-        return f.getAsInt(0);
+        return this.height;
     }
 
     private int getNumBands() {
-        TIFFField f =
-          imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_SAMPLES_PER_PIXEL);
-        return f == null ? 1 : f.getAsInt(0);
+        return this.numBands;
     }
 
     // Returns tile width if image is tiled, else image width
@@ -450,6 +445,9 @@ public class TIFFImageReader extends ImageReader {
         if (f == null) {
             f = imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_STRIP_OFFSETS);
         }
+        if (f == null) {
+            f = imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT);
+        }
 
         return f.getAsLong(tileIndex);
     }
@@ -460,6 +458,9 @@ public class TIFFImageReader extends ImageReader {
         if (f == null) {
             f =
           imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS);
+        }
+        if (f == null) {
+            f = imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT_LENGTH);
         }
 
         long tileOrStripByteCount;
@@ -515,12 +516,17 @@ public class TIFFImageReader extends ImageReader {
      * Initializes these instance variables from the image metadata:
      * <pre>
      * compression
+     * width
+     * height
      * samplesPerPixel
+     * numBands
      * colorMap
      * photometricInterpretation
      * sampleFormat
      * bitsPerSample
      * extraSamples
+     * tileOrStripWidth
+     * tileOrStripHeight
      * </pre>
      */
     private void initializeFromMetadata() {
@@ -536,17 +542,76 @@ public class TIFFImageReader extends ImageReader {
             compression = f.getAsInt(0);
         }
 
+        // Whether key dimensional information is absent.
+        boolean isMissingDimension = false;
+
+        // ImageWidth -> width
+        f = imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_IMAGE_WIDTH);
+        if (f != null) {
+            this.width = f.getAsInt(0);
+        } else {
+            processWarningOccurred("ImageWidth field is missing.");
+            isMissingDimension = true;
+        }
+
+        // ImageLength -> height
+        f = imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_IMAGE_LENGTH);
+        if (f != null) {
+            this.height = f.getAsInt(0);
+        } else {
+            processWarningOccurred("ImageLength field is missing.");
+            isMissingDimension = true;
+        }
+
         // SamplesPerPixel
         f =
           imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_SAMPLES_PER_PIXEL);
-        if (f == null) {
-            samplesPerPixel = 1;
-        } else {
+        if (f != null) {
             samplesPerPixel = f.getAsInt(0);
+        } else {
+            samplesPerPixel = 1;
+            isMissingDimension = true;
         }
+
+        // If any dimension is missing and there is a JPEG stream available
+        // get the information from it.
+        int defaultBitDepth = 1;
+        if(isMissingDimension &&
+           (f = imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT)) != null) {
+            Iterator iter = ImageIO.getImageReadersByFormatName("JPEG");
+            if(iter != null && iter.hasNext()) {
+                ImageReader jreader = (ImageReader)iter.next();
+                try {
+                    stream.mark();
+                    stream.seek(f.getAsLong(0));
+                    jreader.setInput(stream);
+                    if(imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_IMAGE_WIDTH) == null) {
+                        this.width = jreader.getWidth(0);
+                    }
+                    if(imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_IMAGE_LENGTH) == null) {
+                        this.height = jreader.getHeight(0);
+                    }
+                    ImageTypeSpecifier imageType = jreader.getRawImageType(0);
+                    if(imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_SAMPLES_PER_PIXEL) == null) {
+                        this.samplesPerPixel =
+                            imageType.getSampleModel().getNumBands();
+                    }
+                    stream.reset();
+                    defaultBitDepth =
+                        imageType.getColorModel().getComponentSize(0);
+                } catch(IOException e) {
+                    // Ignore it and proceed: an error will occur later.
+                }
+                jreader.dispose();
+            }
+        }
+
         if (samplesPerPixel < 1) {
             processWarningOccurred("Samples per pixel < 1!");
         }
+
+        // SamplesPerPixel -> numBands
+        numBands = samplesPerPixel;
 
         // ColorMap
         this.colorMap = null;
@@ -622,7 +687,7 @@ public class TIFFImageReader extends ImageReader {
         replicateFirst = false;
         if (f == null) {
             replicateFirst = true;
-            first = 1;
+            first = defaultBitDepth;
         } else if (f.getCount() != samplesPerPixel) {
             replicateFirst = true;
             first = f.getAsInt(0);
@@ -899,9 +964,6 @@ public class TIFFImageReader extends ImageReader {
 
         seekToImage(imageIndex);
 
-        this.width = getWidth();
-        this.height = getHeight();
-        this.numBands = getNumBands();
         this.tileOrStripWidth = getTileOrStripWidth();
         this.tileOrStripHeight = getTileOrStripHeight();
         this.planarConfiguration = getPlanarConfiguration();

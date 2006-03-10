@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.7 $
- * $Date: 2006-03-03 17:11:02 $
+ * $Revision: 1.8 $
+ * $Date: 2006-03-10 21:16:26 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -211,6 +211,9 @@ public class TIFFImageWriter extends ImageWriter {
 
     long nextIFDPointerPos;
 
+    // Next available space.
+    long nextSpace = 0L;
+
     /**
      * Converts a pixel's X coordinate into a horizontal tile index
      * relative to a given tile grid layout specified by its X offset
@@ -266,11 +269,41 @@ public class TIFFImageWriter extends ImageWriter {
                     ("output not an ImageOutputStream!");
             }
             this.stream = (ImageOutputStream)output;
+
+            //
+            // The output is expected to be positioned at a TIFF header
+            // or at some arbitrary location which may or may not be
+            // the EOF. In the former case the writer should be able
+            // either to overwrite the existing sequence or append to it.
+            //
+
+            // Set the position of the header and the next available space.
             try {
                 headerPosition = this.stream.getStreamPosition();
-            } catch(IOException ioe) {
+                try {
+                    // Read byte order and magic number.
+                    byte[] b = new byte[4];
+                    stream.readFully(b);
+
+                    // Check bytes for TIFF header.
+                    if((b[0] == (byte)0x49 && b[1] == (byte)0x49 &&
+                        b[2] == (byte)0x2a && b[3] == (byte)0x00) ||
+                       (b[0] == (byte)0x4d && b[1] == (byte)0x4d &&
+                        b[2] == (byte)0x00 && b[3] == (byte)0x2a)) {
+                        // TIFF header.
+                        this.nextSpace = stream.length();
+                    } else {
+                        // Neither TIFF header nor EOF: overwrite.
+                        this.nextSpace = headerPosition;
+                    }
+                } catch(IOException io) { // thrown by readFully()
+                    // At EOF or not at a TIFF header.
+                    this.nextSpace = headerPosition;
+                }
+                stream.seek(headerPosition);
+            } catch(IOException ioe) { // thrown by getStreamPosition()
                 // Assume it's at zero.
-                headerPosition = 0L;
+                this.nextSpace = headerPosition = 0L;
             }
         } else {
             this.stream = null;
@@ -2048,7 +2081,10 @@ public class TIFFImageWriter extends ImageWriter {
 	}
 	
 	stream.writeShort(42); // Magic number
-	stream.writeInt((int)(headerPosition + 8)); // IFD offset = header + 8
+        stream.writeInt(0); // Offset of first IFD (0 == none)
+
+        nextSpace = stream.getStreamPosition();
+        headerPosition = nextSpace - 8;
     }
 
     private void write(IIOMetadata sm,
@@ -2224,7 +2260,11 @@ public class TIFFImageWriter extends ImageWriter {
         stream.writeInt(0);
 
         // Seek to end of IFD data
-        stream.seek(rootIFD.getLastPosition());
+        long lastIFDPosition = rootIFD.getLastPosition();
+        stream.seek(lastIFDPosition);
+        if(lastIFDPosition > this.nextSpace) {
+            this.nextSpace = lastIFDPosition;
+        }
 
         // Get positions of fields within the IFD to update as we write
         // each strip or tile
@@ -2253,7 +2293,11 @@ public class TIFFImageWriter extends ImageWriter {
 
                 try {
                     int byteCount = writeTile(tileRect, compressor);
-        
+
+                    if(pos + byteCount > nextSpace) {
+                        nextSpace = pos + byteCount;
+                    }
+
                     pixelsDone += tileRect.width*tileRect.height;
                     processImageProgress(100.0F*pixelsDone/totalPixels);
         
@@ -2290,6 +2334,7 @@ public class TIFFImageWriter extends ImageWriter {
         if (getOutput() == null) {
             throw new IllegalStateException("getOutput() == null!");
         }
+        // XXX Need to convert the input stream metadata.
 	if (streamMetadata != null &&
 	    streamMetadata instanceof TIFFStreamMetadata) {
 	    this.streamMetadata = (TIFFStreamMetadata)streamMetadata;
@@ -2306,18 +2351,27 @@ public class TIFFImageWriter extends ImageWriter {
 	// Do nothing
     }
 
-    // XXX Insert at existing index iff uncompressed.
-    // XXX Append in all cases.
     public boolean canInsertImage(int imageIndex) throws IOException {
         if (getOutput() == null) {
             throw new IllegalStateException("getOutput() == null!");
         }
+        // locateIFD() will throw an IndexOutOfBoundsException if imageIndex
+        // is < -1 or is too big thereby satisfying the specification.
+        long[] ifdpos = new long[1];
+        long[] ifd = new long[1];
+        locateIFD(imageIndex, ifdpos, ifd);
         return true;
     }
 
-    // Locate start of IFD for image
+    // Locate start of IFD for image.
+    // Throws IIOException if not at a TIFF header and
+    // IndexOutOfBoundsException if imageIndex is < -1 or is too big.
     private void locateIFD(int imageIndex, long[] ifdpos, long[] ifd) 
         throws IOException {
+
+        if(imageIndex < -1) {
+            throw new IndexOutOfBoundsException("imageIndex < -1!");
+        }
 
 	stream.seek(headerPosition);
 	int byteOrder = stream.readUnsignedShort();
@@ -2326,14 +2380,22 @@ public class TIFFImageWriter extends ImageWriter {
 	} else if (byteOrder == 0x4949) {
 	    stream.setByteOrder(ByteOrder.LITTLE_ENDIAN);
 	} else {
-	    // error - not a TIFF file
+	    throw new IIOException("Illegal byte order");
 	}
 	if (stream.readUnsignedShort() != 42) {
-	    // error - not a TIFF file
+	    throw new IIOException("Illegal magic number");
 	}
 
 	ifdpos[0] = stream.getStreamPosition();
 	ifd[0] = stream.readUnsignedInt();
+        if (ifd[0] == 0) {
+            // imageIndex has to be >= -1 due to check above.
+            if(imageIndex > 0) {
+                throw new IndexOutOfBoundsException
+                    ("imageIndex is greater than the largest available index!");
+            }
+            return;
+        }
 	stream.seek(ifd[0]);
 
 	for (int i = 0; imageIndex == -1 || i < imageIndex; i++) {
@@ -2369,27 +2431,36 @@ public class TIFFImageWriter extends ImageWriter {
 	if (image == null) {
 	    throw new IllegalArgumentException("image == null!");
 	}
-	if (imageIndex < -1) {
-	    throw new IllegalArgumentException("imageIndex < -1!");
-	}
 
-	stream.mark();
-
+        // Locate the position of the old IFD (ifd) and the location
+        // of the pointer to that position (ifdpos).
         long[] ifdpos = new long[1];
         long[] ifd = new long[1];
         locateIFD(imageIndex, ifdpos, ifd);
 
-	long streamLength = stream.length();
+        // Seek to the position containing the pointer to the old IFD.
 	stream.seek(ifdpos[0]);
-	stream.writeInt((int)streamLength);
 
-	stream.seek(streamLength);
+        // Update next space pointer in anticipation of next write.
+        if(ifdpos[0] + 4 > nextSpace) {
+            nextSpace = ifdpos[0] + 4;
+        }
+
+        // Update the value to point to the next available space.
+	stream.writeInt((int)nextSpace);
+
+        // Seek to the next available space.
+	stream.seek(nextSpace);
+
+        // Write the image (IFD and data).
 	write(null, image, param, false);
 
+        // Seek to the position containing the pointer in the new IFD.
 	stream.seek(nextIFDPointerPos);
-	stream.writeInt((int)ifd[0]);
 
-	stream.reset();
+        // Update the new IFD to point to the old IFD.
+	stream.writeInt((int)ifd[0]);
+        // Don't need to update nextSpace here as already done in write().
     }
 
     /* XXX Methods to implement for writing empty images.

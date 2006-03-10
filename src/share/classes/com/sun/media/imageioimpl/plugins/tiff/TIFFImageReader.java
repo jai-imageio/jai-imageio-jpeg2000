@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.7 $
- * $Date: 2006-03-08 23:44:11 $
+ * $Revision: 1.8 $
+ * $Date: 2006-03-10 17:50:17 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -167,6 +167,9 @@ public class TIFFImageReader extends ImageReader {
                          boolean ignoreMetadata) {
         super.setInput(input, seekForwardOnly, ignoreMetadata);
 
+        // Clear all local values based on the previous stream contents.
+        resetLocal();
+
         if (input != null) {
             if (!(input instanceof ImageInputStream)) {
                 throw new IllegalArgumentException
@@ -176,9 +179,6 @@ public class TIFFImageReader extends ImageReader {
         } else {
             this.stream = null;
         }
-        
-        // Clear all values based on the previous stream contents
-        // resetStreamSettings();
     }
 
     // Do not seek to the beginning of the stream so as to allow users to
@@ -1426,7 +1426,10 @@ public class TIFFImageReader extends ImageReader {
 
     public void reset() {
         super.reset();
-        
+        resetLocal();
+    }
+
+    protected void resetLocal() {
         stream = null;
         gotHeader = false;
         imageReadParam = getDefaultReadParam();
@@ -1434,8 +1437,8 @@ public class TIFFImageReader extends ImageReader {
         currIndex = -1;
         imageMetadata = null;
         imageStartPosition = new ArrayList();
-        imageTypeMap = new HashMap();
         numImages = -1;
+        imageTypeMap = new HashMap();
         width = -1;
         height = -1;
         numBands = -1;

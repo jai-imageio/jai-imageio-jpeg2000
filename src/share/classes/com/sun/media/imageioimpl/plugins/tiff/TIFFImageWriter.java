@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.8 $
- * $Date: 2006-03-10 21:16:26 $
+ * $Revision: 1.9 $
+ * $Date: 2006-03-10 21:45:40 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -2171,23 +2171,31 @@ public class TIFFImageWriter extends ImageWriter {
         clearAbortRequest();
         processImageStarted(0);
 
-        // Try to convert non-null input stream metadata.
-	if (sm != null) {
-	    this.streamMetadata =
-                (TIFFStreamMetadata)convertStreamMetadata(sm, param);
-        }
-
-        // Set to default if not converted.
-        if(this.streamMetadata == null) {
-	    this.streamMetadata =
-                (TIFFStreamMetadata)getDefaultStreamMetadata(param);
-	}
-
+        // Optionally write the header.
 	if (writeHeader) {
+            // Clear previous stream metadata.
+	    this.streamMetadata = null;
+
+            // Try to convert non-null input stream metadata.
+            if (sm != null) {
+                this.streamMetadata =
+                    (TIFFStreamMetadata)convertStreamMetadata(sm, param);
+            }
+
+            // Set to default if not converted.
+            if(this.streamMetadata == null) {
+                this.streamMetadata =
+                    (TIFFStreamMetadata)getDefaultStreamMetadata(param);
+            }
+
+            // Write the header.
 	    writeHeader();
 	}
 
         // Write out the IFD and any sub IFDs, followed by a zero
+
+        // Clear previous image metadata.
+        this.imageMetadata = null;
 
         // Initialize the metadata object.
         IIOMetadata im = iioimage.getMetadata();

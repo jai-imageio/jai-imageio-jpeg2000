@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.10 $
- * $Date: 2006-03-10 23:02:58 $
+ * $Revision: 1.11 $
+ * $Date: 2006-03-10 23:23:15 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -213,6 +213,9 @@ public class TIFFImageWriter extends ImageWriter {
 
     // Next available space.
     long nextSpace = 0L;
+
+    // Whether a sequence is being written.
+    boolean isWritingSequence = false;
 
     /**
      * Converts a pixel's X coordinate into a horizontal tile index
@@ -2346,21 +2349,49 @@ public class TIFFImageWriter extends ImageWriter {
         if (getOutput() == null) {
             throw new IllegalStateException("getOutput() == null!");
         }
-        // XXX Need to convert the input stream metadata.
-	if (streamMetadata != null &&
-	    streamMetadata instanceof TIFFStreamMetadata) {
-	    this.streamMetadata = (TIFFStreamMetadata)streamMetadata;
+
+        // Set up stream metadata.
+	if (streamMetadata != null) {
+            streamMetadata = convertStreamMetadata(streamMetadata, null);
 	}
+        if(streamMetadata == null) {
+            streamMetadata = getDefaultStreamMetadata(null);
+        }
+        this.streamMetadata = (TIFFStreamMetadata)streamMetadata;
+
+        // Write the header.
 	writeHeader();
+
+        // Set the sequence flag.
+        this.isWritingSequence = true;
     }
 
     public void writeToSequence(IIOImage image, ImageWriteParam param)
  	throws IOException {
+        // Check sequence flag.
+        if(!this.isWritingSequence) {
+            throw new IllegalStateException
+                ("prepareWriteSequence() has not been called!");
+        }
+
+        // Append image.
 	writeInsert(-1, image, param);
     }
 
     public void endWriteSequence() throws IOException {
-	// Do nothing
+        // Check output.
+        if (getOutput() == null) {
+            throw new IllegalStateException("getOutput() == null!");
+        }
+
+        // Check sequence flag.
+        if(!isWritingSequence) {
+            throw new IllegalStateException
+                ("prepareWriteSequence() has not been called!");
+        }
+
+        // Unset sequence flag.
+        this.isWritingSequence = false;
     }
 
     public boolean canInsertImage(int imageIndex) throws IOException {

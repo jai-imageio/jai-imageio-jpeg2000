@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.11 $
- * $Date: 2006-03-10 23:23:15 $
+ * $Revision: 1.12 $
+ * $Date: 2006-03-10 23:47:12 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -2398,11 +2398,19 @@ public class TIFFImageWriter extends ImageWriter {
         if (getOutput() == null) {
             throw new IllegalStateException("getOutput() == null!");
         }
+
+        // Mark position as locateIFD() will seek to IFD with requested index.
+        stream.mark();
+
         // locateIFD() will throw an IndexOutOfBoundsException if imageIndex
         // is < -1 or is too big thereby satisfying the specification.
         long[] ifdpos = new long[1];
         long[] ifd = new long[1];
         locateIFD(imageIndex, ifdpos, ifd);
+
+        // Reset to position before locateIFD().
+        stream.reset();
+
         return true;
     }
 

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.12 $
- * $Date: 2006-03-10 23:47:12 $
+ * $Revision: 1.13 $
+ * $Date: 2006-03-11 01:55:49 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -2399,17 +2399,21 @@ public class TIFFImageWriter extends ImageWriter {
             throw new IllegalStateException("getOutput() == null!");
         }
 
-        // Mark position as locateIFD() will seek to IFD with requested index.
-        stream.mark();
+        try {
+            // Mark position as locateIFD() will seek to IFD at imageIndex.
+            stream.mark();
 
-        // locateIFD() will throw an IndexOutOfBoundsException if imageIndex
-        // is < -1 or is too big thereby satisfying the specification.
-        long[] ifdpos = new long[1];
-        long[] ifd = new long[1];
-        locateIFD(imageIndex, ifdpos, ifd);
-
-        // Reset to position before locateIFD().
-        stream.reset();
+            // locateIFD() will throw an IndexOutOfBoundsException if
+            // imageIndex is < -1 or is too big thereby satisfying the spec.
+            long[] ifdpos = new long[1];
+            long[] ifd = new long[1];
+            locateIFD(imageIndex, ifdpos, ifd);
+        } catch(IndexOutOfBoundsException e) {
+            throw e;
+        } finally {
+            // Reset to position before locateIFD().
+            stream.reset();
+        }
 
         return true;
     }
@@ -2487,7 +2491,16 @@ public class TIFFImageWriter extends ImageWriter {
         // of the pointer to that position (ifdpos).
         long[] ifdpos = new long[1];
         long[] ifd = new long[1];
-        locateIFD(imageIndex, ifdpos, ifd);
+        long posn = stream.getStreamPosition();
+        try {
+            // locateIFD() will throw an IndexOutOfBoundsException if
+            // imageIndex is < -1 or is too big thereby satisfying the spec.
+            locateIFD(imageIndex, ifdpos, ifd);
+        } catch(IndexOutOfBoundsException e) {
+            // Reset to position before locateIFD().
+            stream.seek(posn);
+            throw e;
+        }
 
         // Seek to the position containing the pointer to the old IFD.
 	stream.seek(ifdpos[0]);
@@ -2514,26 +2527,6 @@ public class TIFFImageWriter extends ImageWriter {
         // Don't need to update nextSpace here as already done in write().
     }
 
-    /* XXX Methods to implement for writing empty images.
-    public boolean canWriteEmpty() throws IOException {
-        if (getOutput() == null) {
-            throw new IllegalStateException("getOutput() == null!");
-        }
-        return false;
-    }
-
-    public void prepareWriteEmpty(IIOMetadata streamMetadata,
-                                  ImageTypeSpecifier imageType,o
-                                  int width, int height,
-                                  IIOMetadata imageMetadata,
-                                  List thumbnails,
-                                  ImageWriteParam param) throws IOException {
-    }
-
-    public void endWriteEmpty() throws IOException {
-    }
-    */
-
     // ----- BEGIN replacePixels methods -----
 
     private TIFFIFD readIFD(int imageIndex) throws IOException {
@@ -2544,12 +2537,20 @@ public class TIFFImageWriter extends ImageWriter {
  	    throw new IndexOutOfBoundsException("imageIndex < 0!");
  	}
 
- 	stream.mark();
-        long[] ifdpos = new long[1];
-        long[] ifd = new long[1];
-        locateIFD(imageIndex, ifdpos, ifd);
-        if (ifd[0] == 0) {
- 	    throw new IndexOutOfBoundsException("imageIndex out of bounds!");
+        stream.mark();
+        long posn = stream.getStreamPosition();
+        try {
+            long[] ifdpos = new long[1];
+            long[] ifd = new long[1];
+            locateIFD(imageIndex, ifdpos, ifd);
+            if (ifd[0] == 0) {
+                throw new IndexOutOfBoundsException
+                    ("imageIndex out of bounds!");
+            }
+        } catch(IndexOutOfBoundsException e) {
+            // Reset to position before locateIFD().
+            stream.seek(posn);
+            throw e;
         }
 
         List tagSets = new ArrayList(1);
@@ -2564,6 +2565,10 @@ public class TIFFImageWriter extends ImageWriter {
     }
 
     public boolean canReplacePixels(int imageIndex) throws IOException {
+        if (getOutput() == null) {
+            throw new IllegalStateException("getOutput() == null!");
+        }
+
         TIFFIFD rootIFD = readIFD(imageIndex);
         TIFFField f = rootIFD.getTIFFField(BaselineTIFFTagSet.TAG_COMPRESSION);
         int compression = f.getAsInt(0);
@@ -2603,9 +2608,7 @@ public class TIFFImageWriter extends ImageWriter {
             }
 
             // Read the IFD for the pixel replacement index.
-            // XXX stream.mark()?
             TIFFIFD replacePixelsIFD = readIFD(imageIndex);
-            // XXX stream.reset()?
 
             // Ensure that compression is "none".
             TIFFField f =

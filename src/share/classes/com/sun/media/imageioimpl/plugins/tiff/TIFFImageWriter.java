@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.14 $
- * $Date: 2006-03-14 00:39:26 $
+ * $Revision: 1.15 $
+ * $Date: 2006-03-16 17:33:13 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -83,6 +83,7 @@ import com.sun.media.imageio.plugins.tiff.TIFFImageWriteParam;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
 import com.sun.media.imageioimpl.common.ImageUtil;
 import com.sun.media.imageioimpl.common.PackageUtil;
+import com.sun.media.imageioimpl.common.SimpleRenderedImage;
 import com.sun.media.imageioimpl.common.SingleTileRenderedImage;
 
 public class TIFFImageWriter extends ImageWriter {
@@ -2066,7 +2067,7 @@ public class TIFFImageWriter extends ImageWriter {
     public void write(IIOMetadata sm,
                       IIOImage iioimage,
                       ImageWriteParam p) throws IOException {
-	write(sm, iioimage, p, true);
+	write(sm, iioimage, p, true, true);
     }
     
     private void writeHeader() throws IOException {
@@ -2093,7 +2094,8 @@ public class TIFFImageWriter extends ImageWriter {
     private void write(IIOMetadata sm,
                        IIOImage iioimage,
                        ImageWriteParam p,
-                       boolean writeHeader) throws IOException {
+                       boolean writeHeader,
+                       boolean writeData) throws IOException {
         if (stream == null) {
             throw new IllegalStateException("output == null!");
         }
@@ -2279,6 +2281,12 @@ public class TIFFImageWriter extends ImageWriter {
         stream.seek(lastIFDPosition);
         if(lastIFDPosition > this.nextSpace) {
             this.nextSpace = lastIFDPosition;
+        }
+
+        // If not writing the image data, i.e., if writing or inserting an
+        // empty image, return.
+        if(!writeData) {
+            return;
         }
 
         // Get positions of fields within the IFD to update as we write
@@ -2483,6 +2491,13 @@ public class TIFFImageWriter extends ImageWriter {
     public void writeInsert(int imageIndex,
                             IIOImage image,
                             ImageWriteParam param) throws IOException {
+        insert(imageIndex, image, param, true);
+    }
+
+    private void insert(int imageIndex,
+                        IIOImage image,
+                        ImageWriteParam param,
+                        boolean writeData) throws IOException {
 	if (stream == null) {
 	    throw new IllegalStateException("Output not set!");
 	}
@@ -2514,7 +2529,7 @@ public class TIFFImageWriter extends ImageWriter {
 	stream.seek(nextSpace);
 
         // Write the image (IFD and data).
-	write(null, image, param, false);
+	write(null, image, param, false, writeData);
 
         // Seek to the position containing the pointer in the new IFD.
 	stream.seek(nextIFDPointerPos);
@@ -2523,6 +2538,152 @@ public class TIFFImageWriter extends ImageWriter {
 	stream.writeInt((int)ifd[0]);
         // Don't need to update nextSpace here as already done in write().
     }
+
+    // ----- BEGIN insert/writeEmpty methods -----
+
+    // XXX Move local variable(s) up.
+    private boolean isInsertingEmpty = false;
+    private boolean isWritingEmpty = false;
+
+    public boolean canInsertEmpty(int imageIndex) throws IOException {
+        return canInsertImage(imageIndex);
+    }
+
+    public boolean canWriteEmpty() throws IOException {
+        if (getOutput() == null) {
+            throw new IllegalStateException("getOutput() == null!");
+        }
+        return true;
+    }
+
+    // Check state and parameters for writing or inserting empty images.
+    private void checkParamsEmpty(ImageTypeSpecifier imageType,
+                                  int width,
+                                  int height,
+                                  List thumbnails) {
+        if (getOutput() == null) {
+            throw new IllegalStateException("getOutput() == null!");
+        }
+
+        if(imageType == null) {
+            throw new IllegalArgumentException("imageType == null!");
+        }
+
+        if(width < 1 || height < 1) {
+            throw new IllegalArgumentException("width < 1 || height < 1!");
+        }
+
+        if(thumbnails != null) {
+            int numThumbs = thumbnails.size();
+            for(int i = 0; i < numThumbs; i++) {
+                Object thumb = thumbnails.get(i);
+                if(thumb == null || !(thumb instanceof BufferedImage)) {
+                    throw new IllegalArgumentException
+                        ("thumbnails contains null references or objects other than BufferedImages!");
+                }
+            }
+        }
+
+        if(this.isInsertingEmpty) {
+            throw new IllegalStateException
+                ("Previous call to prepareInsertEmpty() without corresponding call to endInsertEmpty()!");
+        }
+
+        if(this.isWritingEmpty) {
+            throw new IllegalStateException
+                ("Previous call to prepareWriteEmpty() without corresponding call to endWriteEmpty()!");
+        }
+    }
+
+    public void prepareInsertEmpty(int imageIndex,
+                                   ImageTypeSpecifier imageType,
+                                   int width,
+                                   int height,
+                                   IIOMetadata imageMetadata,
+                                   List thumbnails,
+                                   ImageWriteParam param) throws IOException {
+        checkParamsEmpty(imageType, width, height, thumbnails);
+
+        this.isInsertingEmpty = true;
+
+        SampleModel emptySM = imageType.getSampleModel();
+        RenderedImage emptyImage =
+            new EmptyImage(0, 0, width, height,
+                           0, 0, emptySM.getWidth(), emptySM.getHeight(),
+                           emptySM, imageType.getColorModel());
+
+        insert(imageIndex, new IIOImage(emptyImage, null, imageMetadata),
+               param, false);
+    }
+
+    public void prepareWriteEmpty(IIOMetadata streamMetadata,
+                                  ImageTypeSpecifier imageType,
+                                  int width,
+                                  int height,
+                                  IIOMetadata imageMetadata,
+                                  List thumbnails,
+                                  ImageWriteParam param) throws IOException {
+        checkParamsEmpty(imageType, width, height, thumbnails);
+
+        this.isWritingEmpty = true;
+
+        SampleModel emptySM = imageType.getSampleModel();
+        RenderedImage emptyImage =
+            new EmptyImage(0, 0, width, height,
+                           0, 0, emptySM.getWidth(), emptySM.getHeight(),
+                           emptySM, imageType.getColorModel());
+
+	write(streamMetadata, new IIOImage(emptyImage, null, imageMetadata),
+              param, true, false);
+    }
+
+    public void endInsertEmpty() throws IOException {
+        if (getOutput() == null) {
+            throw new IllegalStateException("getOutput() == null!");
+        }
+
+        if(!this.isInsertingEmpty) {
+            throw new IllegalStateException
+                ("No previous call to prepareInsertEmpty()!");
+        }
+
+        if(this.isWritingEmpty) {
+            throw new IllegalStateException
+                ("Previous call to prepareWriteEmpty() without corresponding call to endWriteEmpty()!");
+        }
+
+        if (inReplacePixelsNest) {
+            throw new IllegalStateException
+                ("In nested call to prepareReplacePixels!");
+        }
+
+        this.isInsertingEmpty = false;
+    }
+
+    public void endWriteEmpty() throws IOException {
+        if (getOutput() == null) {
+            throw new IllegalStateException("getOutput() == null!");
+        }
+
+        if(!this.isWritingEmpty) {
+            throw new IllegalStateException
+                ("No previous call to prepareWriteEmpty()!");
+        }
+
+        if(this.isInsertingEmpty) {
+            throw new IllegalStateException
+                ("Previous call to prepareInsertEmpty() without corresponding call to endInsertEmpty()!");
+        }
+
+        if (inReplacePixelsNest) {
+            throw new IllegalStateException
+                ("In nested call to prepareReplacePixels!");
+        }
+
+        this.isWritingEmpty = false;
+    }
+
+    // ----- END insert/writeEmpty methods -----
 
     // ----- BEGIN replacePixels methods -----
 
@@ -3057,5 +3218,27 @@ public class TIFFImageWriter extends ImageWriter {
         replacePixelsTileOffsets = null;
         replacePixelsRegion = null;
         inReplacePixelsNest = false;
+    }
+}
+
+class EmptyImage extends SimpleRenderedImage {
+    EmptyImage(int minX, int minY, int width, int height,
+               int tileGridXOffset, int tileGridYOffset,
+               int tileWidth, int tileHeight,
+               SampleModel sampleModel, ColorModel colorModel) {
+        this.minX = minX;
+        this.minY = minY;
+        this.width = width;
+        this.height = height;
+        this.tileGridXOffset = tileGridXOffset;
+        this.tileGridYOffset = tileGridYOffset;
+        this.tileWidth = tileWidth;
+        this.tileHeight = tileHeight;
+        this.sampleModel = sampleModel;
+        this.colorModel = colorModel;
+    }
+
+    public Raster getTile(int tileX, int tileY) {
+        return null;
     }
 }

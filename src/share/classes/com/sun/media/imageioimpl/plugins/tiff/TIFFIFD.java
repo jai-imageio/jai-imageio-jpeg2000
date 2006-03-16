@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-03-07 20:44:27 $
+ * $Revision: 1.5 $
+ * $Date: 2006-03-16 20:27:45 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -464,6 +464,14 @@ public class TIFFIFD {
         return lastPosition;
     }
 
+    void setPositions(long stripOrTileOffsetsPosition,
+                      long stripOrTileByteCountsPosition,
+                      long lastPosition) {
+        this.stripOrTileOffsetsPosition = stripOrTileOffsetsPosition;
+        this.stripOrTileByteCountsPosition = stripOrTileByteCountsPosition;
+        this.lastPosition = lastPosition;
+    }
+
     public void addTIFFField(TIFFField f) {
         int tagNumber = f.getTagNumber();
         if(tagNumber <= MAX_LOW_FIELD_TAG_NUM) {
@@ -586,6 +594,11 @@ public class TIFFIFD {
             // Add the field to the clone.
             shallowClone.addTIFFField(fieldClone);
         }
+
+        // Set positions.
+        shallowClone.setPositions(stripOrTileOffsetsPosition,
+                                  stripOrTileByteCountsPosition,
+                                  lastPosition);
 
         return shallowClone;
     }

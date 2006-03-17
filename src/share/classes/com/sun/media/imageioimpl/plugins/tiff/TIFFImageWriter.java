@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.15 $
- * $Date: 2006-03-16 17:33:13 $
+ * $Revision: 1.16 $
+ * $Date: 2006-03-17 16:42:01 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -2733,6 +2733,9 @@ public class TIFFImageWriter extends ImageWriter {
     private int replacePixelsIndex = -1;
     private TIFFImageMetadata replacePixelsMetadata = null;
     private long[] replacePixelsTileOffsets = null;
+    private long[] replacePixelsByteCounts = null;
+    private long replacePixelsOffsetsPosition = 0L;
+    private long replacePixelsByteCountsPosition = 0L;
     private Rectangle replacePixelsRegion = null;
     private boolean inReplacePixelsNest = false;
 
@@ -2806,6 +2809,18 @@ public class TIFFImageWriter extends ImageWriter {
                 f = replacePixelsIFD.getTIFFField(BaselineTIFFTagSet.TAG_STRIP_OFFSETS);
             }
             replacePixelsTileOffsets = f.getAsLongs();
+
+            // Get the byte counts.
+            f = replacePixelsIFD.getTIFFField(BaselineTIFFTagSet.TAG_TILE_BYTE_COUNTS);
+            if(f == null) {
+                f = replacePixelsIFD.getTIFFField(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS);
+            }
+            replacePixelsByteCounts = f.getAsLongs();
+
+            replacePixelsOffsetsPosition =
+                replacePixelsIFD.getStripOrTileOffsetsPosition();
+            replacePixelsByteCountsPosition =
+                replacePixelsIFD.getStripOrTileByteCountsPosition();
 
             // Get the image metadata.
             replacePixelsMetadata = new TIFFImageMetadata(replacePixelsIFD);
@@ -3099,15 +3114,22 @@ public class TIFFImageWriter extends ImageWriter {
                 Rectangle tileRect = new Rectangle();
                 for(int ty = minTileY; ty <= maxTileY; ty++) {
                     for(int tx = minTileX; tx <= maxTileX; tx++) {
-                        BufferedImage tileImage =
-                            reader.readTile(replacePixelsIndex, tx, ty);
+                        int tileIndex = ty*tilesAcross + tx;
+                        boolean isEmpty =
+                            replacePixelsByteCounts[tileIndex] == 0L;
+                        WritableRaster raster;
+                        if(isEmpty) {
+                            raster = Raster.createWritableRaster(sm, null);
+                        } else {
+                            BufferedImage tileImage =
+                                reader.readTile(replacePixelsIndex, tx, ty);
+                            raster = tileImage.getRaster();
+                        }
 
                         tileRect.setLocation(tx*tileWidth,
                                              ty*tileLength);
-                        tileRect.setSize(tileImage.getWidth(),
-                                         tileImage.getHeight());
-
-                        WritableRaster raster = tileImage.getRaster();
+                        tileRect.setSize(raster.getWidth(),
+                                         raster.getHeight());
                         raster =
                             raster.createWritableTranslatedChild(tileRect.x,
                                                                  tileRect.y);
@@ -3162,10 +3184,31 @@ public class TIFFImageWriter extends ImageWriter {
 
                         raster.setRect(replacementData);
 
-                        stream.seek(replacePixelsTileOffsets[ty*tilesAcross + tx]);
+                        if(isEmpty) {
+                            stream.seek(nextSpace);
+                        } else {
+                            stream.seek(replacePixelsTileOffsets[tileIndex]);
+                        }
 
                         this.image = new SingleTileRenderedImage(raster, cm);
-                        writeTile(tileRect, encoder);
+
+                        int numBytes = writeTile(tileRect, encoder);
+
+                        if(isEmpty) {
+                            // Update Strip/TileOffsets and
+                            // Strip/TileByteCounts fields.
+                            stream.mark();
+                            stream.seek(replacePixelsOffsetsPosition +
+                                        tileIndex);
+                            stream.writeInt((int)nextSpace);
+                            stream.seek(replacePixelsByteCountsPosition +
+                                        tileIndex);
+                            stream.writeInt(numBytes);
+                            stream.reset();
+
+                            // Increment location of next available space.
+                            nextSpace += numBytes;
+                        }
                     }
                 }
 
@@ -3190,9 +3233,16 @@ public class TIFFImageWriter extends ImageWriter {
 
     public void endReplacePixels() throws IOException {
         synchronized(replacePixelsLock) {
+            if(!this.inReplacePixelsNest) {
+                throw new IllegalStateException
+                    ("No previous call to prepareReplacePixels()!");
+            }
             replacePixelsIndex = -1;
             replacePixelsMetadata = null;
             replacePixelsTileOffsets = null;
+            replacePixelsByteCounts = null;
+            replacePixelsOffsetsPosition = 0L;
+            replacePixelsByteCountsPosition = 0L;
             replacePixelsRegion = null;
             inReplacePixelsNest = false;
         }
@@ -3213,9 +3263,16 @@ public class TIFFImageWriter extends ImageWriter {
         streamMetadata = null;
         imageMetadata = null;
 
+        isWritingSequence = false;
+        isWritingEmpty = false;
+        isInsertingEmpty = false;
+
         replacePixelsIndex = -1;
         replacePixelsMetadata = null;
         replacePixelsTileOffsets = null;
+        replacePixelsByteCounts = null;
+        replacePixelsOffsetsPosition = 0L;
+        replacePixelsByteCountsPosition = 0L;
         replacePixelsRegion = null;
         inReplacePixelsNest = false;
     }

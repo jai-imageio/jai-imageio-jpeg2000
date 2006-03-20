@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.16 $
- * $Date: 2006-03-17 16:42:01 $
+ * $Revision: 1.17 $
+ * $Date: 2006-03-20 20:29:04 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -2004,6 +2004,15 @@ public class TIFFImageWriter extends ImageWriter {
 	    return;
 	}
 
+        // Reset scaling variables.
+        isRescaling = false;
+        scalingBitDepth = -1;
+        scale = scalel = scaleh = null;
+        scale0 = null;
+
+        // Set global sample size to parameter.
+        this.sampleSize = sampleSize;
+
         // Check whether rescaling is called for.
         if(bitDepth <= 16) {
             for(int b = 0; b < numBands; b++) {
@@ -2012,8 +2021,6 @@ public class TIFFImageWriter extends ImageWriter {
                     break;
                 }
             }
-        } else {
-            isRescaling = false;
         }
 
         if(DEBUG) {
@@ -2022,12 +2029,10 @@ public class TIFFImageWriter extends ImageWriter {
 
         // If not rescaling then return after saving the sample size.
         if(!isRescaling) {
-            this.sampleSize = sampleSize;
             return;
         }
 	
 	// Compute new tables
-	this.sampleSize = sampleSize;
 	this.scalingBitDepth = bitDepth;
 	int maxOutSample = (1 << bitDepth) - 1;
 	if (bitDepth <= 8) {
@@ -3093,11 +3098,11 @@ public class TIFFImageWriter extends ImageWriter {
                     this.sourceBands = sBands;
                     this.numBands = sourceBands.length;
                 }
-                int[] scaleSampleSize = sm.getSampleSize();
-                initializeScaleTables(scaleSampleSize);
                 setupMetadata(cm, sm,
                               reader.getWidth(replacePixelsIndex),
                               reader.getHeight(replacePixelsIndex));
+                int[] scaleSampleSize = sm.getSampleSize();
+                initializeScaleTables(scaleSampleSize);
 
                 int minTileX = XToTileX(dstRect.x, 0, tileWidth);
                 int minTileY = YToTileY(dstRect.y, 0, tileLength);

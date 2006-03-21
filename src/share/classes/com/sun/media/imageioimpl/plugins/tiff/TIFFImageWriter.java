@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.17 $
- * $Date: 2006-03-20 20:29:04 $
+ * $Revision: 1.18 $
+ * $Date: 2006-03-21 01:33:51 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -3090,6 +3090,7 @@ public class TIFFImageWriter extends ImageWriter {
                 SampleModel sm = image.getSampleModel();
                 ColorModel cm = image.getColorModel();
                 this.numBands = sm.getNumBands();
+                this.imageType = new ImageTypeSpecifier(image);
                 this.periodX = param.getSourceXSubsampling();
                 this.periodY = param.getSourceYSubsampling();
                 this.sourceBands = null;
@@ -3103,6 +3104,29 @@ public class TIFFImageWriter extends ImageWriter {
                               reader.getHeight(replacePixelsIndex));
                 int[] scaleSampleSize = sm.getSampleSize();
                 initializeScaleTables(scaleSampleSize);
+
+                // Determine whether bilevel.
+                this.isBilevel = ImageUtil.isBinary(image.getSampleModel());
+
+                // Check for photometric inversion.
+                this.isInverted =
+                    (nativePhotometricInterpretation ==
+                     BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_BLACK_IS_ZERO &&
+                     photometricInterpretation ==
+                     BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_WHITE_IS_ZERO) ||
+                    (nativePhotometricInterpretation ==
+                     BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_WHITE_IS_ZERO &&
+                     photometricInterpretation ==
+                     BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_BLACK_IS_ZERO);
+
+                // Analyze image data suitability for direct copy.
+                this.isImageSimple = 
+                    (isBilevel ||
+                     (!isInverted && ImageUtil.imageIsContiguous(image))) &&
+                    !isRescaling &&                 // no value rescaling
+                    sourceBands == null &&          // no subbanding
+                    periodX == 1 && periodY == 1 && // no subsampling
+                    colorConverter == null;
 
                 int minTileX = XToTileX(dstRect.x, 0, tileWidth);
                 int minTileY = YToTileY(dstRect.y, 0, tileLength);
@@ -3124,7 +3148,10 @@ public class TIFFImageWriter extends ImageWriter {
                             replacePixelsByteCounts[tileIndex] == 0L;
                         WritableRaster raster;
                         if(isEmpty) {
-                            raster = Raster.createWritableRaster(sm, null);
+                            SampleModel tileSM =
+                                sm.createCompatibleSampleModel(tileWidth,
+                                                               tileLength);
+                            raster = Raster.createWritableRaster(tileSM, null);
                         } else {
                             BufferedImage tileImage =
                                 reader.readTile(replacePixelsIndex, tx, ty);
@@ -3204,10 +3231,10 @@ public class TIFFImageWriter extends ImageWriter {
                             // Strip/TileByteCounts fields.
                             stream.mark();
                             stream.seek(replacePixelsOffsetsPosition +
-                                        tileIndex);
+                                        4*tileIndex);
                             stream.writeInt((int)nextSpace);
                             stream.seek(replacePixelsByteCountsPosition +
-                                        tileIndex);
+                                        4*tileIndex);
                             stream.writeInt(numBytes);
                             stream.reset();
 

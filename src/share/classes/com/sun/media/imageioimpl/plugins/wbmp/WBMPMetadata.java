@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:52 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-21 00:27:22 $
  * $State: Exp $
  */
 
@@ -98,6 +98,10 @@ public class WBMPMetadata extends IIOMetadata {
         addChildNode(root, "Height", new Integer(height));
         
         return root;
+    }
+
+    public void setFromTree(String formatName, Node root) {
+        throw new IllegalStateException(I18N.getString("WBMPMetadata1"));
     }
 
     public void mergeTree(String formatName, Node root) {

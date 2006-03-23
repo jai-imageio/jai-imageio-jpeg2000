@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2006-03-08 16:43:10 $
+ * $Revision: 1.6 $
+ * $Date: 2006-03-23 22:29:46 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -300,14 +300,6 @@ public class TIFFImageMetadata extends IIOMetadata {
         return chroma_node;
     }
 
-    /* XXX
-    String[] compressionTypeNames = {
-        null,
-        "none", "CCITT RLE", "CCITT T4", "CCITT T6",
-        "LZW", "Old JPEG", "JPEG", "ZLib"
-    };
-    */
-
     public IIOMetadataNode getStandardCompressionNode() {
         IIOMetadataNode compression_node = new IIOMetadataNode("Compression");
         IIOMetadataNode node = null; // scratch node
@@ -318,21 +310,20 @@ public class TIFFImageMetadata extends IIOMetadata {
         if (f != null) {
             String compressionTypeName = null;
             int compression = f.getAsInt(0);
-            switch(compression) {
-            case BaselineTIFFTagSet.COMPRESSION_NONE:
+            boolean isLossless = true; // obligate initialization.
+            if(compression == BaselineTIFFTagSet.COMPRESSION_NONE) {
                 compressionTypeName = "None";
-                break;
-            case BaselineTIFFTagSet.COMPRESSION_PACKBITS:
-                compressionTypeName = "PackBits";
-                break;
-            case BaselineTIFFTagSet.COMPRESSION_DEFLATE:
-                compressionTypeName = "Deflate";
-                break;
-            default:
-                if(compression >= 2 && // "CCITT RLE"
-                   compression <= 8) { // "ZLib"
-                    compressionTypeName =
-                        TIFFImageWriter.compressionTypes[compression - 2];
+                isLossless = true;
+            } else {
+                int[] compressionNumbers = TIFFImageWriter.compressionNumbers;
+                for(int i = 0; i < compressionNumbers.length; i++) {
+                    if(compression == compressionNumbers[i]) {
+                        compressionTypeName =
+                            TIFFImageWriter.compressionTypes[i];
+                        isLossless =
+                            TIFFImageWriter.isCompressionLossless[i];
+                        break;
+                    }
                 }
             }
 
@@ -341,12 +332,6 @@ public class TIFFImageMetadata extends IIOMetadata {
                 node.setAttribute("value", compressionTypeName);
                 compression_node.appendChild(node);
 
-                // Emit Lossless element only if the compression type is
-                // a known one.
-                boolean isLossless =
-                    compression != BaselineTIFFTagSet.COMPRESSION_OLD_JPEG &&
-                    compression != BaselineTIFFTagSet.COMPRESSION_JPEG;
-            
                 node = new IIOMetadataNode("Lossless");
                 node.setAttribute("value", isLossless ? "TRUE" : "FALSE");
                 compression_node.appendChild(node);
@@ -985,18 +970,14 @@ public class TIFFImageMetadata extends IIOMetadata {
                         if(compressionTypeName.equalsIgnoreCase("None")) {
                             compression =
                                 BaselineTIFFTagSet.COMPRESSION_NONE;
-                        } else if(compressionTypeName.equalsIgnoreCase("PackBits")) {
-                            compression =
-                                BaselineTIFFTagSet.COMPRESSION_PACKBITS;
-                        } else if(compressionTypeName.equalsIgnoreCase("Deflate")) {
-                            compression =
-                                BaselineTIFFTagSet.COMPRESSION_DEFLATE;
                         } else {
                             String[] compressionNames =
                                 TIFFImageWriter.compressionTypes;
                             for(int i = 0; i < compressionNames.length; i++) {
                                 if(compressionNames[i].equalsIgnoreCase(compressionTypeName)) {
-                                    compression = i + 2;
+                                    compression =
+                                        TIFFImageWriter.compressionNumbers[i];
+                                    break;
                                 }
                             }
                         }

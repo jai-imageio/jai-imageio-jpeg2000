@@ -38,96 +38,39 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:47 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-24 23:54:06 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
 
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
-import com.sun.media.imageio.plugins.tiff.TIFFCompressor;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
-import java.awt.Point;
-import java.awt.Transparency;
-import java.awt.color.ColorSpace;
-import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.ComponentColorModel;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferByte;
-import java.awt.image.PixelInterleavedSampleModel;
-import java.awt.image.Raster;
-import java.awt.image.SampleModel;
-import java.awt.image.WritableRaster;
-import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
 import java.util.Iterator;
-import javax.imageio.IIOException;
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
-import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.metadata.IIOInvalidTreeException;
 import javax.imageio.metadata.IIOMetadata;
-import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.spi.IIORegistry;
 import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.spi.ServiceRegistry;
-import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
-import javax.imageio.stream.ImageOutputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
- *
+ * Compressor for encoding compression type 7, TTN2/Adobe JPEG-in-TIFF.
  */
-public class TIFFJPEGCompressor extends TIFFCompressor {
+public class TIFFJPEGCompressor extends TIFFBaseJPEGCompressor {
 
     private static final boolean DEBUG = false; // XXX false for release.
 
     // Subsampling factor for chroma bands (Cb Cr).
     static final int CHROMA_SUBSAMPLING = 2;
 
-    // Stream metadata format.
-    private static final String STREAM_METADATA_NAME =
-        "javax_imageio_jpeg_stream_1.0";
-
-    // Image metadata format.
-    private static final String IMAGE_METADATA_NAME =
-        "javax_imageio_jpeg_image_1.0";
-
-    // ImageWriteParam passed in.
-    private ImageWriteParam param = null;
-
-    // ImageWriteParam for JPEG writer.
-    private JPEGImageWriteParam JPEGParam = null;
-
-    // The JPEG writer.
-    private ImageWriter JPEGWriter = null;
-
-    // Whether the codecLib native JPEG writer is being used.
-    private boolean usingCodecLib;
-
-    // Array-based output stream for non-codecLib use only.
-    private IIOByteArrayOutputStream baos;
-
-    // Whether the output has the JPEGTables field.
-    private boolean hasJPEGTables = false;
-
-    // Stream metadata equivalent to the tables-only stream in JPEGTables.
-    private IIOMetadata streamMetadata = null;
-
-    // An empty image metadata object for JPEGTables output.
-    private IIOMetadata imageMetadata = null;
-
     /**
-     * A filter which identifies the ImageReaderSpi of the core JPEG reader.
+     * A filter which identifies the ImageReaderSpi of a JPEG reader
+     * which supports JPEG native stream metadata.
      */
     private static class JPEGSPIFilter implements ServiceRegistry.Filter {
         JPEGSPIFilter() {}
@@ -135,11 +78,11 @@ public class TIFFJPEGCompressor extends TIFFCompressor {
         public boolean filter(Object provider) {
             ImageReaderSpi readerSPI = (ImageReaderSpi)provider;
 
-            if(readerSPI.getPluginClassName().startsWith("com.sun.imageio")) {
+            if(readerSPI != null) {
                 String streamMetadataName =
                     readerSPI.getNativeStreamMetadataFormatName();
                 if(streamMetadataName != null) {
-                    return streamMetadataName.indexOf("jpeg_stream") != -1;
+                    return streamMetadataName.equals(STREAM_METADATA_NAME);
                 } else {
                     return false;
                 }
@@ -150,9 +93,9 @@ public class TIFFJPEGCompressor extends TIFFCompressor {
     }
 
     /**
-     * Retrieves the core J2SE JPEG reader.
+     * Retrieves a JPEG reader which supports native JPEG stream metadata.
      */
-    static ImageReader getCoreJPEGReader() {
+    private static ImageReader getJPEGTablesReader() {
         ImageReader jpegReader = null;
 
         try {
@@ -175,153 +118,8 @@ public class TIFFJPEGCompressor extends TIFFCompressor {
         return jpegReader;
     }
 
-    /**
-     * Removes unwanted nodes from a tree.
-     */
-    private static void pruneNodes(Node tree) {
-        String[] unwantedNodes = new String[] {
-            "app0JFIF", "dht", "dqt"
-        };
-
-        IIOMetadataNode iioTree = (IIOMetadataNode)tree;
-        for(int i = 0; i < unwantedNodes.length; i++) {
-            NodeList list = iioTree.getElementsByTagName(unwantedNodes[i]);
-            int length = list.getLength();
-            for(int j = 0; j < length; j++) {
-                Node node = list.item(j);
-                if(node != null) {
-                    if(DEBUG) {
-                        System.out.println("Removing "+node.getNodeName());
-                    }
-                    node.getParentNode().removeChild(node);
-                }
-            }
-        }
-    }
-
     public TIFFJPEGCompressor(ImageWriteParam param) {
-        super("JPEG", BaselineTIFFTagSet.COMPRESSION_JPEG, false);
-
-        this.param = param;
-    }
-
-    /**
-     * A <code>ByteArrayOutputStream</code> which allows writing to an
-     * <code>ImageOutputStream</code>.
-     */
-    private class IIOByteArrayOutputStream extends ByteArrayOutputStream {
-        IIOByteArrayOutputStream() {
-            super();
-        }
-
-        IIOByteArrayOutputStream(int size) {
-            super(size);
-        }
-
-        public synchronized void writeTo(ImageOutputStream ios)
-            throws IOException {
-            ios.write(buf, 0, count);
-        }
-    }
-
-    /**
-     * Initializes the JPEGWriter and JPEGParam instance variables.
-     */
-    private void initJPEGWriter(boolean preferCodecLib) {
-        // Set the writer to null if it does not match preferences.
-        if(this.JPEGWriter != null) {
-            String writerClassName = JPEGWriter.getClass().getName();
-            if((preferCodecLib &&
-               !writerClassName.startsWith("com.sun.media")) ||
-               (!preferCodecLib &&
-                !writerClassName.startsWith("com.sun.imageio"))) {
-                this.JPEGWriter = null;
-            }
-        }
-
-        // Set the writer.
-        if(this.JPEGWriter == null) {
-            // Use the SPI which should be faster.
-            // Get all JPEG writers.
-            Iterator iter = ImageIO.getImageWritersByFormatName("jpeg");
-
-            if(!iter.hasNext()) {
-                // XXX The exception thrown should really be an IIOException.
-                throw new IllegalStateException("No JPEG writers found!");
-            }
-
-            // Initialize writer to the first one.
-            this.JPEGWriter = (ImageWriter)iter.next();
-
-            if(!preferCodecLib) {
-                // Prefer the J2SE core JPEG writer, if available.
-                if(!JPEGWriter.getClass().getName().startsWith
-                   ("com.sun.imageio")) {
-                    while(iter.hasNext()) {
-                        ImageWriter nextWriter = (ImageWriter)iter.next();
-                        if(nextWriter.getClass().getName().startsWith
-                           ("com.sun.imageio")) {
-                            JPEGWriter = nextWriter;
-                        }
-                    }
-                }
-            }
-        }
-
-        this.usingCodecLib =
-            JPEGWriter.getClass().getName().startsWith("com.sun.media");
-        if(DEBUG) System.out.println("usingCodecLib = "+usingCodecLib);
-
-        // Initialize the ImageWriteParam.
-        if(this.JPEGParam == null) {
-            if(param != null && param instanceof JPEGImageWriteParam) {
-                JPEGParam = (JPEGImageWriteParam)param;
-            } else {
-                JPEGParam =
-                    new JPEGImageWriteParam(writer != null ?
-                                            writer.getLocale() : null);
-                if(param.getCompressionMode() ==
-                   ImageWriteParam.MODE_EXPLICIT) {
-                    JPEGParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                    JPEGParam.setCompressionQuality(param.getCompressionQuality());
-                }
-            }
-        }
-    }
-
-    /**
-     * Retrieves image metadata without app0, dht, and dqt markers.
-     */
-    private IIOMetadata getEmptyImageMetadata() throws IIOException {
-        if(DEBUG) {
-            System.out.println("getEmptyImageMetadata()");
-        }
-        if(imageMetadata == null) {
-            TIFFImageWriter tiffWriter = (TIFFImageWriter)this.writer;
-
-            // Get default image metadata.
-            imageMetadata =
-                JPEGWriter.getDefaultImageMetadata(tiffWriter.imageType,
-                                                   JPEGParam);
-
-            // Get the DOM tree.
-            Node tree = imageMetadata.getAsTree(IMAGE_METADATA_NAME);
-
-            // Remove the app0, dht, and dqt markers.
-            pruneNodes(tree);
-
-            // Set the DOM back into the metadata.
-            try {
-                imageMetadata.setFromTree(IMAGE_METADATA_NAME, tree);
-            } catch(IIOInvalidTreeException e) {
-                // XXX This should really be a warning that image data
-                // segments will be written with tables despite the
-                // present of JPEGTables field.
-                throw new IIOException("Cannot empty image metadata!", e);
-            }
-        }
-
-        return imageMetadata;
+        super("JPEG", BaselineTIFFTagSet.COMPRESSION_JPEG, false, param);
     }
 
     /**
@@ -361,7 +159,8 @@ public class TIFFJPEGCompressor extends TIFFCompressor {
                 // YCbCrSubSampling
                 TIFFField YCbCrSubSamplingField = new TIFFField
                     (base.getTag(BaselineTIFFTagSet.TAG_Y_CB_CR_SUBSAMPLING),
-                     TIFFTag.TIFF_SHORT, 2, new char[] {2, 2});
+                     TIFFTag.TIFF_SHORT, 2,
+                     new char[] {CHROMA_SUBSAMPLING, CHROMA_SUBSAMPLING});
                 rootIFD.addTIFFField(YCbCrSubSamplingField);
 
                 // YCbCrPositioning
@@ -395,18 +194,21 @@ public class TIFFJPEGCompressor extends TIFFCompressor {
             TIFFField JPEGTablesField =
                 tim.getTIFFField(BaselineTIFFTagSet.TAG_JPEG_TABLES);
 
-            // Initialize the core JPEG writer
+            // Initialize JPEG writer to one supporting abbreviated streams.
             if(JPEGTablesField != null) {
-                initJPEGWriter(false);
+                // Intialize the JPEG writer to one that supports stream
+                // metadata, i.e., abbreviated streams, and may or may not
+                // support image metadata.
+                initJPEGWriter(true, false);
             }
 
-            // Write JPEGTables field if core writer was available.
-            if(JPEGTablesField != null &&
-               JPEGWriter.getClass().getName().startsWith("com.sun.imageio")) {
+            // Write JPEGTables field if a writer supporting abbreviated
+            // streams was available.
+            if(JPEGTablesField != null && JPEGWriter != null) {
                 if(DEBUG) System.out.println("Has JPEGTables ...");
 
-                // Set the JPEGTables flag.
-                this.hasJPEGTables = true;
+                // Set the abbreviated stream flag.
+                this.writeAbbreviatedStream = true;
 
                 //Branch based on field value count.
                 if(JPEGTablesField.getCount() > 0) {
@@ -423,29 +225,29 @@ public class TIFFJPEGCompressor extends TIFFCompressor {
                     MemoryCacheImageInputStream iis =
                         new MemoryCacheImageInputStream(bais);
 
-                    // Read the tables stream using the core reader.
-                    ImageReader jpegReader = getCoreJPEGReader();
+                    // Read the tables stream using the JPEG reader.
+                    ImageReader jpegReader = getJPEGTablesReader();
                     jpegReader.setInput(iis);
 
                     // Initialize the stream metadata object.
                     try {
-                        streamMetadata = jpegReader.getStreamMetadata();
+                        JPEGStreamMetadata = jpegReader.getStreamMetadata();
                     } catch(Exception e) {
                         // Fall back to default tables.
-                        streamMetadata = null;
+                        JPEGStreamMetadata = null;
                     } finally {
                         jpegReader.reset();
                     }
-                    if(DEBUG) System.out.println(streamMetadata);
+                    if(DEBUG) System.out.println(JPEGStreamMetadata);
                 }
 
-                if(streamMetadata == null) {
+                if(JPEGStreamMetadata == null) {
                     if(DEBUG) System.out.println("JPEGTables == 0");
 
                     // Derive the field from default stream metadata.
 
                     // Get default stream metadata.
-                    streamMetadata =
+                    JPEGStreamMetadata =
                         JPEGWriter.getDefaultStreamMetadata(JPEGParam);
 
                     // Create an output stream for the tables.
@@ -457,7 +259,7 @@ public class TIFFJPEGCompressor extends TIFFCompressor {
                     // Write a tables-only stream.
                     JPEGWriter.setOutput(tableStream);
                     try {
-                        JPEGWriter.prepareWriteSequence(streamMetadata);
+                        JPEGWriter.prepareWriteSequence(JPEGStreamMetadata);
                         tableStream.flush();
                         JPEGWriter.endWriteSequence();
 
@@ -476,7 +278,7 @@ public class TIFFJPEGCompressor extends TIFFCompressor {
                     } catch(Exception e) {
                         // Do not write JPEGTables field.
                         rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_JPEG_TABLES);
-                        this.hasJPEGTables = false;
+                        this.writeAbbreviatedStream = false;
                     }
                 }
             } else { // Do not write JPEGTables field.
@@ -484,137 +286,8 @@ public class TIFFJPEGCompressor extends TIFFCompressor {
                 rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_JPEG_TABLES);
 
                 // Initialize the writer preferring codecLib.
-                initJPEGWriter(true);
+                initJPEGWriter(false, false);
             }
-        }
-    }
-
-    public int encode(byte[] b, int off,
-                      int width, int height,
-                      int[] bitsPerSample,
-                      int scanlineStride) throws IOException {
-        if (!((bitsPerSample.length == 3 &&
-               bitsPerSample[0] == 8 &&
-               bitsPerSample[1] == 8 &&
-               bitsPerSample[2] == 8) ||
-              (bitsPerSample.length == 1 &&
-               bitsPerSample[0] == 8))) {
-            throw new IIOException
-                ("Can only JPEG compress 8- and 24-bit images!");
-        }
-
-        // Set the stream.
-        ImageOutputStream ios;
-        long initialStreamPosition; // used only if usingCodecLib == true
-        if(usingCodecLib) {
-            ios = stream;
-            initialStreamPosition = stream.getStreamPosition();
-        } else {
-            // If not using codecLib then the stream has to be wrapped
-            // as the core Java Image I/O JPEG ImageWriter flushes the
-            // stream at the end of each write() and this causes problems
-            // for the TIFF writer.
-            if(baos == null) {
-                baos = new IIOByteArrayOutputStream();
-            } else {
-                baos.reset();
-            }
-            ios = new MemoryCacheImageOutputStream(baos);
-            initialStreamPosition = 0L;
-        }
-        JPEGWriter.setOutput(ios);
-
-        // Create a DataBuffer.
-        DataBufferByte dbb;
-        if(off == 0 || usingCodecLib) {
-            dbb = new DataBufferByte(b, b.length);
-        } else {
-            //
-            // Workaround for bug in core Java Image I/O JPEG
-            // ImageWriter which cannot handle non-zero offsets.
-            //
-            int bytesPerSegment = scanlineStride*height;
-            byte[] btmp = new byte[bytesPerSegment];
-            System.arraycopy(b, off, btmp, 0, bytesPerSegment);
-            dbb = new DataBufferByte(btmp, bytesPerSegment);
-            off = 0;
-        }
-
-        // Set up the ColorSpace.
-        int[] offsets;
-        ColorSpace cs;
-        if(bitsPerSample.length == 3) {
-            offsets = new int[] { off, off + 1, off + 2 };
-            cs = ColorSpace.getInstance(ColorSpace.CS_sRGB);
-        } else {
-            offsets = new int[] { off };
-            cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-        }
-
-        // Create the ColorModel.
-        ColorModel cm = new ComponentColorModel(cs,
-                                                false,
-                                                false,
-                                                Transparency.OPAQUE,
-                                                DataBuffer.TYPE_BYTE);
-
-        // Create the SampleModel.
-        SampleModel sm =
-            new PixelInterleavedSampleModel(DataBuffer.TYPE_BYTE,
-                                            width, height,
-                                            bitsPerSample.length,
-                                            scanlineStride,
-                                            offsets);
-
-        // Create the WritableRaster.
-        WritableRaster wras =
-            Raster.createWritableRaster(sm, dbb, new Point(0, 0));
-
-        // Create the BufferedImage.
-        BufferedImage bi = new BufferedImage(cm, wras, false, null);
-
-        // Compress the image into the output stream.
-        int compDataLength;
-        if(usingCodecLib) {
-            // Write complete JPEG stream
-            JPEGWriter.write(null, new IIOImage(bi, null, null), JPEGParam);
-            compDataLength =
-                (int)(stream.getStreamPosition() - initialStreamPosition);
-        } else {
-            if(hasJPEGTables) {
-                // Write abbreviated JPEG stream
-
-                // First write the tables-only data.
-                JPEGWriter.prepareWriteSequence(streamMetadata);
-                ios.flush();
-
-                // Rewind to the beginning of the byte array.
-                baos.reset();
-
-                // Write the abbreviated image data.
-                IIOMetadata emptyMetadata = getEmptyImageMetadata();
-                IIOImage image = new IIOImage(bi, null, emptyMetadata);
-                JPEGWriter.writeToSequence(image, JPEGParam);
-                JPEGWriter.endWriteSequence();
-            } else {
-                // Write complete JPEG stream
-                JPEGWriter.write(null,
-                                 new IIOImage(bi, null, null),
-                                 JPEGParam);
-            }
-
-            compDataLength = baos.size();
-            baos.writeTo(stream);
-            baos.reset();
-        }
-
-        return compDataLength;
-    }
-
-    protected void finalize() throws Throwable {
-        super.finalize();
-        if(JPEGWriter != null) {
-            JPEGWriter.dispose();
         }
     }
 }

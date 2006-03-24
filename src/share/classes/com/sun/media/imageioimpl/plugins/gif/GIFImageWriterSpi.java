@@ -38,12 +38,12 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:29 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-24 22:30:10 $
  * $State: Exp $
  */
 
-package com.sun.media.imageioimpl.plugins.gif;//XXX
+package com.sun.media.imageioimpl.plugins.gif;
 
 import java.awt.image.ColorModel;
 import java.awt.image.SampleModel;
@@ -51,9 +51,13 @@ import java.util.Locale;
 import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.ImageWriter;
 import javax.imageio.spi.ImageWriterSpi;
-import com.sun.media.imageioimpl.common.PackageUtil;
+import com.sun.media.imageioimpl.common.PaletteBuilder;
 
 public class GIFImageWriterSpi extends ImageWriterSpi {
+
+    private static final String vendorName = "Sun Microsystems, Inc.";
+
+    private static final String version = "1.0";
 
     private static final String[] names = { "gif", "GIF" };
 
@@ -62,15 +66,15 @@ public class GIFImageWriterSpi extends ImageWriterSpi {
     private static final String[] MIMETypes = { "image/gif" };
 
     private static final String writerClassName =
-        "com.sun.media.imageioimpl.plugins.gif.GIFImageWriter";
+    "com.sun.media.imageioimpl.plugins.gif.GIFImageWriter";
 
     private static final String[] readerSpiNames = {
-        "com.sun.imageio.plugins.gif.GIFImageReaderSpi" // XXX J2SE core
+        "com.sun.imageio.plugins.gif.GIFImageReaderSpi"
     };
 
     public GIFImageWriterSpi() {
-        super(PackageUtil.getVendor(),
-              PackageUtil.getVersion(),
+        super(vendorName,
+              version,
               names,
               suffixes,
               MIMETypes,
@@ -79,26 +83,34 @@ public class GIFImageWriterSpi extends ImageWriterSpi {
               readerSpiNames,
               true,
               GIFWritableStreamMetadata.NATIVE_FORMAT_NAME,
-              "com.sun.imageio.plugins.gif.GIFStreamMetadataFormat",// XXX J2SE core
+              "com.sun.media.imageioimpl.plugins.gif.GIFStreamMetadataFormat",
               null, null,
               true,
               GIFWritableImageMetadata.NATIVE_FORMAT_NAME,
-              "com.sun.imageio.plugins.gif.GIFImageMetadataFormat",// XXX J2SE core
+              "com.sun.media.imageioimpl.plugins.gif.GIFStreamMetadataFormat",
               null, null
               );
     }
 
     public boolean canEncodeImage(ImageTypeSpecifier type) {
-        if(type == null) {
+        if (type == null) {
             throw new IllegalArgumentException("type == null!");
         }
 
         SampleModel sm = type.getSampleModel();
         ColorModel cm = type.getColorModel();
 
-        return sm.getNumBands() == 1 && sm.getSampleSize(0) <= 8 &&
-            sm.getWidth() <= 65535 && sm.getHeight() <= 65535 &&
+        boolean canEncode = sm.getNumBands() == 1 &&
+            sm.getSampleSize(0) <= 8 &&
+            sm.getWidth() <= 65535 &&
+            sm.getHeight() <= 65535 &&
             (cm == null || cm.getComponentSize()[0] <= 8);
+
+        if (canEncode) {
+            return true;
+        } else {
+            return PaletteBuilder.canCreatePalette(type);
+        }
     }
 
     public String getDescription(Locale locale) {

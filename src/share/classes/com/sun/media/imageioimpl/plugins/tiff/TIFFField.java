@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:45 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-25 01:44:56 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -211,6 +211,14 @@ public class TIFFField {
      * type of the TIFF field.
      */
     public TIFFField(TIFFTag tag, int type, int count, Object data) {
+        if(tag == null) {
+            throw new IllegalArgumentException("tag == null!");
+        }
+        if(!tag.isDataTypeOK(type)) {
+            throw new IllegalArgumentException
+                ("Data type \""+getTypeName(type)+
+                 "\" incompatible with tag "+tag.getName());
+        }
         this.tag = tag;
         this.tagNumber = tag.getNumber();
         this.type = type;
@@ -219,6 +227,14 @@ public class TIFFField {
     }
 
     public TIFFField(TIFFTag tag, int type, int count) {
+        if(tag == null) {
+            throw new IllegalArgumentException("tag == null!");
+        }
+        if(!tag.isDataTypeOK(type)) {
+            throw new IllegalArgumentException
+                ("Data type \""+getTypeName(type)+
+                 "\" incompatible with tag "+tag.getName());
+        }
         this.tag = tag;
         this.tagNumber = tag.getNumber();
         this.type = type;
@@ -227,6 +243,9 @@ public class TIFFField {
     }
 
     public TIFFField(TIFFTag tag, int val) {
+        if(tag == null) {
+            throw new IllegalArgumentException("tag == null!");
+        }
         if (val < 0) {
             throw new IllegalArgumentException("val < 0!");
         }
@@ -245,6 +264,12 @@ public class TIFFField {
             long[] ldata = new long[1];
             ldata[0] = val;
             this.data = ldata;
+        }
+
+        if(!tag.isDataTypeOK(type)) {
+            throw new IllegalArgumentException
+                ("Data type \""+getTypeName(this.type)+
+                 "\" incompatible with tag "+this.tag.getName());
         }
     }
 

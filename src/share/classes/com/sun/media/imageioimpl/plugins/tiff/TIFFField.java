@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-03-25 01:44:56 $
+ * $Revision: 1.3 $
+ * $Date: 2006-03-27 16:49:49 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -214,11 +214,6 @@ public class TIFFField {
         if(tag == null) {
             throw new IllegalArgumentException("tag == null!");
         }
-        if(!tag.isDataTypeOK(type)) {
-            throw new IllegalArgumentException
-                ("Data type \""+getTypeName(type)+
-                 "\" incompatible with tag "+tag.getName());
-        }
         this.tag = tag;
         this.tagNumber = tag.getNumber();
         this.type = type;
@@ -229,11 +224,6 @@ public class TIFFField {
     public TIFFField(TIFFTag tag, int type, int count) {
         if(tag == null) {
             throw new IllegalArgumentException("tag == null!");
-        }
-        if(!tag.isDataTypeOK(type)) {
-            throw new IllegalArgumentException
-                ("Data type \""+getTypeName(type)+
-                 "\" incompatible with tag "+tag.getName());
         }
         this.tag = tag;
         this.tagNumber = tag.getNumber();
@@ -264,12 +254,6 @@ public class TIFFField {
             long[] ldata = new long[1];
             ldata[0] = val;
             this.data = ldata;
-        }
-
-        if(!tag.isDataTypeOK(type)) {
-            throw new IllegalArgumentException
-                ("Data type \""+getTypeName(this.type)+
-                 "\" incompatible with tag "+this.tag.getName());
         }
     }
 

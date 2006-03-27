@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-03-27 18:52:05 $
+ * $Revision: 1.3 $
+ * $Date: 2006-03-27 23:36:20 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -129,7 +129,7 @@ public abstract class TIFFBaseJPEGCompressor extends TIFFCompressor {
     // Whether the codecLib native JPEG writer is being used.
     private boolean usingCodecLib;
 
-    // Array-based output stream for non-codecLib use only.
+    // Array-based output stream.
     private IIOByteArrayOutputStream baos;
 
     /**
@@ -333,7 +333,8 @@ public abstract class TIFFBaseJPEGCompressor extends TIFFCompressor {
         if(DEBUG) {
             System.out.println("getImageMetadata("+pruneTables+")");
         }
-        if(JPEGImageMetadata == null) {
+        if(JPEGImageMetadata == null &&
+           IMAGE_METADATA_NAME.equals(JPEGWriter.getOriginatingProvider().getNativeImageMetadataFormatName())) {
             TIFFImageWriter tiffWriter = (TIFFImageWriter)this.writer;
 
             // Get default image metadata.
@@ -455,7 +456,7 @@ public abstract class TIFFBaseJPEGCompressor extends TIFFCompressor {
         // Create the BufferedImage.
         BufferedImage bi = new BufferedImage(cm, wras, false, null);
 
-        // Get the pruned JPEG image metadata.
+        // Get the pruned JPEG image metadata (may be null).
         IIOMetadata imageMetadata = getImageMetadata(writeAbbreviatedStream);
 
         // Compress the image into the output stream.

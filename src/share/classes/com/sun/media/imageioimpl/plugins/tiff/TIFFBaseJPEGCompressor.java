@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2006-03-24 23:52:30 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-27 18:52:05 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -180,6 +180,9 @@ public abstract class TIFFBaseJPEGCompressor extends TIFFCompressor {
         for(int i = 0; i < numNodes; i++) {
             Node node = (Node)nodes.get(i);
             if(!wantedNodes.contains(node.getNodeName())) {
+                if(DEBUG) {
+                    System.out.println("Removing "+node.getNodeName());
+                }
                 node.getParentNode().removeChild(node);
             }
         }
@@ -338,27 +341,25 @@ public abstract class TIFFBaseJPEGCompressor extends TIFFCompressor {
                 JPEGWriter.getDefaultImageMetadata(tiffWriter.imageType,
                                                    JPEGParam);
 
-            if(pruneTables) {
-                // Get the DOM tree.
-                Node tree = JPEGImageMetadata.getAsTree(IMAGE_METADATA_NAME);
+            // Get the DOM tree.
+            Node tree = JPEGImageMetadata.getAsTree(IMAGE_METADATA_NAME);
 
-                // Remove unwanted marker segments.
-                try {
-                    pruneNodes(tree, pruneTables);
-                } catch(IllegalArgumentException e) {
-                    throw new IIOException("Error pruning unwanted nodes", e);
-                }
+            // Remove unwanted marker segments.
+            try {
+                pruneNodes(tree, pruneTables);
+            } catch(IllegalArgumentException e) {
+                throw new IIOException("Error pruning unwanted nodes", e);
+            }
 
-                // Set the DOM back into the metadata.
-                try {
-                    JPEGImageMetadata.setFromTree(IMAGE_METADATA_NAME, tree);
-                } catch(IIOInvalidTreeException e) {
-                    // XXX This should really be a warning that image data
-                    // segments will be written with tables despite the
-                    // present of JPEGTables field.
-                    throw new IIOException
-                        ("Cannot set pruned image metadata!", e);
-                }
+            // Set the DOM back into the metadata.
+            try {
+                JPEGImageMetadata.setFromTree(IMAGE_METADATA_NAME, tree);
+            } catch(IIOInvalidTreeException e) {
+                // XXX This should really be a warning that image data
+                // segments will be written with tables despite the
+                // present of JPEGTables field.
+                throw new IIOException
+                    ("Cannot set pruned image metadata!", e);
             }
         }
 

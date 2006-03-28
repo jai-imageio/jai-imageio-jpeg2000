@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.18 $
- * $Date: 2006-03-21 01:33:51 $
+ * $Revision: 1.19 $
+ * $Date: 2006-03-28 23:36:16 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -77,10 +77,13 @@ import javax.imageio.spi.ImageWriterSpi;
 import javax.imageio.stream.ImageOutputStream;
 import org.w3c.dom.Node;
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
+import com.sun.media.imageio.plugins.tiff.EXIFParentTIFFTagSet;
+import com.sun.media.imageio.plugins.tiff.EXIFTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.TIFFColorConverter;
 import com.sun.media.imageio.plugins.tiff.TIFFCompressor;
 import com.sun.media.imageio.plugins.tiff.TIFFImageWriteParam;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
+import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
 import com.sun.media.imageioimpl.common.ImageUtil;
 import com.sun.media.imageioimpl.common.PackageUtil;
 import com.sun.media.imageioimpl.common.SimpleRenderedImage;
@@ -89,6 +92,8 @@ import com.sun.media.imageioimpl.common.SingleTileRenderedImage;
 public class TIFFImageWriter extends ImageWriter {
 
     private static final boolean DEBUG = false; // XXX false for release!
+
+    static final String EXIF_JPEG_COMPRESSION_TYPE = "EXIF JPEG";
 
     public static final int DEFAULT_BYTES_PER_STRIP = 8192;
 
@@ -104,8 +109,15 @@ public class TIFFImageWriter extends ImageWriter {
         "JPEG",
         "ZLib",
         "PackBits",
-        "Deflate"
+        "Deflate",
+        EXIF_JPEG_COMPRESSION_TYPE
     };
+
+    //
+    // !!! The lengths of the arrays 'compressionTypes',
+    // !!! 'isCompressionLossless', and 'compressionNumbers'
+    // !!! must be equal.
+    //
 
     /**
      * Known TIFF compression types.
@@ -119,22 +131,24 @@ public class TIFFImageWriter extends ImageWriter {
         "JPEG",
         "ZLib",
         "PackBits",
-        "Deflate"
+        "Deflate",
+        EXIF_JPEG_COMPRESSION_TYPE
     };
 
     /**
      * Lossless flag for known compression types.
      */
     public static final boolean[] isCompressionLossless = {
-        true,
-        true,
-        true,
-        true,
-        false,
-        false,
-        true,
-        true,
-        true
+        true,  // RLE
+        true,  // T.4
+        true,  // T.6
+        true,  // LZW
+        false, // Old JPEG
+        false, // JPEG
+        true,  // ZLib
+        true,  // PackBits
+        true,  // DEFLATE
+        false  // EXIF JPEG
     };
 
     /**
@@ -149,7 +163,8 @@ public class TIFFImageWriter extends ImageWriter {
         BaselineTIFFTagSet.COMPRESSION_JPEG,
         BaselineTIFFTagSet.COMPRESSION_ZLIB,
         BaselineTIFFTagSet.COMPRESSION_PACKBITS,
-        BaselineTIFFTagSet.COMPRESSION_DEFLATE
+        BaselineTIFFTagSet.COMPRESSION_DEFLATE,
+        BaselineTIFFTagSet.COMPRESSION_OLD_JPEG, // EXIF JPEG
     };
 
     ImageOutputStream stream;
@@ -786,6 +801,43 @@ public class TIFFImageWriter extends ImageWriter {
                           compression);
         rootIFD.addTIFFField(compressionField);
 
+        // Set EXIF flag. Note that there is no way to determine definitively
+        // when an uncompressed thumbnail is being written as the EXIF IFD
+        // pointer field is optional for thumbnails.
+        boolean isEXIF = false;
+        if(numBands == 3 &&
+           sampleSize[0] == 8 && sampleSize[1] == 8 && sampleSize[2] == 8) {
+            // Three bands with 8 bits per sample.
+            if(rootIFD.getTIFFField(EXIFParentTIFFTagSet.TAG_EXIF_IFD_POINTER)
+               != null) {
+                // EXIF IFD pointer present.
+                if(compression == BaselineTIFFTagSet.COMPRESSION_NONE &&
+                   (photometricInterpretation ==
+                    BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_RGB ||
+                    photometricInterpretation ==
+                    BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_Y_CB_CR)) {
+                    // Uncompressed RGB or YCbCr.
+                    isEXIF = true;
+                } else if(compression ==
+                          BaselineTIFFTagSet.COMPRESSION_OLD_JPEG) {
+                    // Compressed.
+                    isEXIF = true;
+                }
+            } else if(compressionMode == ImageWriteParam.MODE_EXPLICIT &&
+                      EXIF_JPEG_COMPRESSION_TYPE.equals
+                      (param.getCompressionType())) {
+                // EXIF IFD pointer absent but EXIF JPEG compression set.
+                isEXIF = true;
+            }
+        }
+
+        // Initialize JPEG interchange format flag which is used to
+        // indicate that the image is stored as a single JPEG stream.
+        // This flag is separated from the 'isEXIF' flag in case JPEG
+        // interchange format is eventually supported for non-EXIF images.
+        boolean isJPEGInterchange =
+            isEXIF && compression == BaselineTIFFTagSet.COMPRESSION_OLD_JPEG;
+
         if (compressor == null) {
             if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_RLE) {
                 compressor = new TIFFRLECompressor();
@@ -852,20 +904,26 @@ public class TIFFImageWriter extends ImageWriter {
                 compressor = new TIFFLZWCompressor(predictor);
             } else if (compression ==
                        BaselineTIFFTagSet.COMPRESSION_OLD_JPEG) {
-                throw new IIOException("Old JPEG compression not supported!");
+                if(isEXIF) {
+                    compressor = new TIFFEXIFJPEGCompressor(param);
+                } else {
+                    throw new IIOException
+                        ("Old JPEG compression not supported!");
+                }
             } else if (compression ==
                        BaselineTIFFTagSet.COMPRESSION_JPEG) {
-                compressor = new TIFFJPEGCompressor(param);
-                if(numBands == 3) {
+                if(numBands == 3 && sampleSize[0] == 8 &&
+                   sampleSize[1] == 8 && sampleSize[2] == 8) {
                     photometricInterpretation =
                         BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_Y_CB_CR;
-                } else if(numBands == 1) {
+                } else if(numBands == 1 && sampleSize[0] == 8) {
                     photometricInterpretation =
                         BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_BLACK_IS_ZERO;
                 } else {
                     throw new IIOException
                         ("JPEG compression supported for 1- and 3-band byte images only!");
                 }
+                compressor = new TIFFJPEGCompressor(param);
             } else if (compression ==
                        BaselineTIFFTagSet.COMPRESSION_ZLIB) {
                 compressor = new TIFFZLibCompressor(param, predictor);
@@ -885,8 +943,8 @@ public class TIFFImageWriter extends ImageWriter {
                 } else {
                     compressor = new TIFFNullCompressor();
                 }
-            }
-        }
+            } // compression == ?
+        } // compressor == null
 
         if(DEBUG) {
             if(param != null &&
@@ -1103,6 +1161,7 @@ public class TIFFImageWriter extends ImageWriter {
         }
 
         // Always emit XResolution and YResolution.
+
         TIFFField XResolutionField =
             rootIFD.getTIFFField(BaselineTIFFTagSet.TAG_X_RESOLUTION);
         TIFFField YResolutionField =
@@ -1285,6 +1344,10 @@ public class TIFFImageWriter extends ImageWriter {
                                            MCUMultiple/2)/MCUMultiple),
                              MCUMultiple);
             }
+        } else if(isJPEGInterchange) {
+            // Force tile size to equal image size.
+            tileWidth = width;
+            tileLength = height;
         } else if(useTiling) {
             // Round tile size to multiple of 16 per TIFF 6.0 specification
             // (see pages 67-68 of version 6.0.1 from Adobe).
@@ -1363,6 +1426,264 @@ public class TIFFImageWriter extends ImageWriter {
                          tilesDown*tilesAcross);
             rootIFD.addTIFFField(tileByteCountsField);
         }
+
+        if(isEXIF) {
+            //
+            // Ensure presence of mandatory fields and absence of prohibited
+            // fields and those that duplicate information in JPEG marker
+            // segments per tables 14-18 of the EXIF 2.2 specification.
+            //
+
+            // If an empty image is being written or inserted then infer
+            // that the primary IFD is being set up.
+            boolean isPrimaryIFD = isEncodingEmpty();
+
+            // Handle TIFF fields in order of increasing tag number.
+            if(compression == BaselineTIFFTagSet.COMPRESSION_OLD_JPEG) {
+                // ImageWidth
+                rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_IMAGE_WIDTH);
+
+                // ImageLength
+                rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_IMAGE_LENGTH);
+
+                // BitsPerSample
+                rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE);
+                // Compression
+                if(isPrimaryIFD) {
+                    rootIFD.removeTIFFField
+                        (BaselineTIFFTagSet.TAG_COMPRESSION);
+                }
+
+                // PhotometricInterpretation
+                rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_PHOTOMETRIC_INTERPRETATION);
+
+                // StripOffsets
+                rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_OFFSETS);
+
+                // SamplesPerPixel
+                rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_SAMPLES_PER_PIXEL);
+
+                // RowsPerStrip
+                rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_ROWS_PER_STRIP);
+
+                // StripByteCounts
+                rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS);
+                // XResolution and YResolution are handled above for all TIFFs.
+
+                // PlanarConfiguration
+                rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_PLANAR_CONFIGURATION);
+
+                // ResolutionUnit
+                if(rootIFD.getTIFFField
+                   (BaselineTIFFTagSet.TAG_RESOLUTION_UNIT) == null) {
+                    f = new TIFFField(base.getTag
+                                      (BaselineTIFFTagSet.TAG_RESOLUTION_UNIT),
+                                      BaselineTIFFTagSet.RESOLUTION_UNIT_INCH);
+                    rootIFD.addTIFFField(f);
+                }
+
+                if(isPrimaryIFD) {
+                    // JPEGInterchangeFormat
+                    rootIFD.removeTIFFField
+                        (BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT);
+
+                    // JPEGInterchangeFormatLength
+                    rootIFD.removeTIFFField
+                        (BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT_LENGTH);
+
+                    // YCbCrSubsampling
+                    rootIFD.removeTIFFField
+                        (BaselineTIFFTagSet.TAG_Y_CB_CR_SUBSAMPLING);
+
+                    // YCbCrPositioning
+                    if(rootIFD.getTIFFField
+                       (BaselineTIFFTagSet.TAG_Y_CB_CR_POSITIONING) == null) {
+                        f = new TIFFField
+                            (base.getTag
+                             (BaselineTIFFTagSet.TAG_Y_CB_CR_POSITIONING),
+                             TIFFTag.TIFF_SHORT,
+                             1,
+                             new char[] {
+                                 (char)BaselineTIFFTagSet.Y_CB_CR_POSITIONING_CENTERED
+                             });
+                        rootIFD.addTIFFField(f);
+                    }
+                } else { // Thumbnail IFD
+                    // JPEGInterchangeFormat
+                    f = new TIFFField
+                        (base.getTag
+                         (BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT),
+                         TIFFTag.TIFF_LONG,
+                         1);
+                    rootIFD.addTIFFField(f);
+
+                    // JPEGInterchangeFormatLength
+                    f = new TIFFField
+                        (base.getTag
+                         (BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT_LENGTH),
+                         TIFFTag.TIFF_LONG,
+                         1);
+                    rootIFD.addTIFFField(f);
+
+                    // YCbCrSubsampling
+                    rootIFD.removeTIFFField
+                        (BaselineTIFFTagSet.TAG_Y_CB_CR_SUBSAMPLING);
+                }
+            } else { // Uncompressed
+                // ImageWidth through PlanarConfiguration are set above.
+                // XResolution and YResolution are handled above for all TIFFs.
+
+                // ResolutionUnit
+                if(rootIFD.getTIFFField
+                   (BaselineTIFFTagSet.TAG_RESOLUTION_UNIT) == null) {
+                    f = new TIFFField(base.getTag
+                                      (BaselineTIFFTagSet.TAG_RESOLUTION_UNIT),
+                                      BaselineTIFFTagSet.RESOLUTION_UNIT_INCH);
+                    rootIFD.addTIFFField(f);
+                }
+
+
+                // JPEGInterchangeFormat
+                rootIFD.removeTIFFField
+                    (BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT);
+
+                // JPEGInterchangeFormatLength
+                rootIFD.removeTIFFField
+                    (BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT_LENGTH);
+
+                if(photometricInterpretation ==
+                   BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_RGB) {
+                    // YCbCrCoefficients
+                    rootIFD.removeTIFFField
+                        (BaselineTIFFTagSet.TAG_Y_CB_CR_COEFFICIENTS);
+
+                    // YCbCrSubsampling
+                    rootIFD.removeTIFFField
+                        (BaselineTIFFTagSet.TAG_Y_CB_CR_SUBSAMPLING);
+
+                    // YCbCrPositioning
+                    rootIFD.removeTIFFField
+                        (BaselineTIFFTagSet.TAG_Y_CB_CR_POSITIONING);
+                }
+            }
+
+            // Get EXIF tags.
+            TIFFTagSet exifTags = EXIFTIFFTagSet.getInstance();
+
+            // Retrieve or create the EXIF IFD.
+            TIFFIFD exifIFD = null;
+            f = rootIFD.getTIFFField
+                (EXIFParentTIFFTagSet.TAG_EXIF_IFD_POINTER);
+            if(f != null) {
+                // Retrieve the EXIF IFD.
+                exifIFD = (TIFFIFD)f.getData();
+            } else if(isPrimaryIFD) {
+                // Create the EXIF IFD.
+                List exifTagSets = new ArrayList(1);
+                exifTagSets.add(exifTags);
+                exifIFD = new TIFFIFD(exifTagSets);
+
+                // Add it to the root IFD.
+                TIFFTagSet tagSet = EXIFParentTIFFTagSet.getInstance();
+                TIFFTag exifIFDTag =
+                    tagSet.getTag(EXIFParentTIFFTagSet.TAG_EXIF_IFD_POINTER);
+                rootIFD.addTIFFField(new TIFFField(exifIFDTag,
+                                                   TIFFTag.TIFF_LONG,
+                                                   1,
+                                                   exifIFD));
+            }
+
+            if(exifIFD != null) {
+                // Handle EXIF private fields in order of increasing
+                // tag number.
+
+                // ExifVersion
+                if(exifIFD.getTIFFField
+                   (EXIFTIFFTagSet.TAG_EXIF_VERSION) == null) {
+                    f = new TIFFField
+                        (exifTags.getTag(EXIFTIFFTagSet.TAG_EXIF_VERSION),
+                         TIFFTag.TIFF_UNDEFINED,
+                         4,
+                         EXIFTIFFTagSet.EXIF_VERSION_2_2);
+                    exifIFD.addTIFFField(f);
+                }
+
+                if(compression == BaselineTIFFTagSet.COMPRESSION_OLD_JPEG) {
+                    // ComponentsConfiguration
+                    if(exifIFD.getTIFFField
+                       (EXIFTIFFTagSet.TAG_COMPONENTS_CONFIGURATION) == null) {
+                        f = new TIFFField
+                            (exifTags.getTag
+                             (EXIFTIFFTagSet.TAG_COMPONENTS_CONFIGURATION),
+                             TIFFTag.TIFF_UNDEFINED,
+                             4,
+                             new byte[] {
+                                 (byte)EXIFTIFFTagSet.COMPONENTS_CONFIGURATION_Y,
+                                 (byte)EXIFTIFFTagSet.COMPONENTS_CONFIGURATION_CB,
+                                 (byte)EXIFTIFFTagSet.COMPONENTS_CONFIGURATION_CR,
+                                 (byte)0
+                             });
+                        exifIFD.addTIFFField(f);
+                    }
+                } else {
+                    // ComponentsConfiguration
+                    exifIFD.removeTIFFField
+                        (EXIFTIFFTagSet.TAG_COMPONENTS_CONFIGURATION);
+
+                    // CompressedBitsPerPixel
+                    exifIFD.removeTIFFField
+                        (EXIFTIFFTagSet.TAG_COMPRESSED_BITS_PER_PIXEL);
+                }
+
+                // FlashpixVersion
+                if(exifIFD.getTIFFField
+                   (EXIFTIFFTagSet.TAG_FLASHPIX_VERSION) == null) {
+                    f = new TIFFField
+                        (exifTags.getTag(EXIFTIFFTagSet.TAG_FLASHPIX_VERSION),
+                         TIFFTag.TIFF_UNDEFINED,
+                         4,
+                     new byte[] {(byte)'0', (byte)'1', (byte)'0', (byte)'0'});
+                    exifIFD.addTIFFField(f);
+                }
+
+                // ColorSpace
+                if(exifIFD.getTIFFField
+                   (EXIFTIFFTagSet.TAG_COLOR_SPACE) == null) {
+                    f = new TIFFField
+                        (exifTags.getTag(EXIFTIFFTagSet.TAG_COLOR_SPACE),
+                         TIFFTag.TIFF_SHORT,
+                         1,
+                         new char[] {
+                             (char)EXIFTIFFTagSet.COLOR_SPACE_SRGB
+                         });
+                    exifIFD.addTIFFField(f);
+                }
+
+                if(compression == BaselineTIFFTagSet.COMPRESSION_OLD_JPEG) {
+                    // PixelXDimension
+                    if(exifIFD.getTIFFField
+                       (EXIFTIFFTagSet.TAG_PIXEL_X_DIMENSION) == null) {
+                        f = new TIFFField
+                            (exifTags.getTag(EXIFTIFFTagSet.TAG_PIXEL_X_DIMENSION),
+                             width);
+                        exifIFD.addTIFFField(f);
+                    }
+
+                    // PixelYDimension
+                    if(exifIFD.getTIFFField
+                       (EXIFTIFFTagSet.TAG_PIXEL_Y_DIMENSION) == null) {
+                        f = new TIFFField
+                            (exifTags.getTag(EXIFTIFFTagSet.TAG_PIXEL_Y_DIMENSION),
+                             height);
+                        exifIFD.addTIFFField(f);
+                    }
+                } else {
+                    exifIFD.removeTIFFField
+                        (EXIFTIFFTagSet.TAG_INTEROPERABILITY_IFD_POINTER);
+                }
+            }
+
+        } // if(isEXIF)
     }
 
     /**
@@ -2549,6 +2870,10 @@ public class TIFFImageWriter extends ImageWriter {
     // XXX Move local variable(s) up.
     private boolean isInsertingEmpty = false;
     private boolean isWritingEmpty = false;
+
+    private boolean isEncodingEmpty() {
+        return isInsertingEmpty || isWritingEmpty;
+    }
 
     public boolean canInsertEmpty(int imageIndex) throws IOException {
         return canInsertImage(imageIndex);

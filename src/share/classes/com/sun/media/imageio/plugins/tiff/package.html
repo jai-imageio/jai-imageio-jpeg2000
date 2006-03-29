@@ -38,18 +38,41 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.7 $
-$Date: 2006-02-17 21:22:26 $
+$Revision: 1.8 $
+$Date: 2006-03-29 19:10:37 $
 $State: Exp $
 -->
 
 <html>
 <body>
-
 Package containing the public classes used by the Sun TIFF plug-in for
 the Image I/O Framework.
 
-<h3><a name="Reading"</a>Reading Images</h3>
+<p>
+<a href="#Reading">Reading Images</a><br/>
+<font size="-1">
+<ul>
+<li><a href="#Decompression">Decompression</a></li>
+<li><a href="#ColorConversionRead">Color Conversion</a></li>
+<li><a href="#ColorSpacesRead">Color Spaces</a></li>
+<li><a href="#ICCProfilesRead">ICC Profiles</a></li>
+<li><a href="#MetadataIssuesRead">Metadata Issues</a></li>
+</ul>
+</font>
+<a href="#Writing">Writing Images</a><br/>
+<font size="-1">
+<ul>
+<li><a href="#Compression">Compression</a></li>
+<li><a href="#ColorConversionWrite">Color Conversion</a></li>
+<li><a href="#ICCProfilesWrite">ICC Profiles</a></li>
+<li><a href="#MetadataIssuesWrite">Metadata Issues</a></li>
+</ul>
+</font>
+<a href="#StreamMetadata">Native Stream Metadata Format</a><br/>
+<a href="#ImageMetadata">Native Image Metadata Format</a>
+</p>
+
+<h3><a name="Reading"/>Reading Images</h3>
 
 TIFF images are read by an {@link javax.imageio.ImageReader} which may be
 controlled by its public interface as well as via a supplied
@@ -59,7 +82,7 @@ controlled by its public interface as well as via a supplied
 
 <!-- Table? -->
 
-<h4>Decompression</h4>
+<h4><a name="Decompression"/>Decompression</h4>
 
 A {@link com.sun.media.imageio.plugins.tiff.TIFFDecompressor} object may be
 supplied via
@@ -70,7 +93,7 @@ which might otherwise have been used for a known compression type. This
 mechanism allows for compression types to be handled by user-defined
 decompressors whether or not that compression type is known to the plug-in.
 
-<h4>Color Conversion</h4>
+<h4><a name="ColorConversionRead"/>Color Conversion</h4>
 
 A {@link com.sun.media.imageio.plugins.tiff.TIFFColorConverter} object may be
 supplied via
@@ -193,7 +216,7 @@ space will be included in the {@link java.util.Iterator} returned by
 more than one type, the first one will be based on the ICC profile and the
 second on the inferred color space.</p>
 
-<h4>Metadata Issues</h4>
+<h4><a name="MetadataIssuesRead"/>Metadata Issues</h4>
 
 By default all fields in the TIFF image file directory (IFD) are loaded into
 the native image metadata object. In cases where the IFD includes fields which
@@ -335,7 +358,7 @@ unassociated alpha => "nonpremultiplied".</td>
 </table>
 </p>
 
-<h3><a name="Writing"</a>Writing Images</h3>
+<h3><a name="Writing"/>Writing Images</h3>
 
 TIFF images are written by an {@link javax.imageio.ImageWriter} which may be
 controlled by its public interface as well as via a supplied
@@ -345,7 +368,7 @@ controlled by its public interface as well as via a supplied
 
 <!-- Table? -->
 
-<h4>Compression</h4>
+<h4><a name="Compression"/>Compression</h4>
 
 A {@link com.sun.media.imageio.plugins.tiff.TIFFCompressor} object may be
 supplied via
@@ -356,7 +379,7 @@ which might otherwise have been used for a known compression type. This
 mechanism allows for compression types to be handled by user-defined
 compressors whether or not that compression type is known to the plug-in.
 
-<h4>Color Conversion</h4>
+<h4><a name="ColorConversionWrite"/>Color Conversion</h4>
 
 A {@link com.sun.media.imageio.plugins.tiff.TIFFColorConverter} object may be
 supplied via
@@ -384,7 +407,7 @@ color spaces defined by the <tt>CS_*</tt> constants in <code>ColorSpace</code>.
 </li>
 </ul>
 
-<h4>Metadata Issues</h4>
+<h4><a name="MetadataIssuesWrite"/>Metadata Issues</h4>
 
 Some behavior of the writer is affected by or may affect the contents of
 the image metadata which may be supplied by the user.
@@ -598,7 +621,7 @@ TIFF Fields, e.g., "Software", then the field is added with content
 </table>
 </p>
 
-<h3><a name="StreamMetadata"</a>Stream Metadata</h3>
+<h3><a name="StreamMetadata"/>Stream Metadata</h3>
 
 The DTD for the stream metadata format is as follows:
 
@@ -615,7 +638,7 @@ The DTD for the stream metadata format is as follows:
 ]&gt;
 </pre>
 
-<h3><a name="ImageMetadata"</a>Image Metadata</h3>
+<h3><a name="ImageMetadata"/>Image Metadata</h3>
 
 The DTD for the native image metadata format is as follows:
 

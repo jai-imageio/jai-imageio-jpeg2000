@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.8 $
-$Date: 2006-03-29 19:10:37 $
+$Revision: 1.9 $
+$Date: 2006-03-29 19:14:09 $
 $State: Exp $
 -->
 
@@ -57,6 +57,10 @@ the Image I/O Framework.
 <li><a href="#ColorSpacesRead">Color Spaces</a></li>
 <li><a href="#ICCProfilesRead">ICC Profiles</a></li>
 <li><a href="#MetadataIssuesRead">Metadata Issues</a></li>
+<font size="-1">
+<ul><a href="#MapNativeStandard">
+Mapping from Native to Standard Metadata</a></li>
+</font>
 </ul>
 </font>
 <a href="#Writing">Writing Images</a><br/>
@@ -235,7 +239,8 @@ load into the native image metadata object only those fields which have a
 <code>TIFFTag</code> contained in the one of the allowed
 <code>TIFFTagSet</code>s.
 
-<h5>Mapping of TIFF Native Image Metadata to the Standard Metadata Format</h5>
+<h5><a name="MapNativeStandard"/>
+Mapping of TIFF Native Image Metadata to the Standard Metadata Format</h5>
 
 The derivation of standard metadata format <code>javax_imageio_1.0</code>
 elements from <a href="#ImageMetadata">TIFF native image metadata</a> is given
@@ -505,7 +510,8 @@ be written as supplied.</p>
 an ICC profile field is desired in the output metadata then it should be
 be set in the metadata object supplied to the writer.</p>
 
-<h5>Mapping of the Standard Metadata Format to TIFF Native Image Metadata</h5>
+<h5><a name="MapStandardNative"/>
+Mapping of the Standard Metadata Format to TIFF Native Image Metadata</h5>
 
 The derivation of <a href="#ImageMetadata">TIFF native image metadata</a>
 elements from the standard metadata format <code>javax_imageio_1.0</code> is

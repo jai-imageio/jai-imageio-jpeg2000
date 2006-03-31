@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-03-27 23:36:20 $
+ * $Revision: 1.4 $
+ * $Date: 2006-03-31 01:30:12 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -133,10 +133,11 @@ public abstract class TIFFBaseJPEGCompressor extends TIFFCompressor {
     private IIOByteArrayOutputStream baos;
 
     /**
-     * Removes unwanted nodes from a JPEG native image metadata tree.
-     * All nodes but the DHT, DQT, DRI, COM, SOF, and SOS nodes are
-     * removed unless <code>pruneTables</code> is <code>true</code>
-     * in which case the DHT and DQT nodes are also removed.
+     * Removes nonessential nodes from a JPEG native image metadata tree.
+     * All nodes derived from JPEG marker segments other than DHT, DQT,
+     * SOF, SOS segments are removed unless <code>pruneTables</code> is
+     * <code>true</code> in which case the nodes derived from the DHT and
+     * DQT marker segments are also removed.
      *
      * @param tree A <tt>javax_imageio_jpeg_image_1.0</tt> tree.
      * @param pruneTables Whether to prune Huffman and quantization tables.
@@ -160,8 +161,8 @@ public abstract class TIFFBaseJPEGCompressor extends TIFFCompressor {
         List wantedNodes = new ArrayList();
         wantedNodes.addAll(Arrays.asList(new String[] {
             "JPEGvariety", "markerSequence",
-            "dri", "com", "sof", "sos",
-            "componentSpec", "scanComponentSpec"
+            "sof", "componentSpec",
+            "sos", "scanComponentSpec"
         }));
 
         // Add Huffman and quantization table nodes if not pruning tables.

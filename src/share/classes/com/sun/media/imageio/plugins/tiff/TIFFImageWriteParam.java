@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:19 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-31 22:51:10 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -101,6 +101,11 @@ import com.sun.media.imageioimpl.plugins.tiff.TIFFImageWriter;
  * <a href="http://www.isi.edu/in-notes/rfc1951.txt">
  * DEFLATE Compressed Data Format Specification</a></td>
  * </tr>
+ * <tr>
+ * <td>EXIF JPEG</td>
+ * <td>EXIF-specific JPEG compression (see note following this table)</td>
+ * <td><a href="http://www.exif.org/Exif2-2.PDF">EXIF 2.2 Specification</a>
+ * (PDF), section 4.5.5, "Basic Structure of Thumbnail Data"</td>
  * </table>
  * </p>
  * <p>
@@ -118,6 +123,19 @@ import com.sun.media.imageioimpl.plugins.tiff.TIFFImageWriter;
  * whereas for Deflate it has value 32946 (0x80b2). In both cases each
  * image segment (strip or tile) is written as a single complete zlib data
  * stream.
+ * </p>
+ *
+ * <p>
+ * "EXIF JPEG" is a compression type used when writing the contents of an
+ * APP1 EXIF marker segment for inclusion in a JPEG native image metadata
+ * tree. The contents appended to the output when this compression type is
+ * used are a function of whether an empty or non-empty image is written.
+ * If the image is empty, then a TIFF IFD adhering to the specification of
+ * a compressed EXIF primary IFD is appended. If the image is non-empty,
+ * then a complete IFD and image adhering to the specification of a
+ * compressed EXIF thumbnail IFD and image are appended. Note that the
+ * data of the empty image may <i>not</i> later be appended using the pixel
+ * replacement capability of the TIFF writer.
  * </p>
  *
  * <p> If ZLib/Deflate or JPEG compression is used, the compression quality

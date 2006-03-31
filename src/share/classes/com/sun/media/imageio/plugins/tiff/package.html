@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.9 $
-$Date: 2006-03-29 19:14:09 $
+$Revision: 1.10 $
+$Date: 2006-03-31 23:22:11 $
 $State: Exp $
 -->
 
@@ -56,11 +56,21 @@ the Image I/O Framework.
 <li><a href="#ColorConversionRead">Color Conversion</a></li>
 <li><a href="#ColorSpacesRead">Color Spaces</a></li>
 <li><a href="#ICCProfilesRead">ICC Profiles</a></li>
-<li><a href="#MetadataIssuesRead">Metadata Issues</a></li>
-<font size="-1">
-<ul><a href="#MapNativeStandard">
-Mapping from Native to Standard Metadata</a></li>
+<li><a href="#MetadataIssuesRead">Metadata Issues</a>
+<font size="-2">
+<ul>
+<li><a href="#MapNativeStandard">Native to Standard Metadata Mapping</a></li>
+</ul>
 </font>
+</li>
+<li><a href="#EXIFRead">Reading EXIF Images</a>
+<font size="-2">
+<ul>
+<li><a href="#EXIFReadTIFF">Reading Uncompressed EXIF Images</a></li>
+<li><a href="#EXIFReadJPEG">Reading Compressed EXIF Images</a></li>
+</ul>
+</font>
+</li>
 </ul>
 </font>
 <a href="#Writing">Writing Images</a><br/>
@@ -70,6 +80,19 @@ Mapping from Native to Standard Metadata</a></li>
 <li><a href="#ColorConversionWrite">Color Conversion</a></li>
 <li><a href="#ICCProfilesWrite">ICC Profiles</a></li>
 <li><a href="#MetadataIssuesWrite">Metadata Issues</a></li>
+<font size="-2">
+<ul>
+<li><a href="#MapStandardNative">Standard to Native Metadata Mapping</a></li>
+</ul>
+</font>
+<li><a href="#EXIFWrite">Writing EXIF Images</a>
+<font size="-2">
+<ul>
+<li><a href="#EXIFWriteTIFF">Writing Uncompressed EXIF Images</a></li>
+<li><a href="#EXIFWriteJPEG">Writing Compressed EXIF Images</a></li>
+</ul>
+</font>
+</li>
 </ul>
 </font>
 <a href="#StreamMetadata">Native Stream Metadata Format</a><br/>
@@ -363,6 +386,96 @@ unassociated alpha => "nonpremultiplied".</td>
 </table>
 </p>
 
+<h4><a name="EXIFRead"/>Reading EXIF Images</h4>
+
+The TIFF reader may be used to read an uncompressed EXIF image or the
+contents of the <tt>APP1</tt> marker segment of a compressed EXIF image.
+
+<h5><a name="EXIFReadTIFF"/>Reading Uncompressed EXIF Images</h5>
+
+An uncompressed EXIF image is a one- or two-page uncompressed TIFF image
+with a specific ordering of its IFD and image data content. Each pixel
+has three 8-bit samples with photometric interpretation RGB or YCbCr.
+The image stream must contain a single primary image and may contain a
+single thumbnail which if present must also be uncompressed. The usual
+{@link javax.imageio.ImageReader} methods may be used to read the image
+data and metadata:
+
+<pre><code>
+ImageReader tiffReader;
+ImageInputStream input;
+ImageReadParam readParam;
+
+tiffReader.setInput(input);
+
+// Read primary image and IFD.
+BufferedImage image = tiffReader.read(0, readParam);
+IIOMetadata primaryIFD = tiffReader.getImageMetadata(0);
+
+// Read thumbnail and IFD if present.
+BufferedImage thumbnail = null;
+IIOMetadata thumbnailIFD = null;
+if(tiffReader.getNumImages(true) > 1) {
+    thumbnail = tiffReader.read(1, readParam);
+    thumbnailIFD = tiffReader.getImageMetadata(1);
+}
+</code></pre>
+
+Note that the EXIF thumbnail is treated as a separate page in the TIFF
+stream and not as a thumbnail, i.e.,
+<code>tiffReader.hasThumbnails(0)</code> will return <code>false</code>.
+
+<h5><a name="EXIFReadJPEG"/>Reading Compressed EXIF Images</h5>
+
+A compressed EXIF image is a 3-band ISO/IEC 10918-1 baseline DCT JPEG stream
+with an inserted <tt>APP1</tt> marker segment. The parameters of the marker
+segment after the length are the 6-byte sequence
+<code>{'E',&nbsp;'x',&nbsp;'i',&nbsp;'f',&nbsp;0x00,&nbsp;0x00}</code> followed
+by a complete TIFF stream. The embedded TIFF stream contains a primary IFD
+describing the JPEG image optionally followed by a thumbnail IFD and
+compressed or uncompressed thumbnail image data. Note that the embedded TIFF
+stream does not contain any image data associated with the primary IFD.
+
+<p>The parameter content of the <tt>APP1</tt> marker segment may be obtained
+from the user object of the associated <code>Node</code> in a
+<tt>javax_imageio_jpeg_image_1.0</tt> native image metadata tree extracted
+from the image metadata object returned by the JPEG reader. This node will
+have name <tt>unknown</tt> and an attribute named <tt>MarkerTag</tt> with
+integral value <code>0xE1</code> (<code>String</code> value
+<code>"225"</code>). The primary IFD and the thumbnail IFD and image may be
+read from the user object by the usual {@link javax.imageio.ImageReader}
+methods:
+
+<pre><code>
+ImageReader tiffReader;
+ImageReadParam readParam;
+IIOMetadataNode app1EXIFNode;
+
+// Set up input skipping EXIF ID 6-byte sequence.
+byte[] app1Parameters = (byte[])app1EXIFNode.getUserObject();
+MemoryCacheImageInputStream app1EXIFInput =
+    new MemoryCacheImageInputStream(new ByteArrayInputStream(app1Parameters, 6,
+                                                             app1Parameters.length - 6));
+tiffReader.setInput(app1EXIFInput);
+
+// Read primary IFD.
+IIOMetadata primaryIFD = tiffReader.getImageMetadata(0);
+
+// Read thumbnail and IFD if present.
+BufferedImage thumbnail = null;
+IIOMetadata thumbnailIFD = null;
+if(tiffReader.getNumImages(true) > 1) {
+    thumbnail = tiffReader.read(1, readParam);
+    thumbnailIFD = tiffReader.getImageMetadata(1);
+}
+</core></pre>
+Note that <code>tiffReader.getNumImages(true)</code> returns the number of
+IFDs in the embedded TIFF stream including those corresponding to empty
+images. Calling <code>tiffReader.read(0,&nbsp;readParam)</code> will throw
+an exception as the primary image in the embedded TIFF stream is always
+empty; the primary image should be obtained using the JPEG reader itself.
+</p>
+
 <h3><a name="Writing"/>Writing Images</h3>
 
 TIFF images are written by an {@link javax.imageio.ImageWriter} which may be
@@ -626,6 +739,172 @@ TIFF Fields, e.g., "Software", then the field is added with content
 </tr>
 </table>
 </p>
+
+<h4><a name="EXIFWrite"/>Writing EXIF Images</h4>
+
+The TIFF writer may be used to write an uncompressed EXIF image or the
+contents of the <tt>APP1</tt> marker segment of a compressed EXIF image.
+
+<h5><a name="EXIFWriteTIFF"/>Writing Uncompressed EXIF Images</h5>
+
+When writing a sequence of images each image is normally recorded as
+{IFD,&nbsp;IFD Value,&nbsp;Image Data}. The EXIF specification requires
+that an uncompressed EXIF image be structured as follows:
+
+<ol>
+<a name="EXIFStructure"/>
+<li>File Header</li>
+<li>Primary IFD</li>
+<li>Primary IFD Value</li>
+<li>Thumbnail IFD</li>
+<li>Thumbnail IFD Value</li>
+<li>Thumbnail Image Data</li>
+<li>Primary Image Data</li>
+</ol>
+
+To meet the requirement of the primary image data being recorded last, the
+primary image must be written initially as an empty image and have its data
+added via pixel replacement after the thumbnail IFD and image data have been
+written:
+
+<pre><code>
+ImageWriter tiffWriter;
+ImageOutputStream output;
+ImageWriteParam writeParam;
+
+IIOMetadata streamMetadata;
+BufferedImage image;
+BufferedImage thumbnail;
+IIOMetadata primaryIFD;
+IIOMetadata thumbnailIFD;
+
+tiffWriter.setOutput(output);
+if(thumbnail != null) {
+    // Write the TIFF header.
+    tiffWriter.prepareWriteSequence(streamMetadata);
+
+    // Append the primary IFD.
+    tiffWriter.prepareInsertEmpty(-1, // append
+                                  new ImageTypeSpecifier(image),
+                                  image.getWidth(),
+                                  image.getHeight(),
+                                  primaryIFD,
+                                  null, // thumbnails
+                                  writeParam);
+    tiffWriter.endInsertEmpty();
+
+    // Append the thumbnail IFD and image data.
+    tiffWriter.writeToSequence(new IIOImage(thumbnail, null, null),
+                               writeParam);
+
+    // Append the primary image data.
+    tiffWriter.prepareReplacePixels(0, new Rectangle(image.getWidth(),
+                                                     image.getHeight()));
+    tiffWriter.replacePixels(image, writeParam);
+    tiffWriter.endReplacePixels();
+
+    // End writing.
+    tiffWriter.endWriteSequence();
+} else {
+    // Write only the primary IFD and image data.
+    tiffWriter.write(streamMetadata,
+                     new IIOImage(image, null, primaryIFD),
+                     writeParam);
+}
+</code></pre>
+
+<h5><a name="EXIFWriteJPEG"/>Writing Compressed EXIF Images</h5>
+
+<!-- XXX -->
+The structure of the embedded TIFF stream in the APP1 segment of a
+compressed EXIF image is identical to <a href="#EXIFStructure">
+uncompressed EXIF image structure</a> except that there are no primary
+image data, i.e., the primary IFD does not refer to any image data.
+
+<pre><code>
+ImageWriter tiffWriter;
+ImageWriteParam writeParam;
+boolean isThumbnailCompressed;
+
+IIOMetadata streamMetadata;
+BufferedImage image;
+BufferedImage thumbnail;
+IIOMetadata primaryIFD;
+IIOMetadata thumbnailIFD;
+
+// Set up the output.
+ByteArrayOutputStream baos = new ByteArrayOutputStream();
+MemoryCacheImageOutputStream app1EXIFOutput = new MemoryCacheImageOutputStream(baos);
+tiffWriter.setOutput(app1EXIFOutput);
+
+// Set compression.
+writeParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+writeParam.setCompressionType("EXIF JPEG");
+
+if(thumbnail != null) {
+    // Write the TIFF header.
+    tiffWriter.prepareWriteSequence(streamMetadata);
+
+    // Append the primary IFD.
+    tiffWriter.prepareInsertEmpty(-1,  // append
+                                  new ImageTypeSpecifier(image),
+                                  image.getWidth(),
+                                  image.getHeight(),
+                                  primaryIFD,
+                                  null, // thumbnails
+                                  writeParam);
+    tiffWriter.endInsertEmpty();
+
+    // Change compression type if uncompressed.
+    if(!isThumbnailCompressed) {
+        writeParam.setCompressionMode(ImageWriteParam.MODE_DISABLED);
+    }
+
+    // Append the thumbnail IFD and image data.
+    tiffWriter.writeToSequence(new IIOImage(thumbnail, null,
+                                            thumbnailIFD),
+                               writeParam);
+
+    // End writing.
+    tiffWriter.endWriteSequence();
+} else {
+    // Write only the primary IFD.
+    tiffWriter.prepareWriteEmpty(streamMetadata,
+                                 new ImageTypeSpecifier(image),
+                                 image.getWidth(),
+                                 image.getHeight(),
+                                 primaryIFD,
+                                 null, // thumbnails
+                                 writeParam);
+    tiffWriter.endWriteEmpty();
+}
+
+// Flush data into byte stream.
+app1EXIFOutput.flush();
+
+// Create APP1 parameter array.
+byte[] app1Parameters = new byte[6 + baos.size()];
+
+// Add EXIF APP1 ID bytes.
+app1Parameters[0] = (byte)'E';
+app1Parameters[1] = (byte)'x';
+app1Parameters[2] = (byte)'i';
+app1Parameters[3] = (byte)'f';
+app1Parameters[4] = app1Parameters[5] = (byte)0;
+
+// Append TIFF stream to APP1 parameters.
+System.arraycopy(baos.toByteArray(), 0, app1Parameters, 6, baos.size());
+
+// Create the APP1 EXIF node to be added to native JPEG image metadata.
+IIOMetadataNode app1Node = new IIOMetadataNode("unknown");
+app1Node.setAttribute("MarkerTag", (new Integer(0xE1)).toString());
+app1Node.setUserObject(app1Parameters);
+</code></pre>
+
+The <code>"unknown"</code> node created above would be appended to the
+<code>"markerSequence"</code> node of the native JPEG image metadata
+and written to the JPEG stream when the primary image is written using
+the JPEG writer.
 
 <h3><a name="StreamMetadata"/>Stream Metadata</h3>
 

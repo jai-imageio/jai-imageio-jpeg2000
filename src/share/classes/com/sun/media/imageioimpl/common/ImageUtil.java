@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-02-10 18:47:50 $
+ * $Revision: 1.4 $
+ * $Date: 2006-03-31 19:43:38 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.common;
@@ -67,7 +67,10 @@ import java.awt.image.SampleModel;
 import java.awt.image.SinglePixelPackedSampleModel;
 import java.awt.image.WritableRaster;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 
 //import javax.imageio.ImageTypeSpecifier;
 
@@ -76,7 +79,11 @@ import javax.imageio.IIOImage;
 import javax.imageio.ImageReadParam;
 import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.ImageWriter;
+import javax.imageio.spi.IIORegistry;
+import javax.imageio.spi.ImageReaderSpi;
+import javax.imageio.spi.ImageReaderWriterSpi;
 import javax.imageio.spi.ImageWriterSpi;
+import javax.imageio.spi.ServiceRegistry;
 
 import com.sun.medialib.codec.jiio.Util;
 
@@ -1322,4 +1329,109 @@ public class ImageUtil {
 
         return retval;
     }
+
+    // Method to return JDK core ImageReaderSPI/ImageWriterSPI for a 
+    // given formatName.
+    public static List getJDKImageReaderWriterSPI(ServiceRegistry registry, 
+						  String formatName,
+						  boolean isReader) {
+
+	IIORegistry iioRegistry = (IIORegistry)registry;
+
+	Class spiClass;
+	String descPart;
+	if (isReader) {
+	    spiClass = ImageReaderSpi.class;
+	    descPart = " image reader";
+	} else {
+	    spiClass = ImageWriterSpi.class;
+	    descPart = " image writer";
+	}
+
+	Iterator iter = iioRegistry.getServiceProviders(spiClass, 
+							true); // useOrdering
+
+	String formatNames[];
+	ImageReaderWriterSpi provider;
+	String desc = "standard " + formatName + descPart;
+	String jiioPath = "com.sun.media.imageioimpl";
+	Locale locale = Locale.getDefault();
+	ArrayList list = new ArrayList();
+	while (iter.hasNext()) {
+            provider = (ImageReaderWriterSpi)iter.next();
+
+	    // Look for JDK core ImageWriterSpi's
+	    if (provider.getVendorName().startsWith("Sun Microsystems") &&
+		provider.getDescription(locale).equalsIgnoreCase(desc) &&
+		// not JAI Image I/O plugins
+		!provider.getPluginClassName().startsWith(jiioPath)) {
+
+		// Get the formatNames supported by this Spi
+		formatNames = provider.getFormatNames();
+		for (int i=0; i<formatNames.length; i++) {
+		    if (formatNames[i].equalsIgnoreCase(formatName)) {
+			// Must be a JDK provided ImageReader/ImageWriter
+			list.add(provider);
+			break;
+		    }
+		}
+	    }
+	}
+	
+	return list;
+    }
+
+    public static void processOnRegistration(ServiceRegistry registry,
+					     Class category,
+					     String formatName,
+					     ImageReaderWriterSpi spi,
+					     int deregisterJvmVersion, 
+					     int priorityJvmVersion) {
+
+	// Check which JVM we are running on
+	String jvmVendor = System.getProperty("java.vendor");
+	String jvmVersionString = 
+	    System.getProperty("java.specification.version");
+	int verIndex = jvmVersionString.indexOf("1.");
+	// Skip the "1." part to get to the part of the version number that
+	// actually changes from version to version
+	// The assumption here is that "java.specification.version" is 
+	// always of the format "x.y" and not "x.y.z" since that is what has
+	// been practically observed in all JDKs to-date, an examination of
+	// the code returning this property bears this out. However this does
+	// not guarantee that the format won't change in the future, 
+	// though that seems unlikely.
+	jvmVersionString = jvmVersionString.substring(verIndex+2);
+	
+	int jvmVersion = Integer.parseInt(jvmVersionString);
+	
+	if (jvmVendor.equals("Sun Microsystems Inc.")) {
+	    
+	    List list;
+	    if (spi instanceof ImageReaderSpi)
+		list = getJDKImageReaderWriterSPI(registry, formatName, true);
+	    else 
+		list = getJDKImageReaderWriterSPI(registry, formatName, false);
+	    
+	    if (jvmVersion >= deregisterJvmVersion && list.size() != 0) {
+		// De-register JIIO's plug-in
+		registry.deregisterServiceProvider(spi, category);
+	    } else {
+		for (int i=0; i<list.size(); i++) {
+		    if (jvmVersion >= priorityJvmVersion) {
+			// Set JIIO plug-in to lower priority
+			registry.setOrdering(category, 
+					     list.get(i),
+					     spi);
+		    } else {
+			// Set JIIO plug-in to higher priority
+			registry.setOrdering(category,
+					     spi,
+					     list.get(i));
+		    }
+		}
+	    }
+	}
+    }
+
 }

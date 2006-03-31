@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:52 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-31 19:43:41 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.wbmp;
@@ -53,6 +53,7 @@ import java.io.IOException;
 import javax.imageio.ImageReader;
 import javax.imageio.IIOException;
 import com.sun.media.imageioimpl.common.PackageUtil;
+import com.sun.media.imageioimpl.common.ImageUtil;
 
 public class WBMPImageReaderSpi extends ImageReaderSpi {
 
@@ -87,10 +88,18 @@ public class WBMPImageReaderSpi extends ImageReaderSpi {
             return;
         }
         registered = true;
+	
+	// By JDK 1.7, the WBMPImageReader will have been in JDK core for 
+	// atleast two FCS releases, so we can set JIIO's to lower priority
+	// With JDK 1.8, we can entirely de-register the JIIO one
+	ImageUtil.processOnRegistration(registry, category, "WBMP", this,
+					8, 7); // JDK version 1.8, 1.7
     }
 
     public String getDescription(Locale locale) {
-        return "Standard WBMP Image Reader";
+	String desc = PackageUtil.getSpecificationTitle() + 
+	    " WBMP Image Reader";  
+	return desc;
     }
 
     public boolean canDecodeInput(Object source) throws IOException {

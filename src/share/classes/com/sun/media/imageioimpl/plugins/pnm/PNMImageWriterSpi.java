@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:41 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-31 19:43:40 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.pnm;
@@ -85,7 +85,9 @@ public class PNMImageWriterSpi extends ImageWriterSpi {
     }
 
     public String getDescription(Locale locale) {
-        return "Standard PNM Image Writer";
+	String desc = PackageUtil.getSpecificationTitle() + 
+	    " PNM Image Writer";
+	return desc;
     }
 
     public void onRegistration(ServiceRegistry registry,

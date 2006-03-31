@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-11-14 23:22:19 $
+ * $Revision: 1.3 $
+ * $Date: 2006-03-31 19:43:38 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.bmp;
@@ -58,6 +58,7 @@ import java.util.Locale;
 
 import com.sun.media.imageio.plugins.bmp.BMPImageWriteParam;
 import com.sun.media.imageioimpl.common.PackageUtil;
+import com.sun.media.imageioimpl.common.ImageUtil;
 
 public class BMPImageWriterSpi extends ImageWriterSpi {
     private static String [] readerSpiNames =
@@ -87,7 +88,9 @@ public class BMPImageWriterSpi extends ImageWriterSpi {
     }
 
     public String getDescription(Locale locale) {
-        return "Standard BMP Image Writer";
+	String desc = PackageUtil.getSpecificationTitle() + 
+	    " BMP Image Writer";  
+	return desc;
     }
 
     public void onRegistration(ServiceRegistry registry,
@@ -95,45 +98,33 @@ public class BMPImageWriterSpi extends ImageWriterSpi {
         if (registered) {
             return;
         }
-
+	
         registered = true;
-
-        // Set pairwise ordering to give writer precedence
-        // over Sun core J2SE writer (if any).
-        Class coreWriterSPIClass = null;
-        try {
-            coreWriterSPIClass =
-                Class.forName("com.sun.imageio.plugins.bmp.BMPImageWriterSpi");
-        } catch(Throwable t) {
-            // Ignore it.
-        }
-
-        if(coreWriterSPIClass != null) {
-            Object coreWriterSPI =
-                registry.getServiceProviderByClass(coreWriterSPIClass);
-            if(coreWriterSPI != null) {
-                registry.setOrdering(category, this, coreWriterSPI);
-            }
-        }
+	
+	// By JDK 1.7, the BMPImageWriter will have been in JDK core for 
+	// atleast two FCS releases, so we can set JIIO's to lower priority
+	// With JDK 1.8, we can entirely de-register the JIIO one
+	ImageUtil.processOnRegistration(registry, category, "BMP", this,
+					8, 7); // JDK version 1.8, 1.7
     }
 
     public boolean canEncodeImage(ImageTypeSpecifier type) {
         int dataType= type.getSampleModel().getDataType();
         if (dataType < DataBuffer.TYPE_BYTE || dataType > DataBuffer.TYPE_INT)
             return false;
-	
-	SampleModel sm = type.getSampleModel();
-	int numBands = sm.getNumBands();
-	if (!(numBands == 1 || numBands == 3))
-	    return false;
-
-	if (numBands == 1 && dataType != DataBuffer.TYPE_BYTE)
-	    return false;
-
-	if (dataType > DataBuffer.TYPE_BYTE && 
-	      !(sm instanceof SinglePixelPackedSampleModel))
-	    return false;
-
+       
+        SampleModel sm = type.getSampleModel();
+        int numBands = sm.getNumBands();
+        if (!(numBands == 1 || numBands == 3))
+            return false;
+        
+        if (numBands == 1 && dataType != DataBuffer.TYPE_BYTE)
+            return false;
+        
+        if (dataType > DataBuffer.TYPE_BYTE && 
+              !(sm instanceof SinglePixelPackedSampleModel))
+            return false;
+        
         return true;
     }
 

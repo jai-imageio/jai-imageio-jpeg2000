@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:47 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-31 19:43:41 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.util.Locale;
 import javax.imageio.ImageReader;
 import javax.imageio.spi.ImageReaderSpi;
+import javax.imageio.spi.ServiceRegistry;
 import javax.imageio.stream.ImageInputStream;
 import com.sun.media.imageioimpl.common.PackageUtil;
 
@@ -65,6 +66,8 @@ public class TIFFImageReaderSpi extends ImageReaderSpi {
     private static final String[] writerSpiNames = {
         "com.sun.media.imageioimpl.plugins.tiff.TIFFImageWriterSpi"
     };
+
+    private boolean registered = false;
  
     public TIFFImageReaderSpi() {
         super(PackageUtil.getVendor(),
@@ -87,7 +90,9 @@ public class TIFFImageReaderSpi extends ImageReaderSpi {
     }
 
     public String getDescription(Locale locale) {
-        return "Standard TIFF image reader";
+	String desc = PackageUtil.getSpecificationTitle() + 
+	    " TIFF Image Reader";
+	return desc;
     }
 
     public boolean canDecodeInput(Object input) throws IOException {
@@ -109,5 +114,14 @@ public class TIFFImageReaderSpi extends ImageReaderSpi {
 
     public ImageReader createReaderInstance(Object extension) {
         return new TIFFImageReader(this);
+    }
+
+    public void onRegistration(ServiceRegistry registry,
+                               Class category) {
+        if (registered) {
+            return;
+        }
+	
+        registered = true;
     }
 }

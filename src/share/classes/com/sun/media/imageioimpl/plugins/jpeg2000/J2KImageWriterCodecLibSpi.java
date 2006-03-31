@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:35 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-31 19:43:39 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -69,6 +69,8 @@ public class J2KImageWriterCodecLibSpi extends ImageWriterSpi {
         {"jp2"}; // Should add jpx or jpm
     private static String[] mimeTypes = {"image/jp2", "image/jpeg2000"};
 
+    private boolean registered = false;
+
     public J2KImageWriterCodecLibSpi() {
         super(PackageUtil.getVendor(),
               PackageUtil.getVersion(),
@@ -88,11 +90,19 @@ public class J2KImageWriterCodecLibSpi extends ImageWriterSpi {
     }
 
     public String getDescription(Locale locale) {
-        return "codecLib JPEG 2000 Image Writer";
+	String desc = PackageUtil.getSpecificationTitle() + 
+	    " natively-accelerated JPEG 2000 Image Writer";
+	return desc;
     }
 
     public void onRegistration(ServiceRegistry registry,
                                Class category) {
+        if (registered) {
+            return;
+        }
+	
+        registered = true;
+
         // Branch based on codecLib availability.
         if(!PackageUtil.isCodecLibAvailable()) {
             // Deregister provider.

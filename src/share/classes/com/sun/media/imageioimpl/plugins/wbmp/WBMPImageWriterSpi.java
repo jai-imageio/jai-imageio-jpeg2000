@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:52 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-31 19:43:41 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.wbmp;
@@ -58,6 +58,7 @@ import java.awt.image.SampleModel;
 import java.util.Locale;
 
 import com.sun.media.imageioimpl.common.PackageUtil;
+import com.sun.media.imageioimpl.common.ImageUtil;
 
 public class WBMPImageWriterSpi extends ImageWriterSpi {
     private static String [] readerSpiNames =
@@ -86,7 +87,9 @@ public class WBMPImageWriterSpi extends ImageWriterSpi {
     }
 
     public String getDescription(Locale locale) {
-        return "Standard WBMP Image Writer";
+	String desc = PackageUtil.getSpecificationTitle() + 
+	    " WBMP Image Writer";  
+	return desc;
     }
 
     public void onRegistration(ServiceRegistry registry,
@@ -96,6 +99,12 @@ public class WBMPImageWriterSpi extends ImageWriterSpi {
         }
 
         registered = true;
+
+	// By JDK 1.7, the WBMPImageWriter will have been in JDK core for 
+	// atleast two FCS releases, so we can set JIIO's to lower priority
+	// With JDK 1.8, we can entirely de-register the JIIO one
+	ImageUtil.processOnRegistration(registry, category, "WBMP", this,
+					8, 7); // JDK version 1.8, 1.7
     }
 
     public boolean canEncodeImage(ImageTypeSpecifier type) {

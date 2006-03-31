@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:33 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-31 19:43:39 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -64,6 +64,7 @@ public class J2KImageReaderCodecLibSpi extends ImageReaderSpi {
     private static String[] extensions =
         {"jp2"}; // Should add jpx or jpm
     private static String[] mimeTypes = {"image/jp2", "image/jpeg2000"};
+    private boolean registered = false;
 
     public J2KImageReaderCodecLibSpi() {
         super(PackageUtil.getVendor(),
@@ -85,6 +86,12 @@ public class J2KImageReaderCodecLibSpi extends ImageReaderSpi {
 
     public void onRegistration(ServiceRegistry registry,
                                Class category) {
+        if (registered) {
+            return;
+        }
+	
+        registered = true;
+
         // Branch based on codecLib availability.
         if(!PackageUtil.isCodecLibAvailable()) {
             // Deregister provider.
@@ -110,7 +117,9 @@ public class J2KImageReaderCodecLibSpi extends ImageReaderSpi {
     }
 
     public String getDescription(Locale locale) {
-        return "codecLib JPEG 2000 Image Reader";
+	String desc = PackageUtil.getSpecificationTitle() + 
+	    " natively-accelerated JPEG 2000 Image Reader";
+	return desc;
     }
 
     public boolean canDecodeInput(Object source) throws IOException {

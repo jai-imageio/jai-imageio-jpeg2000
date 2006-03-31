@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-09-26 22:15:01 $
+ * $Revision: 1.3 $
+ * $Date: 2006-03-31 19:43:38 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.common;
@@ -65,6 +65,11 @@ public class PackageUtil {
     private static String vendor = "Sun Microsystems, Inc.";
 
     /**
+     * Specification Title derived from Manifest.
+     */
+    private static String specTitle = "Java Advanced Imaging Image I/O Tools";
+
+    /**
      * Set static flags.
      */
     static {
@@ -85,6 +90,7 @@ public class PackageUtil {
             Package thisPackage = thisClass.getPackage();
             version = thisPackage.getImplementationVersion();
             vendor = thisPackage.getImplementationVendor();
+	    specTitle = thisPackage.getSpecificationTitle();
         } catch(ClassNotFoundException e) {
         }
     }
@@ -127,5 +133,12 @@ public class PackageUtil {
      */
     public static final String getVendor() {
         return vendor;
+    }
+
+    /**
+     * Return the Specification Title string for the package.
+     */
+    public static final String getSpecificationTitle() {
+        return specTitle;
     }
 }

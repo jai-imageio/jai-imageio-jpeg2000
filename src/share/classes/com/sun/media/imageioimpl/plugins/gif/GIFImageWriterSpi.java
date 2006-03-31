@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-03-24 22:30:10 $
+ * $Revision: 1.3 $
+ * $Date: 2006-03-31 19:43:39 $
  * $State: Exp $
  */
 
@@ -51,7 +51,10 @@ import java.util.Locale;
 import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.ImageWriter;
 import javax.imageio.spi.ImageWriterSpi;
+import javax.imageio.spi.ServiceRegistry;
 import com.sun.media.imageioimpl.common.PaletteBuilder;
+import com.sun.media.imageioimpl.common.ImageUtil;
+import com.sun.media.imageioimpl.common.PackageUtil;
 
 public class GIFImageWriterSpi extends ImageWriterSpi {
 
@@ -71,6 +74,8 @@ public class GIFImageWriterSpi extends ImageWriterSpi {
     private static final String[] readerSpiNames = {
         "com.sun.imageio.plugins.gif.GIFImageReaderSpi"
     };
+
+    private boolean registered = false;
 
     public GIFImageWriterSpi() {
         super(vendorName,
@@ -114,7 +119,24 @@ public class GIFImageWriterSpi extends ImageWriterSpi {
     }
 
     public String getDescription(Locale locale) {
-        return "Standard GIF image writer";
+	String desc = PackageUtil.getSpecificationTitle() + 
+	    " GIF Image Writer";  
+	return desc;
+    }
+
+    public void onRegistration(ServiceRegistry registry,
+                               Class category) {
+        if (registered) {
+            return;
+        }
+	
+        registered = true;
+	
+	// By JDK 1.8, the GIFImageWriter will have been in JDK core for 
+	// atleast two FCS releases, so we can set JIIO's to lower priority
+	// With JDK 1.9, we can entirely de-register the JIIO one
+	ImageUtil.processOnRegistration(registry, category, "GIF", this,
+					9, 8); // JDK version 1.9, 1.8
     }
 
     public ImageWriter createWriterInstance(Object extension) {

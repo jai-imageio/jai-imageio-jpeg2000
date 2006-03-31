@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:39 $
+ * $Revision: 1.2 $
+ * $Date: 2006-03-31 19:43:40 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.png;
@@ -47,6 +47,7 @@ package com.sun.media.imageioimpl.plugins.png;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
 import java.awt.image.SampleModel;
+import java.util.List;
 import java.util.Locale;
 import javax.imageio.ImageWriter;
 import javax.imageio.ImageTypeSpecifier;
@@ -55,6 +56,7 @@ import javax.imageio.metadata.IIOMetadataFormatImpl;
 import javax.imageio.spi.ImageWriterSpi;
 import javax.imageio.spi.ServiceRegistry;
 import com.sun.media.imageioimpl.common.PackageUtil;
+import com.sun.media.imageioimpl.common.ImageUtil;
 
 /**
  */
@@ -72,6 +74,8 @@ public class CLibPNGImageWriterSpi extends ImageWriterSpi {
     private static final String[] readerSpiNames = {
         "com.sun.media.imageioimpl.plugins.png.CLibPNGImageReaderSpi"
     };
+
+    private boolean registered = false;
 
     public CLibPNGImageWriterSpi() {
         super(PackageUtil.getVendor(),
@@ -93,28 +97,26 @@ public class CLibPNGImageWriterSpi extends ImageWriterSpi {
 
     public void onRegistration(ServiceRegistry registry,
                                Class category) {
+        if (registered) {
+            return;
+        }
+	
+        registered = true;
+
         // Branch as a function of codecLib availability.
         if(!PackageUtil.isCodecLibAvailable()) {
             // Deregister provider.
             registry.deregisterServiceProvider(this);
         } else {
-            // Set pairwise ordering to give codecLib reader precedence
-            // over Sun core J2SE writer.
-            Class coreWriterSPIClass = null;
-            try {
-                coreWriterSPIClass =
-                    Class.forName("com.sun.imageio.plugins.png.PNGImageWriterSpi");
-            } catch(Throwable t) {
-                // Ignore it.
-            }
 
-            if(coreWriterSPIClass != null) {
-                Object coreWriterSPI =
-                    registry.getServiceProviderByClass(coreWriterSPIClass);
-                if(coreWriterSPI != null) {
-                    registry.setOrdering(category, this, coreWriterSPI);
-                }
-            }
+	    List list = 
+		ImageUtil.getJDKImageReaderWriterSPI(registry, "PNG", false);
+
+	    for (int i=0; i<list.size(); i++) {
+		// Set pairwise ordering to give codecLib writer precedence
+		// over Sun core J2SE writer.
+		registry.setOrdering(category, this, list.get(i));
+	    }
         }
     }
 
@@ -160,7 +162,9 @@ public class CLibPNGImageWriterSpi extends ImageWriterSpi {
     }
 
     public String getDescription(Locale locale) {
-        return "codecLib PNG image writer";
+	String desc = PackageUtil.getSpecificationTitle() + 
+	    " natively-accelerated PNG Image Writer";
+	return desc;
     }
 
     public ImageWriter createWriterInstance(Object extension) {

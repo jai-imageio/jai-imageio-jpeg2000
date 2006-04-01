@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.7 $
-$Date: 2006-03-01 23:44:55 $
+$Revision: 1.8 $
+$Date: 2006-04-01 01:08:54 $
 $State: Exp $
 -->
 <project name="jai_imageio" default="jar" basedir=".">
@@ -662,7 +662,7 @@ $State: Exp $
     <mkdir dir="${distdir}/javadocs"/>
     
     <!-- Create a Zip doc bundle -->
-    <zip destfile="${distdir}/javadocs/jai-imageio-${doc_file}-${btime}.zip"
+    <zip destfile="${distdir}/javadocs/jai-imageio-${doc_file}${buildtime}.zip"
 	 basedir="${build}/${platform}/javadocs/docs-jcp"
 	 includes="**"
 	 filesonly="true"/>

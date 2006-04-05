@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:19 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-05 22:33:44 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -225,8 +225,17 @@ public class TIFFTag {
 
     /**
      * Constructs  a  <code>TIFFTag</code>  with  a  given  name,  tag
-     * number,  set  of  legal  data  types.  The  tag  will  have  no
+     * number,  and set  of  legal  data  types.  The  tag  will  have  no
      * associated <code>TIFFTagSet</code>.
+     *
+     * <p> If there are mnemonic names to be associated with the legal
+     * data values for the tag, {@link #addValueName(int, String)
+     * <code>addValueName</code>} should be called on the new instance
+     * for each name.
+     *
+     * <p> See the documentation for {@link #getDataTypes()
+     * <code>getDataTypes()</code>} for an explanation of how the set
+     * of data types are to be converted into a bit mask.
      *
      * @param name the name of the tag.
      * @param number the number used to represent the tag.
@@ -284,7 +293,7 @@ public class TIFFTag {
      * would return a value of:
      *
      * <pre>
-     * (1 << TIFFTag.TIFF_SHORT) | (1 < TIFFTag.TIFF_LONG)
+     * (1 << TIFFTag.TIFF_SHORT) | (1 << TIFFTag.TIFF_LONG)
      * </pre>
      *
      * @return an <code>int</code> containing a bitmask encoding the

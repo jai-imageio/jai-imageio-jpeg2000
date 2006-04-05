@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2006-03-23 22:29:46 $
+ * $Revision: 1.7 $
+ * $Date: 2006-04-05 20:23:08 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -1570,6 +1570,16 @@ public class TIFFImageMetadata extends IIOMetadata {
             fatal(root, "Root must have \"TIFFIFD\" child");
         } 
         TIFFIFD ifd = parseIFD(node);
+
+        List rootIFDTagSets = rootIFD.getTagSets();
+        Iterator tagSetIter = ifd.getTagSets().iterator();
+        while(tagSetIter.hasNext()) {
+            Object o = tagSetIter.next();
+            if(!rootIFDTagSets.contains(o)) {
+                rootIFDTagSets.add(o);
+            }
+        }
+
         Iterator ifdIter = ifd.iterator();
         while(ifdIter.hasNext()) {
             TIFFField field = (TIFFField)ifdIter.next();

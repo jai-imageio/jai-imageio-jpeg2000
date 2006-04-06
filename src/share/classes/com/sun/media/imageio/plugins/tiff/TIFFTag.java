@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-04-05 22:33:44 $
+ * $Revision: 1.3 $
+ * $Date: 2006-04-06 00:58:11 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -60,8 +60,7 @@ import org.w3c.dom.Node;
  * <code>BaselineTIFFTagSet</code>} class.
  *
  * @see BaselineTIFFTagSet
- * @see EXIFParentTIFFTagSet
- * @see EXIFTIFFTagSet
+ * @see TIFFTagSet
  */
 public class TIFFTag {
 
@@ -196,25 +195,25 @@ public class TIFFTag {
     Map valueNames = null;
 
     /**
-     * Constructs a <code>TIFFTag</code> with a given name, tag number,
-     * set of legal data types, and a reference to the <code>TIFFTagSet</code>
+     * Constructs a <code>TIFFTag</code> with a given name, tag number, set
+     * of legal data types, and a reference to the <code>TIFFTagSet</code>
      * to which it belongs.
      *
      * <p> If there are mnemonic names to be associated with the legal
      * data values for the tag, {@link #addValueName(int, String)
-     * <code>addValueName</code>} should be called on the new instance
+     * <code>addValueName()</code>} should be called on the new instance
      * for each name.
      *
      * <p> See the documentation for {@link #getDataTypes()
      * <code>getDataTypes()</code>} for an explanation of how the set
      * of data types are to be converted into a bit mask.
      *
-     * @param name the name of the tag.
+     * @param name the name of the tag; may be <code>null</code>.
      * @param number the number used to represent the tag.
      * @param dataTypes a bit mask indicating the set of legal data
      * types for this tag.
      * @param tagSet the <code>TIFFTagSet</code> to which this tag
-     * belongs.
+     * belongs; may be <code>null</code>.
      */
     public TIFFTag(String name, int number, int dataTypes, TIFFTagSet tagSet) {
         this.name = name;
@@ -228,16 +227,7 @@ public class TIFFTag {
      * number,  and set  of  legal  data  types.  The  tag  will  have  no
      * associated <code>TIFFTagSet</code>.
      *
-     * <p> If there are mnemonic names to be associated with the legal
-     * data values for the tag, {@link #addValueName(int, String)
-     * <code>addValueName</code>} should be called on the new instance
-     * for each name.
-     *
-     * <p> See the documentation for {@link #getDataTypes()
-     * <code>getDataTypes()</code>} for an explanation of how the set
-     * of data types are to be converted into a bit mask.
-     *
-     * @param name the name of the tag.
+     * @param name the name of the tag; may be <code>null</code>.
      * @param number the number used to represent the tag.
      * @param dataTypes a bit mask indicating the set of legal data
      * types for this tag.

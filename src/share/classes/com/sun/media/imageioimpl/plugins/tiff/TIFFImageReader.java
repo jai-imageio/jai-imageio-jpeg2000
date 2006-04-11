@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.8 $
- * $Date: 2006-03-10 17:50:17 $
+ * $Revision: 1.9 $
+ * $Date: 2006-04-11 22:10:36 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -83,6 +83,7 @@ import org.w3c.dom.Node;
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.TIFFColorConverter;
 import com.sun.media.imageio.plugins.tiff.TIFFDecompressor;
+import com.sun.media.imageio.plugins.tiff.TIFFField;
 import com.sun.media.imageio.plugins.tiff.TIFFImageReadParam;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
 import com.sun.media.imageioimpl.common.ImageUtil;
@@ -821,7 +822,7 @@ public class TIFFImageReader extends ImageReader {
     public IIOMetadata getImageMetadata(int imageIndex) throws IIOException {
         seekToImage(imageIndex);
         TIFFImageMetadata im =
-            new TIFFImageMetadata(imageMetadata.getRootIFD().getTagSets());
+            new TIFFImageMetadata(imageMetadata.getRootIFD().getTagSetList());
         Node root =
             imageMetadata.getAsTree(TIFFImageMetadata.nativeMetadataFormatName);
         im.setFromTree(TIFFImageMetadata.nativeMetadataFormatName, root);

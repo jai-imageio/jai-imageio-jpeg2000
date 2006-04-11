@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.19 $
- * $Date: 2006-03-28 23:36:16 $
+ * $Revision: 1.20 $
+ * $Date: 2006-04-11 22:10:36 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -81,6 +81,7 @@ import com.sun.media.imageio.plugins.tiff.EXIFParentTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.EXIFTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.TIFFColorConverter;
 import com.sun.media.imageio.plugins.tiff.TIFFCompressor;
+import com.sun.media.imageio.plugins.tiff.TIFFField;
 import com.sun.media.imageio.plugins.tiff.TIFFImageWriteParam;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
 import com.sun.media.imageio.plugins.tiff.TIFFTagSet;

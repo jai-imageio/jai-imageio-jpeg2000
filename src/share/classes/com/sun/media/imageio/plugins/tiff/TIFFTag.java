@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-04-06 00:58:11 $
+ * $Revision: 1.4 $
+ * $Date: 2006-04-11 22:10:35 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -51,20 +51,22 @@ import org.w3c.dom.Node;
 
 /**
  * A class defining the notion of a TIFF tag.  A TIFF tag is a key
- * that may appear in an Image File Directory (IFD).  Each tag has
- * some data associated with it, which may consist of zero or more
- * values of a given data type.
+ * that may appear in an Image File Directory (IFD).  In the IFD
+ * each tag has some data associated with it, which may consist of zero
+ * or more values of a given data type. The combination of a tag and a
+ * value is known as an IFD Entry or TIFF Field.
  *
- * <p> The actual tag values used in a standard ("baseline") tiff file
- * are defined in the {@link BaselineTIFFTagSet
+ * <p> The actual tag values used in the root IFD of a standard ("baseline")
+ * tiff stream are defined in the {@link BaselineTIFFTagSet
  * <code>BaselineTIFFTagSet</code>} class.
  *
  * @see BaselineTIFFTagSet
+ * @see TIFFField
  * @see TIFFTagSet
  */
 public class TIFFTag {
 
-    // TIFF 6.0 + tech note datatypes
+    // TIFF 6.0 + Adobe PageMaker(R) 6.0 TIFF Technical Notes 1 IFD data type
 
     /** Flag for 8 bit unsigned integers. */
     public static final int TIFF_BYTE        =  1;
@@ -102,7 +104,10 @@ public class TIFFTag {
     /** Flag for 64 bit IEEE doubles. */
     public static final int TIFF_DOUBLE      = 12;
 
-    /** Flag for IFD pointer (Tech Note 1). */
+    /**
+     * Flag for IFD pointer defined in TIFF Tech Note 1 in
+     * TIFF Specification Supplement 1.
+     */
     public static final int TIFF_IFD_POINTER = 13;
 
     /**
@@ -196,17 +201,23 @@ public class TIFFTag {
 
     /**
      * Constructs a <code>TIFFTag</code> with a given name, tag number, set
-     * of legal data types, and a reference to the <code>TIFFTagSet</code>
-     * to which it belongs.
+     * of legal data types, and <code>TIFFTagSet</code> to which it refers.
+     * The <code>tagSet</code> parameter will generally be
+     * non-<code>null</code> only if this <code>TIFFTag</code> corresponds
+     * to a pointer to a TIFF IFD. In this case <code>tagSet</code> will
+     * represent the set of <code>TIFFTag</code>s which appear in the IFD
+     * pointed to. A <code>TIFFTag</code> represents an IFD pointer if and
+     * only if <code>tagSet</code> is non-<code>null</code> or the data
+     * type <code>TIFF_IFD_POINTER</code> is legal.
      *
      * <p> If there are mnemonic names to be associated with the legal
      * data values for the tag, {@link #addValueName(int, String)
      * <code>addValueName()</code>} should be called on the new instance
-     * for each name.
+     * for each name.</p>
      *
      * <p> See the documentation for {@link #getDataTypes()
      * <code>getDataTypes()</code>} for an explanation of how the set
-     * of data types are to be converted into a bit mask.
+     * of data types is to be converted into a bit mask.</p>
      *
      * @param name the name of the tag; may be <code>null</code>.
      * @param number the number used to represent the tag.

@@ -2,7 +2,7 @@
  * $RCSfile: TIFFField.java,v $
  *
  * 
- * Copyright (c) 2005 Sun Microsystems, Inc. All  Rights Reserved.
+ * Copyright (c) 2006 Sun Microsystems, Inc. All  Rights Reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,11 +38,11 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-03-27 16:49:49 $
+ * $Revision: 1.1 $
+ * $Date: 2006-04-11 22:10:35 $
  * $State: Exp $
  */
-package com.sun.media.imageioimpl.plugins.tiff;
+package com.sun.media.imageio.plugins.tiff;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -58,120 +58,232 @@ import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
  * A class representing a field in a TIFF 6.0 Image File Directory.
  *
  * <p> A field in a TIFF Image File Directory (IFD) is defined as a
- * sequence of values of identical data type.  TIFF 6.0 defines 12
- * data types (plus a 13th type 'IFD' defined in a technical note,
- * which s referred to here as an 'IFDPointer'), which are mapped
- * internally onto Java language datatypes as follows:
+ * tag number accompanied by a sequence of values of identical data type.
+ * TIFF 6.0 defines 12 data types; a 13th type <code>IFD</code> is
+ * defined in TIFF Tech Note 1 of TIFF Specification Supplement 1. These
+ * TIFF data types are referred to by Java constants and mapped internally
+ * onto Java language data types and type names as follows:
  *
  * <br>
  * <br>
  * <table border="1">
  *
- * <tr bgcolor="#CCCCFF">
+ * <tr>
  * <th>
- * <font size="+2"><b>TIFF Datatype</b></font>
+ * <b>TIFF Data Type</b>
  * </th>
  * <th>
- * <font size="+2"><b>Java Datatype</b></font>
+ * <b>Java Constant</b>
+ * </th>
+ * <th>
+ * <b>Java Data Type</b>
+ * </th>
+ * <th>
+ * <b>Java Type Name</b>
  * </th>
  * </tr>
  *
  * <tr>
  * <td>
- * <code>TIFF_BYTE</code>, <code>TIFF_SBYTE</code>,
- * <code>TIFF_UNDEFINED</code>
+ * <tt>BYTE</tt>
+ * </td>
+ * <td>
+ * {@link TIFFTag#TIFF_BYTE}
  * </td>
  * <td>
  * <code>byte</code>
  * </td>
+ * <td>
+ * <code>"Byte"</code>
+ * </td>
  * </tr>
  *
  * <tr>
  * <td>
- * <code>TIFF_SHORT</code>
+ * <tt>ASCII</tt>
+ * </td>
+ * <td>
+ * {@link TIFFTag#TIFF_ASCII}
+ * </td>
+ * <td>
+ * <code>String</code>
+ * </td>
+ * <td>
+ * <code>"Ascii"</code>
+ * </td>
+ * </tr>
+ *
+ * <tr>
+ * <td>
+ * <tt>SHORT</tt>
+ * </td>
+ * <td>
+ * {@link TIFFTag#TIFF_SHORT}
  * </td>
  * <td>
  * <code>char</code>
  * </td>
- * </tr>
- *
- * <tr>
  * <td>
- * <code>TIFF_SSHORT</code>
- * </td>
- * <td>
- * <code>short</code>
+ * <code>"Short"</code>
  * </td>
  * </tr>
  *
  * <tr>
  * <td>
- * <code>TIFF_SLONG</code>
+ * <tt>LONG</tt>
  * </td>
  * <td>
- * <code>int</code>
- * </td>
- * </tr>
- *
- * <tr>
- * <td>
- * <code>TIFF_LONG</code>, <code>TIFF_IFD_POINTER</code>
+ * {@link TIFFTag#TIFF_LONG}
  * </td>
  * <td>
  * <code>long</code>
  * </td>
+ * <td>
+ * <code>"Long"</code>
+ * </td>
  * </tr>
  *
  * <tr>
  * <td>
- * <code>TIFF_FLOAT</code>
+ * <tt>RATIONAL</tt>
+ * </td>
+ * <td>
+ * {@link TIFFTag#TIFF_RATIONAL}
+ * </td>
+ * <td>
+ * <code>long[2]</code> {numerator, denominator}
+ * </td>
+ * <td>
+ * <code>"Rational"</code>
+ * </td>
+ * </tr>
+ *
+ * <tr>
+ * <td>
+ * <tt>SBYTE</tt>
+ * </td>
+ * <td>
+ * {@link TIFFTag#TIFF_SBYTE}
+ * </td>
+ * <td>
+ * <code>byte</code>
+ * </td>
+ * <td>
+ * <code>"SByte"</code>
+ * </td>
+ * </tr>
+ *
+ * <tr>
+ * <td>
+ * <tt>UNDEFINED</tt>
+ * </td>
+ * <td>
+ * {@link TIFFTag#TIFF_UNDEFINED}
+ * </td>
+ * <td>
+ * <code>byte</code>
+ * </td>
+ * <td>
+ * <code>"Undefined"</code>
+ * </td>
+ * </tr>
+ *
+ * <tr>
+ * <td>
+ * <tt>SSHORT</tt>
+ * </td>
+ * <td>
+ * {@link TIFFTag#TIFF_SSHORT}
+ * </td>
+ * <td>
+ * <code>short</code>
+ * </td>
+ * <td>
+ * <code>"SShort"</code>
+ * </td>
+ * </tr>
+ *
+ * <tr>
+ * <td>
+ * <tt>SLONG</tt>
+ * </td>
+ * <td>
+ * {@link TIFFTag#TIFF_SLONG}
+ * </td>
+ * <td>
+ * <code>int</code>
+ * </td>
+ * <td>
+ * <code>"SLong"</code>
+ * </td>
+ * </tr>
+ *
+ * <tr>
+ * <td>
+ * <tt>SRATIONAL</tt>
+ * </td>
+ * <td>
+ * {@link TIFFTag#TIFF_SRATIONAL}
+ * </td>
+ * <td>
+ * <code>int[2]</code> {numerator, denominator}
+ * </td>
+ * <td>
+ * <code>"SRational"</code>
+ * </td>
+ * </tr>
+ *
+ * <tr>
+ * <td>
+ * <tt>FLOAT</tt>
+ * </td>
+ * <td>
+ * {@link TIFFTag#TIFF_FLOAT}
  * </td>
  * <td>
  * <code>float</code>
  * </td>
+ * <td>
+ * <code>"Float"</code>
+ * </td>
  * </tr>
  *
  * <tr>
  * <td>
- * <code>TIFF_DOUBLE</code>
+ * <tt>DOUBLE</tt>
+ * </td>
+ * <td>
+ * {@link TIFFTag#TIFF_DOUBLE}
  * </td>
  * <td>
  * <code>double</code>
  * </td>
- * </tr>
- *
- * <tr>
  * <td>
- * <code>TIFF_SRATIONAL</code>
- * </td>
- * <td>
- * <code>int[2]</code> (numerator, denominator)
+ * <code>"Double"</code>
  * </td>
  * </tr>
  *
  * <tr>
  * <td>
- * <code>TIFF_RATIONAL</code>
+ * <tt>IFD</tt>
  * </td>
  * <td>
- * <code>long[2]</code> (numerator, denominator)
- * </td>
- * </tr>
- *
- * <tr>
- * <td>
- * <code>TIFF_ASCII</code>
+ * {@link TIFFTag#TIFF_IFD_POINTER}
  * </td>
  * <td>
- * <code>String</code>
+ * <code>long</code>
+ * </td>
+ * <td>
+ * <code>"IFDPointer"</code>
  * </td>
  * </tr>
  *
  * </table>
  *
  * @see TIFFDirectory
+ * @see TIFFTag
  */
-public class TIFFField {
+public class TIFFField implements Comparable {
 
     private static final String[] typeNames = {
         null,
@@ -204,58 +316,6 @@ public class TIFFField {
     
     /** The default constructor. */
     private TIFFField() {}
-
-    /**
-     * Constructs a TIFFField with arbitrary data.  The data
-     * parameter must be an array of a Java type appropriate for the
-     * type of the TIFF field.
-     */
-    public TIFFField(TIFFTag tag, int type, int count, Object data) {
-        if(tag == null) {
-            throw new IllegalArgumentException("tag == null!");
-        }
-        this.tag = tag;
-        this.tagNumber = tag.getNumber();
-        this.type = type;
-        this.count = count;
-        this.data = data;
-    }
-
-    public TIFFField(TIFFTag tag, int type, int count) {
-        if(tag == null) {
-            throw new IllegalArgumentException("tag == null!");
-        }
-        this.tag = tag;
-        this.tagNumber = tag.getNumber();
-        this.type = type;
-        this.count = count;
-        this.data = createArrayForType(type, count);
-    }
-
-    public TIFFField(TIFFTag tag, int val) {
-        if(tag == null) {
-            throw new IllegalArgumentException("tag == null!");
-        }
-        if (val < 0) {
-            throw new IllegalArgumentException("val < 0!");
-        }
-
-        this.tag = tag;
-        this.tagNumber = tag.getNumber();
-        this.count = 1;
-
-        if (val < 65536) {
-            this.type = TIFFTag.TIFF_SHORT;
-            char[] cdata = new char[1];
-            cdata[0] = (char)val;
-            this.data = cdata;
-        } else {
-            this.type = TIFFTag.TIFF_LONG;
-            long[] ldata = new long[1];
-            ldata[0] = val;
-            this.data = ldata;
-        }
-    }
 
     private static String getAttribute(Node node, String attrName) {
         NamedNodeMap attrs = node.getAttributes();
@@ -369,21 +429,42 @@ public class TIFFField {
         odata[0] = data;
     }
 
-    public TIFFField(TIFFTagSet tagSet, Node node) {
+    /**
+     * Creates a <code>TIFFField</code> from a TIFF native image
+     * metadata node. If the value of the <tt>"tagNumber"</tt> attribute
+     * of the node is not found in <code>tagSet</code> then a new
+     * <code>TIFFTag</code> with name <code>"unknown"</code> will be
+     * created and assigned to the field.
+     *
+     * @param tagSet The <code>TIFFTagSet</code> to which the
+     * <code>TIFFTag</code> of the field belongs.
+     * @param node A native TIFF image metadata <code>TIFFField</code> node.
+     * @throws IllegalArgumentException if <code>node</code> is
+     * <code>null</code>.
+     * @throws IllegalArgumentException if the name of the node is not
+     * <code>"TIFFField"</code>.
+     */
+    public static TIFFField createFromMetadataNode(TIFFTagSet tagSet,
+                                                   Node node) {
         if (node == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("node == null!");
         }
         String name = node.getNodeName();
         if (!name.equals("TIFFField")) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("!name.equals(\"TIFFField\")");
         }
-        
-        this.tagNumber = Integer.parseInt(getAttribute(node, "number"));
+
+        int tagNumber = Integer.parseInt(getAttribute(node, "number"));
+        TIFFTag tag;
         if (tagSet != null) {
-            this.tag = tagSet.getTag(tagNumber);
+            tag = tagSet.getTag(tagNumber);
         } else {
-            this.tag = new TIFFTag("unknown", tagNumber, 0, null);
+            tag = new TIFFTag("unknown", tagNumber, 0, null);
         }
+
+        int type = TIFFTag.TIFF_UNDEFINED;
+        int count = 0;
+        Object data = null;
 
         Node child = node.getFirstChild();
         if (child != null) {
@@ -391,58 +472,197 @@ public class TIFFField {
             if (typeName.equals("TIFFUndefined")) {
                 String values = getAttribute(child, "value");
                 StringTokenizer st = new StringTokenizer(values, ",");
-                this.count = st.countTokens();
+                count = st.countTokens();
 
                 byte[] bdata = new byte[count];
                 for (int i = 0; i < count; i++) {
                     bdata[i] = (byte)Integer.parseInt(st.nextToken());
                 }
 
-                this.type = TIFFTag.TIFF_UNDEFINED;
-                this.data = bdata;
+                type = TIFFTag.TIFF_UNDEFINED;
+                data = bdata;
             } else {
                 int[] otype = new int[1];
                 int[] ocount = new int[1];
                 Object[] odata = new Object[1];
 
                 initData(node.getFirstChild(), otype, ocount, odata); 
-                this.type = otype[0];
-                this.count = ocount[0];
-                this.data = odata[0];
+                type = otype[0];
+                count = ocount[0];
+                data = odata[0];
             }
+        } else {
+            int t = TIFFTag.MAX_DATATYPE;
+            while(t >= TIFFTag.MIN_DATATYPE && !tag.isDataTypeOK(t)) {
+                t--;
+            }
+            type = t;
+        }
+
+        return new TIFFField(tag, type, count, data);
+    }
+
+    /**
+     * Constructs a <code>TIFFField</code> with arbitrary data. The
+     * <code>type</code> parameter must be a value for which
+     * {@link TIFFTag#isDataTypeOK <code>tag.isDataTypeOK()</code>}
+     * returns <code>true</code>. The <code>data</code> parameter must
+     * be an array of a Java type appropriate for the type of the TIFF
+     * field unless {@link TIFFTag#isIFDPointer
+     * <code>tag.isIFDPointer()</code>} returns <code>true</code> in
+     * which case it must be a <code>TIFFDirectory</code> instance.
+     *
+     * <p><i>Neither the legality of <code>type</code> with respect to
+     * <code>tag</code> nor that or <code>data</code> with respect to
+     * <code>type</code> is verified by this constructor.</i> The methods
+     * {@link TIFFTag#isDataTypeOK <code>TIFFTag.isDataTypeOK()</code>}
+     * and {@link #createArrayForType <code>createArrayForType()</code>}
+     * should be used programmatically to ensure that subsequent errors
+     * such as <code>ClassCastException</code>s do not occur as a result
+     * of providing inconsitent parameters to this constructor.</p>
+     *
+     * <p>Note that the value (data) of the <code>TIFFField</code>
+     * will always be the actual field value regardless of the number of
+     * bytes required for that value. This is the case despite the fact
+     * that the TIFF <i>IFD Entry</i> corresponding to the field may
+     * actually contain the offset to the field's value rather than
+     * the value itself (the latter occurring if and only if the
+     * value fits into 4 bytes). In other words, the value of the
+     * field will already have been read from the TIFF stream. This
+     * subsumes the case where <code>tag.isIFDPointer()</code> returns
+     * <code>true</code> and the value will be a <code>TIFFDirectory</code>
+     * rather than an array.</p>
+     *
+     * @param tag The tag to associated with this field.
+     * @param type One of the <code>TIFFTag.TIFF_*</code> constants
+     * indicating the data type of the field as written to the TIFF stream.
+     * @param count The number of data values.
+     * @param data The actual data content of the field.
+     *
+     * @throws IllegalArgumentException if <code>tag&nbsp;==&nbsp;null</code>.
+     * @throws IllegalArgumentException if <code>dataType</code> is not
+     * one of the <code>TIFFTag.TIFF_*</code> data type constants.
+     * @throws IllegalArgumentException if <code>count&nbsp;&lt;&nbsp;0</code>.
+     */
+    public TIFFField(TIFFTag tag, int type, int count, Object data) {
+        if(tag == null) {
+            throw new IllegalArgumentException("tag == null!");
+        } else if(type < TIFFTag.MIN_DATATYPE || type > TIFFTag.MAX_DATATYPE) {
+            throw new IllegalArgumentException("Unknown data type "+type);
+        } else if(count < 0) {
+            throw new IllegalArgumentException("count < 0!");
+        }
+        this.tag = tag;
+        this.tagNumber = tag.getNumber();
+        this.type = type;
+        this.count = count;
+        this.data = data;
+    }
+
+    /**
+     * Constructs a data array using {@link #createArrayForType
+     * <code>createArrayForType()</code>} and invokes
+     * {@link #TIFFField(TIFFTag,int,int,Object)} with the supplied
+     * parameters and the created array.
+     *
+     * @see #TIFFField(TIFFTag,int,int,Object)
+     */
+    public TIFFField(TIFFTag tag, int type, int count) {
+        this(tag, type, count, createArrayForType(type, count));
+    }
+
+    /**
+     * Constructs a <code>TIFFField</code> with a single integral value.
+     * The field will have type
+     * {@link TIFFTag#TIFF_SHORT  <code>TIFF_SHORT</code>} if
+     * <code>val&nbsp;&lt;&nbsp;65536</code> and type
+     * {@link TIFFTag#TIFF_LONG <code>TIFF_LONG</code>} otherwise.
+     * <i>It is <b>not</b> verified whether the resulting type is
+     * legal for <code>tag</code>.</i>
+     *
+     * @param tag The tag to associate with this field.
+     * @param value The value to associate with this field.
+     * @throws IllegalArgumentException if <code>tag&nbsp;==&nbsp;null</code>.
+     * @throws IllegalArgumentException if <code>value&nbsp;&lt;&nbsp;0</code>.
+     */
+    public TIFFField(TIFFTag tag, int value) {
+        if(tag == null) {
+            throw new IllegalArgumentException("tag == null!");
+        }
+        if (value < 0) {
+            throw new IllegalArgumentException("value < 0!");
+        }
+
+        this.tag = tag;
+        this.tagNumber = tag.getNumber();
+        this.count = 1;
+
+        if (value < 65536) {
+            this.type = TIFFTag.TIFF_SHORT;
+            char[] cdata = new char[1];
+            cdata[0] = (char)value;
+            this.data = cdata;
+        } else {
+            this.type = TIFFTag.TIFF_LONG;
+            long[] ldata = new long[1];
+            ldata[0] = value;
+            this.data = ldata;
         }
     }
 
+    /**
+     * Retrieves the tag associated with this field.
+     *
+     * @return The associated <code>TIFFTag</code>.
+     */
     public TIFFTag getTag() {
         return tag;
     }
 
     /**
-     * Returns the tag number, between 0 and 65535.
+     * Retrieves the tag number in the range <code>[0,&nbsp;65535]</code>.
+     *
+     * @return The tag number.
      */
     public int getTagNumber() {
         return tagNumber;
     }
 
     /**
-     * Returns the type of the data stored in the field.  For a TIFF6.0
-     * file, the value will equal one of the <code>TIFF_*</code>
-     * constants defined in this class.  For future revisions of TIFF,
-     * higher values are possible.
+     * Returns the type of the data stored in the field.  For a TIFF 6.0
+     * stream, the value will equal one of the <code>TIFFTag.TIFF_*</code>
+     * constants. For future revisions of TIFF, higher values are possible.
      *
+     * @return The data type of the field value.
      */
     public int getType() {
         return type;
     }
 
+    /**
+     * Returns the name of the supplied data type constant.
+     *
+     * @param dataType One of the <code>TIFFTag.TIFF_*</code> constants
+     * indicating the data type of the field as written to the TIFF stream.
+     * @throws IllegalArgumentException if <code>dataType</code> is not
+     * one of the <code>TIFFTag.TIFF_*</code> data type constants.
+     */
     public static String getTypeName(int dataType) {
-        if (dataType < TIFFTag.MIN_DATATYPE ||dataType > TIFFTag.MAX_DATATYPE) {
-            throw new IllegalArgumentException();
+        if (dataType < TIFFTag.MIN_DATATYPE ||
+            dataType > TIFFTag.MAX_DATATYPE) {
+            throw new IllegalArgumentException("Unknown data type "+dataType);
         }
 
         return typeNames[dataType];
     }
 
+    /**
+     * Returns the data type constant corresponding to the supplied data
+     * type name. If the name is unknown <code>-1</code> will be returned.
+     *
+     * @return One of the <code>TIFFTag.TIFF_*</code> constants or
+     * <code>-1</code> if the name is not recognized.
+     */
     public static int getTypeByName(String typeName) {
         for (int i = TIFFTag.MIN_DATATYPE; i <= TIFFTag.MAX_DATATYPE; i++) {
             if (typeName.equals(typeNames[i])) {
@@ -453,7 +673,21 @@ public class TIFFField {
         return -1;
     }
 
+    /**
+     * Creates an array appropriate for the indicated data type.
+     *
+     * @param dataType One of the <code>TIFFTag.TIFF_*</code> data type
+     * constants.
+     * @param count The number of values in the array.
+     *
+     * @throws IllegalArgumentException if <code>dataType</code> is not
+     * one of the <code>TIFFTag.TIFF_*</code> data type constants.
+     * @throws IllegalArgumentException if <code>count&nbsp;&lt;&nbsp;0</code>.
+     */
     public static Object createArrayForType(int dataType, int count) {
+        if(count < 0) {
+            throw new IllegalArgumentException("count < 0!");
+        }
         switch (dataType) {
         case TIFFTag.TIFF_BYTE:
         case TIFFTag.TIFF_SBYTE:
@@ -479,11 +713,17 @@ public class TIFFField {
         case TIFFTag.TIFF_DOUBLE:
             return new double[count];
         default:
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Unknown data type "+dataType);
         }
     }
 
-    public Node getNativeNode() {
+    /**
+     * Returns the <code>TIFFField</code> as a node named <tt>"TIFFField"</tt>
+     * as described in the TIFF native image metadata specification.
+     *
+     * @return a <code>Node</code> named <tt>"TIFFField"</tt>.
+     */
+    public Node getAsNativeNode() {
         IIOMetadataNode node = new IIOMetadataNode("TIFFField");
         node.setAttribute("number", Integer.toString(getTagNumber()));
         node.setAttribute("name", tag.getName());
@@ -531,6 +771,12 @@ public class TIFFField {
         return node;
     }
 
+    /**
+     * Indicates whether the value associated with the field is of
+     * integral data type.
+     *
+     * @return Whether the field type is integral.
+     */
     public boolean isIntegral() {
         return isIntegral[type];
     }
@@ -545,6 +791,11 @@ public class TIFFField {
         return count;
     }
 
+    /**
+     * Returns a reference to the data object associated with the field.
+     *
+     * @return The data object of the field.
+     */
     public Object getData() {
         return data;
     }
@@ -880,7 +1131,8 @@ public class TIFFField {
     }
 
     /**
-     * Returns a <code>TIFFTag.TIFF_ASCII</code> value as a <code>String</code>.
+     * Returns a <code>TIFFTag.TIFF_ASCII</code> value as a
+     * <code>String</code>.
      *
      * @throws ClassCastException if the field is not of type
      * <code>TIFF_ASCII</code>.
@@ -978,65 +1230,6 @@ public class TIFFField {
             return rationalString;
         default:
             throw new ClassCastException();
-        }
-    }
-
-    public void writeData(ImageOutputStream stream) throws IOException {
-        switch (type) {
-        case TIFFTag.TIFF_ASCII:
-            for (int i = 0; i < count; i++) {
-                String s = ((String[])data)[i];
-                int length = s.length();
-                for (int j = 0; j < length; j++) {
-                    stream.writeByte(s.charAt(j) & 0xff);
-                }
-                stream.writeByte(0);
-            }
-            break;
-        case TIFFTag.TIFF_UNDEFINED:
-        case TIFFTag.TIFF_BYTE:
-        case TIFFTag.TIFF_SBYTE:
-            stream.write((byte[])data);
-            break;
-        case TIFFTag.TIFF_SHORT:
-            stream.writeChars((char[])data, 0, ((char[])data).length);
-            break;
-        case TIFFTag.TIFF_SSHORT:
-            stream.writeShorts((short[])data, 0, ((short[])data).length);
-            break;
-        case TIFFTag.TIFF_SLONG:
-            stream.writeInts((int[])data, 0, ((int[])data).length);
-            break;
-        case TIFFTag.TIFF_LONG:
-            for (int i = 0; i < count; i++) {
-                stream.writeInt((int)(((long[])data)[i]));
-            }
-            break;
-        case TIFFTag.TIFF_IFD_POINTER:
-            stream.writeInt(0); // will need to be backpatched
-            break;
-        case TIFFTag.TIFF_FLOAT:
-            stream.writeFloats((float[])data, 0, ((float[])data).length);
-            break;
-        case TIFFTag.TIFF_DOUBLE:
-            stream.writeDoubles((double[])data, 0, ((double[])data).length);
-            break;
-        case TIFFTag.TIFF_SRATIONAL:
-            for (int i = 0; i < count; i++) {
-                stream.writeInt(((int[][])data)[i][0]);
-                stream.writeInt(((int[][])data)[i][1]);
-            }
-            break;
-        case TIFFTag.TIFF_RATIONAL:
-            for (int i = 0; i < count; i++) {
-                long num = ((long[][])data)[i][0];
-                long den = ((long[][])data)[i][1];
-                stream.writeInt((int)num);
-                stream.writeInt((int)den);
-            }
-            break;
-        default:
-            // error
         }
     }
 

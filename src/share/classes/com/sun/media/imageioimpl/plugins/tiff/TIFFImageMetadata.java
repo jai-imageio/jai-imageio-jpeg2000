@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.7 $
- * $Date: 2006-04-05 20:23:08 $
+ * $Revision: 1.8 $
+ * $Date: 2006-04-11 22:10:36 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -67,6 +67,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.EXIFParentTIFFTagSet;
+import com.sun.media.imageio.plugins.tiff.TIFFField;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
 import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
 
@@ -98,7 +99,7 @@ public class TIFFImageMetadata extends IIOMetadata {
               nativeMetadataFormatName,
               nativeMetadataFormatClassName,
               null, null);
-        this.tagSets = ifd.getTagSets();
+        this.tagSets = ifd.getTagSetList();
         this.rootIFD = ifd;
     }
 
@@ -145,7 +146,7 @@ public class TIFFImageMetadata extends IIOMetadata {
             IFDRoot.setAttribute("parentTagName", parentTagName);
         }
 
-        List tagSets = ifd.getTagSets();
+        List tagSets = ifd.getTagSetList();
         if (tagSets.size() > 0) {
             Iterator iter = tagSets.iterator();
             String tagSetNames = "";
@@ -168,14 +169,14 @@ public class TIFFImageMetadata extends IIOMetadata {
 
             Node node = null;
             if (tag == null) {
-                node = f.getNativeNode();
+                node = f.getAsNativeNode();
             } else if (tag.isIFDPointer()) {
                 TIFFIFD subIFD = (TIFFIFD)f.getData();
 
                 // Recurse
                 node = getIFDAsTree(subIFD, tag.getName(), tag.getNumber());
             } else {
-                node = f.getNativeNode();
+                node = f.getAsNativeNode();
             }
 
             if (node != null) {
@@ -1522,7 +1523,16 @@ public class TIFFImageMetadata extends IIOMetadata {
                 TIFFIFD subIFD = parseIFD(node);
                 String parentTagName = getAttribute(node, "parentTagName");
                 String parentTagNumber = getAttribute(node, "parentTagNumber");
-                TIFFTag tag = TIFFIFD.getTag(parentTagName, tagSets);
+                TIFFTag tag = null;
+                if(parentTagName != null) {
+                    tag = TIFFIFD.getTag(parentTagName, tagSets);
+                } else if(parentTagNumber != null) {
+                    int tagNumber =
+                        Integer.valueOf(parentTagNumber).intValue();
+                    tag = TIFFIFD.getTag(tagNumber, tagSets);
+                } else {
+                    new TIFFTag("unknown", 0, 0, null);
+                }
 
                 int type;
                 if (tag.isDataTypeOK(TIFFTag.TIFF_IFD_POINTER)) {
@@ -1545,7 +1555,7 @@ public class TIFFImageMetadata extends IIOMetadata {
                     }
                 }
 
-                f = new TIFFField(tagSet, node);
+                f = TIFFField.createFromMetadataNode(tagSet, node);
             } else {
                 fatal(node,
                       "Expected either \"TIFFIFD\" or \"TIFFField\" node, got "
@@ -1571,8 +1581,8 @@ public class TIFFImageMetadata extends IIOMetadata {
         } 
         TIFFIFD ifd = parseIFD(node);
 
-        List rootIFDTagSets = rootIFD.getTagSets();
-        Iterator tagSetIter = ifd.getTagSets().iterator();
+        List rootIFDTagSets = rootIFD.getTagSetList();
+        Iterator tagSetIter = ifd.getTagSetList().iterator();
         while(tagSetIter.hasNext()) {
             Object o = tagSetIter.next();
             if(!rootIFDTagSets.contains(o)) {

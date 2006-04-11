@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:50 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-11 22:10:37 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -47,6 +47,7 @@ package com.sun.media.imageioimpl.plugins.tiff;
 import java.awt.color.ColorSpace;
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.TIFFColorConverter;
+import com.sun.media.imageio.plugins.tiff.TIFFField;
 
 /**
  */

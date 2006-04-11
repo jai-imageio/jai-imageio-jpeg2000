@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2006-03-28 23:28:04 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-11 22:10:35 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -58,11 +58,9 @@ import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.EXIFParentTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.EXIFTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.TIFFCompressor;
+import com.sun.media.imageio.plugins.tiff.TIFFField;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
 import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
-import com.sun.media.imageioimpl.plugins.tiff.TIFFField;
-import com.sun.media.imageioimpl.plugins.tiff.TIFFIFD;
-import com.sun.media.imageioimpl.plugins.tiff.TIFFImageMetadata;
 
 /**
  * A <code>TIFFCompressor</code> for the JPEG variant of EXIF.

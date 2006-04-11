@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-10-06 01:10:37 $
+ * $Revision: 1.3 $
+ * $Date: 2006-04-11 22:10:37 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -61,6 +61,7 @@ import javax.imageio.stream.MemoryCacheImageInputStream;
 import javax.imageio.stream.ImageInputStream;
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.TIFFDecompressor;
+import com.sun.media.imageio.plugins.tiff.TIFFField;
 
 /**
  * <code>TIFFDecompressor</code> for "Old JPEG" compression.

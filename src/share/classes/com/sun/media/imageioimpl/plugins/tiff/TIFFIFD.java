@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2006-03-16 20:27:45 $
+ * $Revision: 1.6 $
+ * $Date: 2006-04-11 22:10:36 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -57,64 +57,16 @@ import java.util.Vector;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
+import com.sun.media.imageio.plugins.tiff.TIFFDirectory;
+import com.sun.media.imageio.plugins.tiff.TIFFField;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
 import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
 
-public class TIFFIFD {
-
-    /**
-     * The largest low-valued tag number in the TIFF 6.0 specification.
-     */
-    private static final int MAX_LOW_FIELD_TAG_NUM =
-        BaselineTIFFTagSet.TAG_REFERENCE_BLACK_WHITE;
-
-    private List tagSets;
-    private TIFFTag parentTag;
-
-    private TIFFField[] lowFields = new TIFFField[MAX_LOW_FIELD_TAG_NUM + 1];
-    private int numLowFields = 0;
-    private Map highFields = new TreeMap();
+public class TIFFIFD extends TIFFDirectory {
 
     private long stripOrTileByteCountsPosition = -1;
     private long stripOrTileOffsetsPosition = -1;
     private long lastPosition = -1;
-
-    public TIFFIFD(List tagSets, TIFFTag parentTag) {
-        this.tagSets = tagSets;
-        this.parentTag = parentTag;
-    }
-
-    public TIFFIFD(List tagSets) {
-        this(tagSets, null);
-    }
-
-    public List getTagSets() {
-        return tagSets;
-    }
-
-    public TIFFTag getParentTag() {
-        return parentTag;
-    }
-
-    /**
-     * Returns an <code>Iterator</code> over the TIFF fields. The
-     * traversal is in the order of increasing tag number.
-     */
-    // Note: the sort is guaranteed for low fields by the use of an
-    // array wherein the index corresponds to the tag number and for
-    // the high fields by the use of a TreeMap with tag number keys.
-    public Iterator iterator() {
-        List fields = new ArrayList(numLowFields + highFields.size());
-        int len = lowFields.length;
-        for(int i = 0; i < len; i++) {
-            TIFFField f = lowFields[i];
-            if(f != null) {
-                fields.add(f);
-            }
-        }
-        fields.addAll(highFields.values());
-        return fields.iterator();
-    }
 
     public static TIFFTag getTag(int tagNumber, List tagSets) {
         Iterator iter = tagSets.iterator();
@@ -127,10 +79,6 @@ public class TIFFIFD {
         }
 
         return null;
-    }
-
-    public TIFFTag getTag(int tagNumber) {
-        return getTag(tagNumber, tagSets);
     }
 
     public static TIFFTag getTag(String tagName, List tagSets) {
@@ -146,15 +94,103 @@ public class TIFFIFD {
         return null;
     }
 
+    private static void writeTIFFFieldToStream(TIFFField field,
+                                               ImageOutputStream stream)
+        throws IOException {
+        int count = field.getCount();
+        Object data = field.getData();
+
+        switch (field.getType()) {
+        case TIFFTag.TIFF_ASCII:
+            for (int i = 0; i < count; i++) {
+                String s = ((String[])data)[i];
+                int length = s.length();
+                for (int j = 0; j < length; j++) {
+                    stream.writeByte(s.charAt(j) & 0xff);
+                }
+                stream.writeByte(0);
+            }
+            break;
+        case TIFFTag.TIFF_UNDEFINED:
+        case TIFFTag.TIFF_BYTE:
+        case TIFFTag.TIFF_SBYTE:
+            stream.write((byte[])data);
+            break;
+        case TIFFTag.TIFF_SHORT:
+            stream.writeChars((char[])data, 0, ((char[])data).length);
+            break;
+        case TIFFTag.TIFF_SSHORT:
+            stream.writeShorts((short[])data, 0, ((short[])data).length);
+            break;
+        case TIFFTag.TIFF_SLONG:
+            stream.writeInts((int[])data, 0, ((int[])data).length);
+            break;
+        case TIFFTag.TIFF_LONG:
+            for (int i = 0; i < count; i++) {
+                stream.writeInt((int)(((long[])data)[i]));
+            }
+            break;
+        case TIFFTag.TIFF_IFD_POINTER:
+            stream.writeInt(0); // will need to be backpatched
+            break;
+        case TIFFTag.TIFF_FLOAT:
+            stream.writeFloats((float[])data, 0, ((float[])data).length);
+            break;
+        case TIFFTag.TIFF_DOUBLE:
+            stream.writeDoubles((double[])data, 0, ((double[])data).length);
+            break;
+        case TIFFTag.TIFF_SRATIONAL:
+            for (int i = 0; i < count; i++) {
+                stream.writeInt(((int[][])data)[i][0]);
+                stream.writeInt(((int[][])data)[i][1]);
+            }
+            break;
+        case TIFFTag.TIFF_RATIONAL:
+            for (int i = 0; i < count; i++) {
+                long num = ((long[][])data)[i][0];
+                long den = ((long[][])data)[i][1];
+                stream.writeInt((int)num);
+                stream.writeInt((int)den);
+            }
+            break;
+        default:
+            // error
+        }
+    }
+
+    public TIFFIFD(List tagSets, TIFFTag parentTag) {
+        super((TIFFTagSet[])tagSets.toArray(new TIFFTagSet[tagSets.size()]),
+              parentTag);
+    }
+
+    public TIFFIFD(List tagSets) {
+        this(tagSets, null);
+    }
+
+    public List getTagSetList() {
+        return Arrays.asList(getTagSets());
+    }
+
+    /**
+     * Returns an <code>Iterator</code> over the TIFF fields. The
+     * traversal is in the order of increasing tag number.
+     */
+    // Note: the sort is guaranteed for low fields by the use of an
+    // array wherein the index corresponds to the tag number and for
+    // the high fields by the use of a TreeMap with tag number keys.
+    public Iterator iterator() {
+        return Arrays.asList(getTIFFFields()).iterator();
+    }
+
     // Stream position initially at beginning, left at end
     // if ignoreUnknownFields is true, do not load fields for which
     // a tag cannot be found in an allowed TagSet.
     public void initialize(ImageInputStream stream,
                            boolean ignoreUnknownFields) throws IOException {
-        Arrays.fill(lowFields, (Object)null);
-        numLowFields = 0;
-        highFields.clear();
-        
+        removeTIFFFields();
+
+        List tagSetList = getTagSetList();
+
         int numEntries = stream.readUnsignedShort();
         for (int i = 0; i < numEntries; i++) {
             // Read tag number, value type, and value count.
@@ -163,7 +199,7 @@ public class TIFFIFD {
             int count = (int)stream.readUnsignedInt();
 
             // Get the associated TIFFTag.
-            TIFFTag tiffTag = getTag(tag, tagSets);
+            TIFFTag tiffTag = getTag(tag, tagSetList);
 
             // Ignore unknown fields.
             if(ignoreUnknownFields && tiffTag == null) {
@@ -232,9 +268,18 @@ public class TIFFIFD {
                         }
 
                         count = v.size();
-                        String strings[] = new String[count];
-                        for (int c = 0 ; c < count; c++) {
-                            strings[c] = (String)v.elementAt(c);
+                        String[] strings;
+                        if(count != 0) {
+                            strings = new String[count];
+                            for (int c = 0 ; c < count; c++) {
+                                strings[c] = (String)v.elementAt(c);
+                            }
+                        } else {
+                            // This case has been observed when the value of
+                            // 'count' recorded in the field is non-zero but
+                            // the value portion contains all nulls.
+                            count = 1;
+                            strings = new String[] {""};
                         }
                     
                         obj = strings;
@@ -320,8 +365,7 @@ public class TIFFIFD {
                 // If there is an error reading a baseline tag, then re-throw
                 // the exception and fail; otherwise continue with the next
                 // field.
-                if(tag <= MAX_LOW_FIELD_TAG_NUM ||
-                   tag == BaselineTIFFTagSet.TAG_COPYRIGHT) {
+                if(BaselineTIFFTagSet.getInstance().getTag(tag) == null) {
                     throw eofe;
                 }
             }
@@ -364,7 +408,7 @@ public class TIFFIFD {
     public void writeToStream(ImageOutputStream stream)
         throws IOException {
 
-        int numFields = numLowFields + highFields.size();
+        int numFields = getNumTIFFFields();
         stream.writeShort(numFields);
 
         long nextSpace = stream.getStreamPosition() + 12*numFields + 4;
@@ -419,12 +463,12 @@ public class TIFFIFD {
                     subIFD.writeToStream(stream);
                     nextSpace = subIFD.lastPosition;
                 } else {
-                    f.writeData(stream);
+                    writeTIFFFieldToStream(f, stream);
                     nextSpace = stream.getStreamPosition();
                 }
             } else {
                 pos = stream.getStreamPosition();
-                f.writeData(stream);
+                writeTIFFFieldToStream(f, stream);
             }
 
             // If we are writing the data for the
@@ -472,39 +516,6 @@ public class TIFFIFD {
         this.lastPosition = lastPosition;
     }
 
-    public void addTIFFField(TIFFField f) {
-        int tagNumber = f.getTagNumber();
-        if(tagNumber <= MAX_LOW_FIELD_TAG_NUM) {
-            if(lowFields[tagNumber] == null) {
-                numLowFields++;
-            }
-            lowFields[tagNumber] = f;
-        } else {
-            highFields.put(new Integer(tagNumber), f);
-        }
-    }
-
-    public TIFFField getTIFFField(int tagNumber) {
-        TIFFField f;
-        if(tagNumber <= MAX_LOW_FIELD_TAG_NUM) {
-            f = lowFields[tagNumber];
-        } else {
-            f = (TIFFField)highFields.get(new Integer(tagNumber));
-        }
-        return f;
-    }
-
-    public void removeTIFFField(int tagNumber) {
-        if(tagNumber <= MAX_LOW_FIELD_TAG_NUM) {
-            if(lowFields[tagNumber] != null) {
-                numLowFields--;
-                lowFields[tagNumber] = null;
-            }
-        } else {
-            highFields.remove(new Integer(tagNumber));
-        }
-    }
-
     /**
      * Returns a <code>TIFFIFD</code> wherein all fields from the
      * <code>BaselineTIFFTagSet</code> are copied by value and all other
@@ -515,12 +526,13 @@ public class TIFFIFD {
         TIFFTagSet baselineTagSet = BaselineTIFFTagSet.getInstance();
 
         // If the baseline TagSet is not included just return.
-        if(!tagSets.contains(baselineTagSet)) {
+        List tagSetList = getTagSetList();
+        if(!tagSetList.contains(baselineTagSet)) {
             return this;
         }
 
         // Create a new object.
-        TIFFIFD shallowClone = new TIFFIFD(tagSets, parentTag);
+        TIFFIFD shallowClone = new TIFFIFD(tagSetList, getParentTag());
 
         // Get the tag numbers in the baseline set.
         Set baselineTagNumbers = baselineTagSet.getTagNumbers();

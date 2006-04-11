@@ -38,14 +38,15 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-09-07 22:03:18 $
+ * $Revision: 1.3 $
+ * $Date: 2006-04-11 22:10:37 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
 
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
 import com.sun.media.imageio.plugins.tiff.TIFFCompressor;
+import com.sun.media.imageio.plugins.tiff.TIFFField;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
 import java.io.IOException;
 import javax.imageio.IIOException;

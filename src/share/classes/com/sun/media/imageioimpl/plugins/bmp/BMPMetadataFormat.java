@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:26 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-14 21:29:14 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.bmp;
@@ -49,7 +49,7 @@ import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.metadata.IIOMetadataFormat;
 import javax.imageio.metadata.IIOMetadataFormatImpl;
 
-class BMPMetadataFormat extends IIOMetadataFormatImpl {
+public class BMPMetadataFormat extends IIOMetadataFormatImpl {
 
     private static IIOMetadataFormat instance = null;
 

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:26 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-14 21:29:14 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.bmp;
@@ -50,7 +50,11 @@ import javax.imageio.metadata.IIOMetadataFormatImpl;
 
 public class BMPMetadataFormatResources extends ListResourceBundle {
 
-    static final Object[][] contents = {
+    public BMPMetadataFormatResources() {}
+
+    protected Object[][] getContents() {
+        return new Object[][] {
+
         // Node name, followed by description
         { "BMPVersion", "BMP version string" },
         { "Width", "The width of the image" },
@@ -79,12 +83,6 @@ public class BMPMetadataFormatResources extends ListResourceBundle {
 	{ "X", "The X coordinate of a point in XYZ color space" },
 	{ "Y", "The Y coordinate of a point in XYZ color space" },
 	{ "Z", "The Z coordinate of a point in XYZ color space" },
-
-    };
-
-    public BMPMetadataFormatResources() {}
-
-    public Object[][] getContents() {
-        return contents;
+        };
     }
 }

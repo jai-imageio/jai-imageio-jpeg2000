@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2006-04-11 22:10:35 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-14 22:20:14 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -53,6 +53,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
 import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
+import com.sun.media.imageioimpl.plugins.tiff.TIFFFieldNode;
 
 /**
  * A class representing a field in a TIFF 6.0 Image File Directory.
@@ -724,51 +725,7 @@ public class TIFFField implements Comparable {
      * @return a <code>Node</code> named <tt>"TIFFField"</tt>.
      */
     public Node getAsNativeNode() {
-        IIOMetadataNode node = new IIOMetadataNode("TIFFField");
-        node.setAttribute("number", Integer.toString(getTagNumber()));
-        node.setAttribute("name", tag.getName());
-
-        int count = getCount();
-
-        if (tag.isIFDPointer() || count == 0) {
-            return node;
-        }
-
-        IIOMetadataNode child;
-        if (getType() == TIFFTag.TIFF_UNDEFINED) {
-            child = new IIOMetadataNode("TIFFUndefined");
-
-            byte[] data = getAsBytes();
-            StringBuffer sb = new StringBuffer();
-            for (int i = 0; i < count; i++) {
-                sb.append(Integer.toString(data[i] & 0xff));
-                if (i < count - 1) {
-                    sb.append(",");
-                }
-            }
-            child.setAttribute("value", sb.toString());
-        } else {
-            child = new IIOMetadataNode("TIFF" + getTypeName(getType()) + "s");
-            
-            for (int i = 0; i < count; i++) {
-                IIOMetadataNode cchild =
-                    new IIOMetadataNode("TIFF" + getTypeName(getType()));
-                
-                cchild.setAttribute("value", getValueAsString(i));
-                if (tag.hasValueNames() && isIntegral()) {
-                    int value = getAsInt(i);
-                    String name = tag.getValueName(value);
-                    if (name != null) {
-                        cchild.setAttribute("description", name);
-                    }
-                }
-                
-                child.appendChild(cchild);
-            }
-        }
-
-        node.appendChild(child);
-        return node;
+        return new TIFFFieldNode(this);
     }
 
     /**

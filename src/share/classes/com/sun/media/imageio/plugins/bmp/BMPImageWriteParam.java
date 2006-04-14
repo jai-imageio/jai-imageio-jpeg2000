@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:14 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-14 21:32:04 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.bmp;
@@ -47,22 +47,29 @@ package com.sun.media.imageio.plugins.bmp;
 import java.util.Locale;
 import javax.imageio.ImageWriteParam;
 
+import com.sun.media.imageioimpl.plugins.bmp.BMPConstants;
+
 /**
  * A subclass of <code>ImageWriteParam</code> for encoding images in
  * the BMP format.
  *
  * <p> This class allows for the specification of various parameters
- * while writing a BMP format image file.  By default, the version
- * used is VERSION_3, no compression is used, and the data layout is
- * bottom_up, such that the pixels are stored in bottom-up order, the
- * first scanline being stored last.
+ * while writing a BMP format image file.  By default, the data layout 
+ * is bottom-up, such that the pixels are stored in bottom-up order, 
+ * the first scanline being stored last.
  *
- * <p>Compression may be requested if the BMP version is 3.0.
- * The particular compression scheme to be used can be specified by using
+ * <p>The particular compression scheme to be used can be specified by using
  * the <code>setCompressionType()</code> method with the appropriate type
- * string.  The compression scheme specified will be honored if only if it
- * is compatible with the type of image being written.  The compression type
- * strings and the image type(s) each supports are listed in the following
+ * string.  The compression scheme specified will be honored if and only if it
+ * is compatible with the type of image being written. If the specified 
+ * compression scheme is not compatible with the type of image being written
+ * then the <code>IOException</code> will be thrown by the BMP image writer.
+ * If the compression type is not set explicitly then <code>getCompressionType()</code>
+ * will return <code>null</code>. In this case the BMP image writer will select 
+ * a compression type that supports encoding of the given image without loss
+ * of the color resolution.
+ * <p>The compression type strings and the image type(s) each supports are
+ * listed in the following
  * table:
  *
  * <p><table border=1>
@@ -71,7 +78,7 @@ import javax.imageio.ImageWriteParam;
  * <tr><td>BI_RGB</td>  <td>Uncompressed RLE</td> <td><= 8-bits/sample</td></tr>
  * <tr><td>BI_RLE8</td> <td>8-bit Run Length Encoding</td> <td><= 8-bits/sample</td></tr>
  * <tr><td>BI_RLE4</td> <td>4-bit Run Length Encoding</td> <td><= 4-bits/sample</td></tr>
- * <tr><td>BI_BITFIELDS</td> <td>Packed data</td> <td>16-bit or 32-bit (See below)</td></tr>
+ * <tr><td>BI_BITFIELDS</td> <td>Packed data</td> <td> 16 or 32 bits/sample</td></tr>
  * <tr><td>BI_JPEG</td> <td>JPEG encoded</td> <td>grayscale or RGB image</td></tr>
  * </table>
  *
@@ -83,22 +90,36 @@ import javax.imageio.ImageWriteParam;
  */
 public class BMPImageWriteParam extends ImageWriteParam {
 
-    // version constants
+    // deprecated version constants
 
-    /** Constant for BMP version 2. */
+    /** 
+     * Constant for BMP version 2. 
+     *
+     * @deprecated
+     */
     public static final int VERSION_2 = 0;
 
-    /** Constant for BMP version 3. */
+    /** 
+     * Constant for BMP version 3. 
+     *
+     * @deprecated
+     */
     public static final int VERSION_3 = 1;
 
-    /** Constant for BMP version 4. */
+    /** 
+     * Constant for BMP version 4. 
+     *
+     * @deprecated
+     */
     public static final int VERSION_4 = 2;
 
-    /** Constant for BMP version 5. */
+    /** 
+     * Constant for BMP version 5. 
+     *
+     * @deprecated
+     */
     public static final int VERSION_5 = 3;
 
-    // Default values
-    private int version = VERSION_3;
     private boolean topDown = false;
 
     /**
@@ -112,15 +133,13 @@ public class BMPImageWriteParam extends ImageWriteParam {
     public BMPImageWriteParam(Locale locale) {
         super(locale);
 
-        // Set compression flag.
-        canWriteCompressed = version != VERSION_2;
-	compressionMode = MODE_COPY_FROM_METADATA;
-
         // Set compression types ("BI_RGB" denotes uncompressed).
-        compressionTypes = new String[] {
-            "BI_RGB", "BI_RLE8", "BI_RLE4", "BI_BITFIELDS",
-            "BI_JPEG", "BI_PNG"
-        };
+        compressionTypes = BMPConstants.compressionTypeNames;
+
+        // Set compression flag.
+        canWriteCompressed = true;
+        compressionMode = MODE_COPY_FROM_METADATA;
+        compressionType = compressionTypes[BMPConstants.BI_RGB];
     }
 
     /**
@@ -131,36 +150,15 @@ public class BMPImageWriteParam extends ImageWriteParam {
         this(null);
     }
 
-    //
-    // Sets the BMP version to be used.  If <code>versionNumber</code>
-    // is <code>VERSION_2</code> then <code>canWriteCompressed</code>
-    // is set to <code>false</code> but otherwise to <code>true</code>.
-    //
-    // @throws IllegalArgumentException if <code>versionNumber</code> is
-    // not one of the pre-defined enumerated values <code>VERSION_*</code>.
-    //
-/*
-    public void setVersion(int versionNumber) {
-	if ( !(versionNumber == VERSION_2 ||
-	       versionNumber == VERSION_3 ||
-	       versionNumber == VERSION_4 ||
-               versionNumber == VERSION_5) ) {
-	    throw new IllegalArgumentException(I18N.getString("BMPImageWriteParam0"));
-	}
-
-	this.version = versionNumber;
-        canWriteCompressed = versionNumber != VERSION_2;
-    }
-*/
-
     /**
      * Returns the BMP version to be used.  The default is
      * <code>VERSION_3</code>.
      *
+     * @deprecated
      * @return the BMP version number.
      */
     public int getVersion() {
-	return version;
+	return VERSION_3;
     }
 
     /**

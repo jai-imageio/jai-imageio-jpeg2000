@@ -38,22 +38,27 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2006-04-14 22:20:14 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-18 20:47:02 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.StringTokenizer;
+import java.util.Arrays;
+import java.util.List;
+import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import com.sun.media.imageio.plugins.tiff.TIFFDirectory;
 import com.sun.media.imageio.plugins.tiff.TIFFField;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
 import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
+import com.sun.media.imageioimpl.plugins.tiff.TIFFIFD;
+import com.sun.media.imageioimpl.plugins.tiff.TIFFImageMetadata;
 
 /**
  * The <code>Node</code> representation of a <code>TIFFField</code>
@@ -62,6 +67,13 @@ import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
  * @since 1.1-beta
  */
 public class TIFFFieldNode extends IIOMetadataNode {
+    private static String getNodeName(TIFFField f) {
+        return f.getData() instanceof TIFFDirectory ?
+            "TIFFIFD" : "TIFFField";
+    }
+
+    private boolean isIFD;
+
     /** Initialization flag. */
     private Boolean isInitialized = Boolean.FALSE;
 
@@ -69,59 +81,105 @@ public class TIFFFieldNode extends IIOMetadataNode {
 
     // XXX Set the user object to "field"?
     public TIFFFieldNode(TIFFField field) {
-        super("TIFFField");
+        super(getNodeName(field));
+
+        isIFD = field.getData() instanceof TIFFDirectory;
 
         this.field = field;
 
         TIFFTag tag = field.getTag();
+        int tagNumber = tag.getNumber();
+        String tagName = tag.getName();
 
-        setAttribute("number", Integer.toString(field.getTagNumber()));
-        setAttribute("name", tag.getName());
+        if(isIFD) {
+            if(tagNumber != 0) {
+                setAttribute("parentTagNumber", Integer.toString(tagNumber));
+            }
+            if(tagName != null) {
+                setAttribute("parentTagName", tagName);
+            }
+
+            TIFFDirectory dir = (TIFFDirectory)field.getData();
+            TIFFTagSet[] tagSets = dir.getTagSets();
+            if(tagSets != null) {
+                String tagSetNames = "";
+                for(int i = 0; i < tagSets.length; i++) {
+                    tagSetNames += tagSets[i].getClass().getName();
+                    if(i != tagSets.length - 1) {
+                        tagSetNames += ",";
+                    }
+                }
+                setAttribute("tagSets", tagSetNames);
+            }
+        } else {
+            setAttribute("number", Integer.toString(tagNumber));
+            setAttribute("name", tagName);
+        }
     }
 
     private synchronized void initialize() {
         if(isInitialized == Boolean.TRUE) return;
 
-        IIOMetadataNode child;
-        int count = field.getCount();
-        if (field.getType() == TIFFTag.TIFF_UNDEFINED) {
-            child = new IIOMetadataNode("TIFFUndefined");
+        if(isIFD) {
+            TIFFDirectory dir = (TIFFDirectory)field.getData();
+            TIFFField[] fields = dir.getTIFFFields();
+            if(fields != null) {
+                TIFFTagSet[] tagSets = dir.getTagSets();
+                List tagSetList = Arrays.asList(tagSets);
+                int numFields = fields.length;
+                for(int i = 0; i < numFields; i++) {
+                    TIFFField f = fields[i];
+                    int tagNumber = f.getTagNumber();
+                    TIFFTag tag = TIFFIFD.getTag(tagNumber, tagSetList);
 
-            byte[] data = field.getAsBytes();
-            StringBuffer sb = new StringBuffer();
-            for (int i = 0; i < count; i++) {
-                sb.append(Integer.toString(data[i] & 0xff));
-                if (i < count - 1) {
-                    sb.append(",");
-                }
-            }
-            child.setAttribute("value", sb.toString());
-        } else {
-            child = new IIOMetadataNode("TIFF" +
-                                        field.getTypeName(field.getType()) +
-                                        "s");
+                    Node node = f.getAsNativeNode();
 
-            TIFFTag tag = field.getTag();
-
-            for (int i = 0; i < count; i++) {
-                IIOMetadataNode cchild =
-                    new IIOMetadataNode("TIFF" +
-                                        field.getTypeName(field.getType()));
-                
-                cchild.setAttribute("value", field.getValueAsString(i));
-                if (tag.hasValueNames() && field.isIntegral()) {
-                    int value = field.getAsInt(i);
-                    String name = tag.getValueName(value);
-                    if (name != null) {
-                        cchild.setAttribute("description", name);
+                    if (node != null) {
+                        appendChild(node);
                     }
                 }
-                
-                child.appendChild(cchild);
             }
-        }
+        } else {
+            IIOMetadataNode child;
+            int count = field.getCount();
+            if (field.getType() == TIFFTag.TIFF_UNDEFINED) {
+                child = new IIOMetadataNode("TIFFUndefined");
 
-        appendChild(child);
+                byte[] data = field.getAsBytes();
+                StringBuffer sb = new StringBuffer();
+                for (int i = 0; i < count; i++) {
+                    sb.append(Integer.toString(data[i] & 0xff));
+                    if (i < count - 1) {
+                        sb.append(",");
+                    }
+                }
+                child.setAttribute("value", sb.toString());
+            } else {
+                child = new IIOMetadataNode("TIFF" +
+                                            field.getTypeName(field.getType()) +
+                                            "s");
+
+                TIFFTag tag = field.getTag();
+
+                for (int i = 0; i < count; i++) {
+                    IIOMetadataNode cchild =
+                        new IIOMetadataNode("TIFF" +
+                                            field.getTypeName(field.getType()));
+                
+                    cchild.setAttribute("value", field.getValueAsString(i));
+                    if (tag.hasValueNames() && field.isIntegral()) {
+                        int value = field.getAsInt(i);
+                        String name = tag.getValueName(value);
+                        if (name != null) {
+                            cchild.setAttribute("description", name);
+                        }
+                    }
+                
+                    child.appendChild(cchild);
+                }
+            }
+            appendChild(child);
+        }
 
         isInitialized = Boolean.TRUE;
     }

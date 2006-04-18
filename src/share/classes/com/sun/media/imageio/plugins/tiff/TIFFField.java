@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-04-14 22:20:14 $
+ * $Revision: 1.3 $
+ * $Date: 2006-04-18 21:01:52 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -719,8 +719,13 @@ public class TIFFField implements Comparable {
     }
 
     /**
-     * Returns the <code>TIFFField</code> as a node named <tt>"TIFFField"</tt>
-     * as described in the TIFF native image metadata specification.
+     * Returns the <code>TIFFField</code> as a node named either
+     * <tt>"TIFFField"</tt> or <tt>"TIFFIFD"</tt> as described in the
+     * TIFF native image metadata specification. The node will be named
+     * <tt>"TIFFIFD"</tt> if and only if the field's data object is an
+     * instance of {@link TIFFDirectory} or equivalently
+     * {@link TIFFTag#isIFDPointer getTag.isIFDPointer()} returns
+     * <code>true</code>.
      *
      * @return a <code>Node</code> named <tt>"TIFFField"</tt>.
      */

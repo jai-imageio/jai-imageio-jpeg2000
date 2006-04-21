@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-03-31 19:43:41 $
+ * $Revision: 1.3 $
+ * $Date: 2006-04-21 00:02:53 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.wbmp;
@@ -108,16 +108,31 @@ public class WBMPImageReaderSpi extends ImageReaderSpi {
         }
 
         ImageInputStream stream = (ImageInputStream)source;
-        byte[] b = new byte[3];
 
         stream.mark();
-        stream.readFully(b);
+        int type = stream.readByte();   // TypeField
+        byte fixHeaderField = stream.readByte();
+
+        int width = ImageUtil.readMultiByteInteger(stream);
+        int height = ImageUtil.readMultiByteInteger(stream);
+
+        long remainingBytes = stream.length() - stream.getStreamPosition();
         stream.reset();
 
-        return ((b[0] == (byte)0) &&  // TypeField == 0
-                b[1] == 0 && // FixHeaderField == 0xxx00000; not support ext header
-                ((b[2] & 0x8f) != 0 || (b[2] & 0x7f) != 0));  // First width byte
-                //XXX: b[2] & 0x8f) != 0 for the bug in Sony Ericsson encoder.
+        // check WBMP "header"
+        if (type != 0 || fixHeaderField != 0) {
+            // while WBMP reader does not support ext WBMP headers
+            return false;
+        }
+        
+        // check image dimension
+        if (width <= 0 || height <= 0) {
+            return false;
+        }
+
+        long scanSize = (width / 8) + ((width % 8) == 0 ? 0 : 1);
+        
+        return (remainingBytes == scanSize * height);
     }
 
     public ImageReader createReaderInstance(Object extension)

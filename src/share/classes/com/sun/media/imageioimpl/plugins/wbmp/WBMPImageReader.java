@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:51 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-21 00:02:26 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.wbmp;
@@ -62,6 +62,8 @@ import javax.imageio.stream.ImageInputStream;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import com.sun.media.imageioimpl.common.ImageUtil;
 
 /** This class is the Java Image IO plugin reader for WBMP images.
  *  It may subsample the image, clip the image,
@@ -163,11 +165,11 @@ public class WBMPImageReader extends ImageReader {
 	metadata.wbmpType = wbmpType;
 
         // Read image width
-        width = readMultiByteInteger();
+        width = ImageUtil.readMultiByteInteger(iis);
 	metadata.width = width;
 
         // Read image height
-        height = readMultiByteInteger();
+        height = ImageUtil.readMultiByteInteger(iis);
 	metadata.height = height;
 
         gotHeader = true;
@@ -333,17 +335,6 @@ public class WBMPImageReader extends ImageReader {
         super.reset();
         iis = null;
         gotHeader = false;
-    }
-
-    private int readMultiByteInteger() throws IOException {
-        int value = iis.readByte();
-        int result = value & 0x7f;
-        while((value & 0x80) == 0x80) {
-            result <<= 7;
-            value = iis.readByte();
-            result |= (value & 0x7f);
-        }
-        return result;
     }
 
     /*

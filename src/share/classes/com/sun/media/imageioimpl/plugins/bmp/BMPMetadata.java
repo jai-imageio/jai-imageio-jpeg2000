@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:26 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-21 23:14:37 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.bmp;
@@ -520,12 +520,8 @@ public class BMPMetadata extends IIOMetadata
     void initialize(ColorModel cm, SampleModel sm, ImageWriteParam param) {
         // bmpVersion and compression.
         if(param != null) {
-            if(param instanceof BMPImageWriteParam) {
-                bmpVersion = "BMP v. "+
-                    ((BMPImageWriteParam)param).getVersion()+".x";
-            } else {
-                bmpVersion = BMPConstants.VERSION_3;
-            }
+            bmpVersion = BMPConstants.VERSION_3;
+
             if(param.getCompressionMode() == ImageWriteParam.MODE_EXPLICIT) {
                 String compressionType = param.getCompressionType();
                 compression =

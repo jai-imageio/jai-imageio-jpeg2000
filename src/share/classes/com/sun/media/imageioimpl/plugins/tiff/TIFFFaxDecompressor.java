@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.8 $
- * $Date: 2006-04-11 22:10:35 $
+ * $Revision: 1.9 $
+ * $Date: 2006-04-21 23:25:45 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -678,7 +678,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
             this.uncompressedMode = (int)((t6Options & 0x02) >> 1);
             decodeT6();
         } else {
-            System.out.println("Unknown compression = " + compression);
+            throw new IIOException("Unknown compression type " + compression);
         }
     }
 
@@ -723,7 +723,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
 		    updatePointer(4 - bits);
 		} else if (bits == 0) {     // ERROR
-                    System.out.println("Error 0");
+                    warning("Error 0");
 		} else if (bits == 15) {    // EOL
                     // Instead of throwing an error, assume that the EOL
                     // was premature. Rewind the pointers to the start

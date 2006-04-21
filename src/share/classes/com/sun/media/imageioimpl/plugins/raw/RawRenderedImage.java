@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:43 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-21 23:19:13 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.raw;
@@ -217,7 +217,8 @@ public class RawRenderedImage extends SimpleRenderedImage {
         this.minX = destinationRegion.x;
         this.minY = destinationRegion.y;
 
-        sampleModel.createCompatibleSampleModel(tileWidth, tileHeight);
+        sampleModel =
+            sampleModel.createCompatibleSampleModel(tileWidth, tileHeight);
 
         maxXTile = originalDimension.width / tileWidth;
         maxYTile = originalDimension.height / tileHeight;

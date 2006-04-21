@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-03-31 19:43:38 $
+ * $Revision: 1.5 $
+ * $Date: 2006-04-21 00:01:47 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.common;
@@ -66,6 +66,7 @@ import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.SinglePixelPackedSampleModel;
 import java.awt.image.WritableRaster;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -84,6 +85,7 @@ import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.spi.ImageReaderWriterSpi;
 import javax.imageio.spi.ImageWriterSpi;
 import javax.imageio.spi.ServiceRegistry;
+import javax.imageio.stream.ImageInputStream;
 
 import com.sun.medialib.codec.jiio.Util;
 
@@ -1433,5 +1435,15 @@ public class ImageUtil {
 	    }
 	}
     }
-
+    
+    public static int readMultiByteInteger(ImageInputStream iis) throws IOException {
+        int value = iis.readByte();
+        int result = value & 0x7f;
+        while((value & 0x80) == 0x80) {
+            result <<= 7;
+            value = iis.readByte();
+            result |= (value & 0x7f);
+        }
+        return result;
+    }
 }

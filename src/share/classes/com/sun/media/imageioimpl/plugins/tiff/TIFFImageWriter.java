@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.20 $
- * $Date: 2006-04-11 22:10:36 $
+ * $Revision: 1.21 $
+ * $Date: 2006-04-22 00:04:23 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -841,7 +841,27 @@ public class TIFFImageWriter extends ImageWriter {
 
         if (compressor == null) {
             if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_RLE) {
-                compressor = new TIFFRLECompressor();
+                if(PackageUtil.isCodecLibAvailable()) {
+                    try {
+                        compressor = new TIFFCodecLibRLECompressor();
+                        if(DEBUG) {
+                            System.out.println
+                                ("Using codecLib RLE compressor");
+                        }
+                    } catch(RuntimeException e) {
+                        if(DEBUG) {
+                            System.out.println(e);
+                        }
+                    }
+                }
+
+                if(compressor == null) {
+                    compressor = new TIFFRLECompressor();
+                    if(DEBUG) {
+                        System.out.println("Using Java RLE compressor");
+                    }
+                }
+
                 if (!forcePhotometricInterpretation) {
                     photometricInterpretation =
                    BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_WHITE_IS_ZERO;

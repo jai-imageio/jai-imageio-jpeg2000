@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-03-31 19:43:39 $
+ * $Revision: 1.4 $
+ * $Date: 2006-04-24 20:53:01 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -85,12 +85,16 @@ public class CLibJPEGImageReaderSpi extends ImageReaderSpi {
               readerClassName,
               STANDARD_INPUT_TYPE,
               writerSpiNames,
-              false,
-              null, null,
-              null, null,
-              false,
-              null, null,
-              null, null);
+              false, // supportsStandardStreamMetadataFormat
+              null,  // nativeStreamMetadataFormatName
+              null,  // nativeStreamMetadataFormatClassName
+              null,  // extraStreamMetadataFormatNames
+              null,  // extraStreamMetadataFormatClassNames
+              true,  // supportsStandardImageMetadataFormat
+              CLibJPEGMetadata.NATIVE_FORMAT,
+              CLibJPEGMetadata.NATIVE_FORMAT_CLASS,
+              new String[] {CLibJPEGMetadata.TIFF_FORMAT},
+              new String[] {CLibJPEGMetadata.TIFF_FORMAT_CLASS});
     }
 
     public void onRegistration(ServiceRegistry registry,

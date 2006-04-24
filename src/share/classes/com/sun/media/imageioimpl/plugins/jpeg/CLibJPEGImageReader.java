@@ -38,13 +38,15 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.9 $
- * $Date: 2006-02-24 01:03:28 $
+ * $Revision: 1.10 $
+ * $Date: 2006-04-24 20:53:01 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
 
 import java.awt.color.ColorSpace;
+import java.awt.color.ICC_ColorSpace;
+import java.awt.color.ICC_Profile;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
@@ -66,7 +68,7 @@ import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.stream.ImageInputStream;
-import com.sun.media.imageioimpl.common.SimpleCMYKColorSpace;
+import com.sun.media.imageioimpl.common.InvertedCMYKColorSpace;
 import com.sun.media.imageioimpl.plugins.clib.CLibImageReader;
 import com.sun.media.imageioimpl.plugins.clib.InputStreamAdapter;
 import com.sun.medialib.codec.jpeg.Decoder;
@@ -77,6 +79,9 @@ final class CLibJPEGImageReader extends CLibImageReader {
 
     private mediaLibImage infoImage = null;
     private int infoImageIndex = -1;
+    private byte[] iccProfileData = null;
+    private IIOMetadata imageMetadata = null;
+    private int imageMetadataIndex = -1;
     private HashMap imageTypes = new HashMap();
     private int bitDepth; // XXX Should depend on imageIndex.
 
@@ -101,6 +106,26 @@ final class CLibJPEGImageReader extends CLibImageReader {
             }
             //decoder.setType(Decoder.JPEG_TYPE_UNKNOWN);
             mlImage = decoder.decode(null);
+
+            // Set the ICC profile data.
+            iccProfileData = decoder.getEmbeddedICCProfile();
+
+            // If there is a profile need to invert the data if they
+            // are YCCK or CMYK originally.
+            if(iccProfileData != null &&
+               mlImage.getType() == mediaLibImage.MLIB_BYTE) {
+                int format = mlImage.getFormat();
+                if(format == mediaLibImage.MLIB_FORMAT_CMYK ||
+                   format == mediaLibImage.MLIB_FORMAT_YCCK) {
+                    long t0 = System.currentTimeMillis();
+                    byte[] data = mlImage.getByteData();
+                    int len = data.length;
+                    for(int i = mlImage.getOffset(); i < len; i++) {
+                        data[i] = (byte)(255 - data[i]&0xff);
+                    }
+                }
+            }
+
         } catch(Throwable t) {
             throw new IIOException("codecLib error", t);
         }
@@ -175,6 +200,9 @@ final class CLibJPEGImageReader extends CLibImageReader {
 
                 // Set the informational image.
                 infoImage = decoder.getSize();
+
+                // Set the ICC profile data.
+                iccProfileData = decoder.getEmbeddedICCProfile();
             } catch(Throwable t) {
                 throw new IIOException("codecLib error", t);
             }
@@ -245,28 +273,79 @@ final class CLibJPEGImageReader extends CLibImageReader {
                 // Get the informational image.
                 mediaLibImage mlImage = getInfoImage(imageIndex);
 
-                // XXX If an APP2 ICC profile is available, add its type first.
+                ColorSpace cs;
 
-                if(mlImage.getFormat() == mediaLibImage.MLIB_FORMAT_CMYK) {
-                    // Use the default CMYK color space.
-                    ColorSpace cmyk = SimpleCMYKColorSpace.getInstance();
-                    types.add(createImageType(mlImage, cmyk, bitDepth,
-                                              null, null, null, null));
-                } else {
-                    // Create the type.
-                    types.add(createImageType(mlImage, null, bitDepth,
+                // Add profile-based type if an ICC profile is present.
+                if(iccProfileData != null) {
+                    ICC_Profile profile =
+                        ICC_Profile.getInstance(iccProfileData);
+                    cs = new ICC_ColorSpace(profile);
+                    types.add(createImageType(mlImage, cs, bitDepth,
                                               null, null, null, null));
                 }
+
+                // Add a standard type.
+                cs = mlImage.getFormat() == mediaLibImage.MLIB_FORMAT_CMYK ?
+                    InvertedCMYKColorSpace.getInstance() : null;
+                types.add(createImageType(mlImage, cs, bitDepth,
+                                          null, null, null, null));
             }
         }
 
         return types.iterator();
     }
 
+    public synchronized IIOMetadata getImageMetadata(int imageIndex)
+        throws IOException {
+        if(input == null) {
+            throw new IllegalStateException("input == null");
+        }
+
+        if(imageMetadata == null || imageIndex != imageMetadataIndex) {
+            seekToImage(imageIndex);
+
+            ImageInputStream stream = (ImageInputStream)input;
+            long pos = stream.getStreamPosition();
+
+            try {
+                imageMetadata = new CLibJPEGMetadata(stream);
+                imageMetadataIndex = imageIndex;
+            } catch(IIOException e) {
+                throw e;
+            } finally {
+                stream.seek(pos);
+            }
+        }
+
+        return imageMetadata;
+    }
+
+    // Override thumbnail methods.
+
+    public boolean readerSupportsThumbnails() {
+        return true;
+    }
+
+    public int getNumThumbnails(int imageIndex) throws IOException {
+        CLibJPEGMetadata metadata =
+            (CLibJPEGMetadata)getImageMetadata(imageIndex);
+        return metadata.getNumThumbnails();
+    }
+
+    public BufferedImage readThumbnail(int imageIndex,
+                                       int thumbnailIndex) throws IOException {
+        CLibJPEGMetadata metadata =
+            (CLibJPEGMetadata)getImageMetadata(imageIndex);
+        return metadata.getThumbnail(thumbnailIndex);
+    }
+
     // Override superclass method.
     protected void resetLocal() {
         infoImage = null;
         infoImageIndex = -1;
+        iccProfileData = null;
+        imageMetadata = null;
+        imageMetadataIndex = -1;
         imageTypes.clear();
         super.resetLocal();
     }

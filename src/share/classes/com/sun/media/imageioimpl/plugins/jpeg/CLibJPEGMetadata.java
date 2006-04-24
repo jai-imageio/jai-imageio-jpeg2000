@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2006-04-24 20:53:01 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-24 21:48:13 $
  * $State: Exp $
  */
 
@@ -1209,18 +1209,21 @@ public class CLibJPEGMetadata extends IIOMetadata {
 
     protected IIOMetadataNode getStandardCompressionNode() {
 
+        boolean isLossless =
+            sofProcess == 3 || sofProcess == 7 || sofProcess == 11 ||
+            sofProcess == 15 || sofProcess == 48;
+
         IIOMetadataNode compression = new IIOMetadataNode("Compression");
 
         // CompressionTypeName
         IIOMetadataNode name = new IIOMetadataNode("CompressionTypeName");
-        name.setAttribute("value", "JPEG");
+        String compressionType = isLossless ?
+            (sofProcess == 48 ? "JPEG-LS" : "JPEG-LOSSLESS") : "JPEG";
+        name.setAttribute("value", compressionType);
         compression.appendChild(name);
 
         // Lossless - false
         IIOMetadataNode lossless = new IIOMetadataNode("Lossless");
-        boolean isLossless =
-            sofProcess == 3 || sofProcess == 7 || sofProcess == 11 ||
-            sofProcess == 15 || sofProcess == 48;
         lossless.setAttribute("value", isLossless ? "true" : "false");
         compression.appendChild(lossless);
 

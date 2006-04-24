@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.5 $
-$Date: 2006-04-12 01:04:52 $
+$Revision: 1.6 $
+$Date: 2006-04-24 21:10:19 $
 $State: Exp $
 -->
 <body>
@@ -110,6 +110,18 @@ revert to the respective defaults for reading and writing.
 <td>T</td>
 <td>U</td>
 <td>T</td>
+</tr>
+<tr>
+<td>{@link javax.imageio.ImageReader#readerSupportsThumbnails()}</td>
+<td>F</td>
+<td>F</td>
+<td>T</td>
+<td>F</td>
+<td>F</td>
+<td>F</td>
+<td>F</td>
+<td>F</td>
+<td>F</td>
 </tr>
 <tr>
 <td>{@link javax.imageio.ImageWriteParam#canWriteCompressed()}</td>
@@ -235,7 +247,7 @@ revert to the respective defaults for reading and writing.
 <td>Standard Image Metadata</td>
 <td>T</td>
 <td>T</td>
-<td>F</td>
+<td>T (reader only)</td>
 <td>T</td>
 <td>T</td>
 <td>T</td>
@@ -247,7 +259,7 @@ revert to the respective defaults for reading and writing.
 <td>Native Image Metadata</td>
 <td>T</td>
 <td>T</td>
-<td>F</td>
+<td>T (reader only)</td>
 <td>T</td>
 <td>T</td>
 <td>T</td>
@@ -553,6 +565,29 @@ equal to the number of samples per pixel and color component order G
 (red-green-blue with alpha) as appropriate for the color space. Other layouts
 will cause data to be reformatted in memory.</p>
 
+<p>If the JPEG reader detects an ICC profile in an APP2 marker segment it
+will use it to define the raw {@link javax.imageio.ImageTypeSpecifier}.
+If the inferred color space not based on the ICC profile is compatible
+with the ICC profile-based color space, then a second
+<code>ImageTypeSpecifier</code> derived from this inferred color
+space will be included in the {@link java.util.Iterator} returned by
+{@link javax.imageio.ImageReader#getImageTypes}. If the iterator contains
+more than one type, the first one will be based on the ICC profile and the
+second on the inferred color space.</p>
+
+<p>The JPEG reader supports TIFF native image metadata as an extra metadata
+format. If the JPEG stream contains an EXIF APP1 marker segment, the primary
+IFD contained therein will be available from the metadata tree extracted
+using the TIFF extra metadata format name.</p>
+
+<p>The JPEG reader supports thumbnails. These may be derived from APP0 JFIF,
+APP0 JFXX, or APP1 EXIF marker segments. Although APP0 marker segments are
+not allowed by the EXIF specification, there exist EXIF images which contain
+them. If there is more than one thumbnail present, the JFIF thumbnail will be
+retrieved first, followed by any JFXX thumbnail(s), followed by any EXIF
+thumbnail. The source of each respective thumbnail may be determined by
+consulting the native image metadata.</p>
+
 <p>
 <table border=1>
 <caption><b>JPEG Reader/Writer Plug-in Attributes</b></caption>
@@ -572,6 +607,18 @@ jpeg-ls (ISO 14495-1 lossless), jfif</td>
 <tr>
 <td>Suffixes</td>
 <td>jpeg, jpg, jls (ISO 14495-1 lossless), jfif</td>
+</tr>
+<tr>
+<td>Native Image Metadata</td>
+<td><a
+href="http://java.sun.com/j2se/1.5.0/docs/api/javax/imageio/metadata/doc-files/jpeg_metadata.html#image"
+>javax_imageio_jpeg_1.0</a></td>
+</tr>
+<tr>
+<td>Extra Image Metadata</td>
+<td><a
+href="./com/sun/media/imageio/plugins/tiff/package-summary.html#ImageMetadata"
+>com_sun_media_imageio_plugins_tiff_image_1.0</a></td>
 </tr>
 <tr>
 <td>{@link javax.imageio.ImageWriteParam}</td>
@@ -691,6 +738,23 @@ color component order G (grayscale), GA (grayscale with alpha), RGB
 color space. Other layouts will cause data to be reformatted in memory.
 Currently only bit depths of 1, 8, and 16 are supported.</p>
 
+<p>If the PNG reader detects an ICC profile in an iCCP chunk it
+will use it to define the raw {@link javax.imageio.ImageTypeSpecifier}.
+If the inferred color space not based on the ICC profile field is compatible
+with the ICC profile-based color space, then a second
+<code>ImageTypeSpecifier</code> derived from this inferred color
+space will be included in the {@link java.util.Iterator} returned by
+{@link javax.imageio.ImageReader#getImageTypes}. If the iterator contains
+more than one type, the first one will be based on the ICC profile and the
+second on the inferred color space.</p>
+
+<p>The PNG writer will write an iCCP chunk to the output if one is in the
+native image metadata object provided to the writer, or if the
+<code>ColorSpace</code> of the <code>ColorModel</code> of the image is
+based on an ICC profile which is not one of the standard
+<code>ColorSpace</code>s defined by the <code>ColorSpace.cs_*</code>
+constants.</p>
+
 <p>
 <table border=1>
 <caption><b>PNG Reader/Writer Plug-in Attributes</b></caption>
@@ -713,7 +777,7 @@ Currently only bit depths of 1, 8, and 16 are supported.</p>
 <tr>
 <td>Native Image Metadata</td>
 <td><a
-href="http://java.sun.com/j2se/1.4.2/docs/api/javax/imageio/metadata/doc-files/png_metadata.html"
+href="http://java.sun.com/j2se/1.5.0/docs/api/javax/imageio/metadata/doc-files/png_metadata.html"
 >javax_imageio_png_1.0</a></td>
 </tr>
 <tr>

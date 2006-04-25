@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-04-24 21:48:13 $
+ * $Revision: 1.3 $
+ * $Date: 2006-04-25 19:15:17 $
  * $State: Exp $
  */
 
@@ -224,7 +224,9 @@ public class CLibJPEGMetadata extends IIOMetadata {
     // Marker codes for JPEG-LS
 
     /** JPEG-LS SOF marker */
-    static final int SOF48 = 0xF0;
+    // This was SOF48 in an earlier revision of the JPEG-LS specification.
+    // "55" is the numerical value of SOF55 - SOF0 (= 247 - 192).
+    static final int SOF55 = 0xF7;
 
     /** JPEG-LS parameters */
     static final int LSE = 0xF2;
@@ -747,7 +749,7 @@ public class CLibJPEGMetadata extends IIOMetadata {
                         iis.readFully(b);
                         comments.add(b);
                     } else if((code >= SOFN_MIN && code <= SOFN_MAX) ||
-                              code == SOF48) { // SOFn
+                              code == SOF55) { // SOFn
                         if(!sofPresent) {
                             sofPresent = true;
                             sofProcess = code - SOFN_MIN;
@@ -1209,16 +1211,17 @@ public class CLibJPEGMetadata extends IIOMetadata {
 
     protected IIOMetadataNode getStandardCompressionNode() {
 
+        // Process 55 is JPEG-LS, others are lossless JPEG.
         boolean isLossless =
             sofProcess == 3 || sofProcess == 7 || sofProcess == 11 ||
-            sofProcess == 15 || sofProcess == 48;
+            sofProcess == 15 || sofProcess == 55;
 
         IIOMetadataNode compression = new IIOMetadataNode("Compression");
 
         // CompressionTypeName
         IIOMetadataNode name = new IIOMetadataNode("CompressionTypeName");
         String compressionType = isLossless ?
-            (sofProcess == 48 ? "JPEG-LS" : "JPEG-LOSSLESS") : "JPEG";
+            (sofProcess == 55 ? "JPEG-LS" : "JPEG-LOSSLESS") : "JPEG";
         name.setAttribute("value", compressionType);
         compression.appendChild(name);
 

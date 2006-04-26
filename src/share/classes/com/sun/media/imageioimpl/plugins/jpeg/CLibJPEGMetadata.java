@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-04-26 18:22:03 $
+ * $Revision: 1.5 $
+ * $Date: 2006-04-26 19:57:39 $
  * $State: Exp $
  */
 
@@ -268,6 +268,18 @@ public class CLibJPEGMetadata extends IIOMetadata {
     /** Maximum number of bytes in an ICC profile chunk. */
     private static final int MAX_ICC_CHUNK_LENGTH = 65520;
 
+    // Zig-zag to natural re-ordering array.
+    static final int [] zigzag = {
+        0,  1,  5,  6, 14, 15, 27, 28,
+        2,  4,  7, 13, 16, 26, 29, 42,
+        3,  8, 12, 17, 25, 30, 41, 43,
+        9, 11, 18, 24, 31, 40, 44, 53,
+        10, 19, 23, 32, 39, 45, 52, 54,
+        20, 22, 33, 38, 46, 51, 55, 60,
+        21, 34, 37, 47, 50, 56, 59, 61,
+        35, 36, 48, 49, 57, 58, 62, 63
+    };
+
     // --- Static methods ---
 
     private static IIOImage getThumbnail(ImageInputStream stream, int len,
@@ -450,16 +462,6 @@ public class CLibJPEGMetadata extends IIOMetadata {
 
     private class QTable {
         private static final int QTABLE_SIZE = 64;
-        private final int [] zigzag = {
-            0,  1,  5,  6, 14, 15, 27, 28,
-            2,  4,  7, 13, 16, 26, 29, 42,
-            3,  8, 12, 17, 25, 30, 41, 43,
-            9, 11, 18, 24, 31, 40, 44, 53,
-            10, 19, 23, 32, 39, 45, 52, 54,
-            20, 22, 33, 38, 46, 51, 55, 60,
-            21, 34, 37, 47, 50, 56, 59, 61,
-            35, 36, 48, 49, 57, 58, 62, 63
-        };
 
         int elementPrecision;
         int tableID;
@@ -507,7 +509,7 @@ public class CLibJPEGMetadata extends IIOMetadata {
             }
             table = new JPEGHuffmanTable(lengths, values);
 
-            length = 1 + 16 + values.length;
+            length = 1 + NUM_LENGTHS + values.length;
         }
     }
 
@@ -1419,6 +1421,7 @@ public class CLibJPEGMetadata extends IIOMetadata {
             } // chroma != null
         } // sofPresent
 
+        // JFIF APP0 -> Resolution fields.
         if(app0JFIFPresent) {
             long[][] xResolution = new long[][] {{Xdensity, 1}};
             TIFFField XResolutionField =
@@ -1452,6 +1455,107 @@ public class CLibJPEGMetadata extends IIOMetadata {
                               (BaselineTIFFTagSet.TAG_RESOLUTION_UNIT),
                               resolutionUnit);
             dir.addTIFFField(ResolutionUnitField);
+        }
+
+        // DQT + DHT -> JPEGTables.
+        byte[] jpegTablesData = null;
+        if(dqtPresent || dqtPresent) {
+            // Determine length of JPEGTables data.
+            int jpegTablesLength = 2; // SOI
+            if(dqtPresent) {
+                Iterator dqts = qtables.iterator();
+                while(dqts.hasNext()) {
+                    Iterator qtiter = ((List)dqts.next()).iterator();
+                    while(qtiter.hasNext()) {
+                        QTable qt = (QTable)qtiter.next();
+                        jpegTablesLength += 4 + qt.length;
+                    }
+                }
+            }
+            if(dhtPresent) {
+                Iterator dhts = htables.iterator();
+                while(dhts.hasNext()) {
+                    Iterator htiter = ((List)dhts.next()).iterator();
+                    while(htiter.hasNext()) {
+                        HuffmanTable ht = (HuffmanTable)htiter.next();
+                        jpegTablesLength += 4 + ht.length;
+                    }
+                }
+            }
+            jpegTablesLength += 2; // EOI
+
+            // Allocate space.
+            jpegTablesData = new byte[jpegTablesLength];
+
+            // SOI
+            jpegTablesData[0] = (byte)0xff;
+            jpegTablesData[1] = (byte)SOI;
+            int jpoff = 2;
+
+            if(dqtPresent) {
+                Iterator dqts = qtables.iterator();
+                while(dqts.hasNext()) {
+                    Iterator qtiter = ((List)dqts.next()).iterator();
+                    while(qtiter.hasNext()) {
+                        jpegTablesData[jpoff++] = (byte)0xff;
+                        jpegTablesData[jpoff++] = (byte)DQT;
+                        QTable qt = (QTable)qtiter.next();
+                        int qtlength = qt.length + 2;
+                        jpegTablesData[jpoff++] =
+                            (byte)((qtlength & 0xff00) >> 8);
+                        jpegTablesData[jpoff++] = (byte)(qtlength & 0xff);
+                        jpegTablesData[jpoff++] =
+                            (byte)(((qt.elementPrecision & 0xf0) << 4) |
+                                   (qt.tableID & 0x0f));
+                        int[] table = qt.table.getTable();
+                        int qlen = table.length;
+                        for(int i = 0; i < qlen; i++) {
+                            jpegTablesData[jpoff + zigzag[i]] = (byte)table[i];
+                        }
+                        jpoff += qlen;
+                    }
+                }
+            }
+
+            if(dhtPresent) {
+                Iterator dhts = htables.iterator();
+                while(dhts.hasNext()) {
+                    Iterator htiter = ((List)dhts.next()).iterator();
+                    while(htiter.hasNext()) {
+                        jpegTablesData[jpoff++] = (byte)0xff;
+                        jpegTablesData[jpoff++] = (byte)DHT;
+                        HuffmanTable ht = (HuffmanTable)htiter.next();
+                        int htlength = ht.length + 2;
+                        jpegTablesData[jpoff++] =
+                            (byte)((htlength & 0xff00) >> 8);
+                        jpegTablesData[jpoff++] = (byte)(htlength & 0xff);
+                        jpegTablesData[jpoff++] =
+                            (byte)(((ht.tableClass & 0x0f) << 4) |
+                                   (ht.tableID & 0x0f));
+                        short[] lengths = ht.table.getLengths();
+                        int numLengths = lengths.length;
+                        for(int i = 0; i < numLengths; i++) {
+                            jpegTablesData[jpoff++] = (byte)lengths[i];
+                        }
+                        short[] values = ht.table.getValues();
+                        int numValues = values.length;
+                        for(int i = 0; i < numValues; i++) {
+                            jpegTablesData[jpoff++] = (byte)values[i];
+                        }
+                    }
+                }
+            }
+
+            jpegTablesData[jpoff++] = (byte)0xff;
+            jpegTablesData[jpoff] = (byte)EOI;            
+        }
+        if(jpegTablesData != null) {
+            TIFFField JPEGTablesField =
+                new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_JPEG_TABLES),
+                              TIFFTag.TIFF_UNDEFINED,
+                              jpegTablesData.length,
+                              jpegTablesData);
+            dir.addTIFFField(JPEGTablesField);
         }
 
         IIOMetadata tiffMetadata = dir.getAsMetadata();

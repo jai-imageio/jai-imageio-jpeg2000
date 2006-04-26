@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-03-03 17:05:01 $
+ * $Revision: 1.5 $
+ * $Date: 2006-04-26 01:14:14 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -231,8 +231,10 @@ final class CLibJPEGImageWriter extends CLibImageWriter {
             (param.getCompressionMode() == ImageWriteParam.MODE_EXPLICIT &&
              !param.isCompressionLossless()) ?
             new int [] {Constants.MLIB_FORMAT_GRAYSCALE,
+                        Constants.MLIB_FORMAT_GRAYSCALE_ALPHA,
                         Constants.MLIB_FORMAT_BGR,
-                        Constants.MLIB_FORMAT_RGB} : // baseline
+                        Constants.MLIB_FORMAT_RGB,
+                        Constants.MLIB_FORMAT_CMYK  } : // baseline
             new int [] {Constants.MLIB_FORMAT_GRAYSCALE,
                         Constants.MLIB_FORMAT_RGB};  // lossless & LS
         mediaLibImage mlibImage = getMediaLibImage(renderedImage,
@@ -241,6 +243,26 @@ final class CLibJPEGImageWriter extends CLibImageWriter {
                                                    supportedFormats);
 
         try {
+            if(mlibImage.getChannels() == 2) {
+                // GRAYSCALE_ALPHA
+                encoder.setType(Encoder.JPEG_TYPE_GRAYSCALE);
+            } else if(mlibImage.getChannels() == 4) {
+                // XXX The selection of CMYK (Adobe transform 0) or
+                // YCCK (Adobe transform 2) should probably be made
+                // on the basis of image metadata passed in so this
+                // code should be modified once the writer supports
+                // image metadata. Until then select CMYK type which
+                // will generate Adobe transform 0 and non-subsampled
+                // data.
+                if(mlibImage.getFormat() == Constants.MLIB_FORMAT_CMYK) {
+                    // CMYK
+                    encoder.setType(Encoder.JPEG_TYPE_CMYK);
+                } else if(mlibImage.getFormat() ==
+                          Constants.MLIB_FORMAT_YCCK) {
+                    // YCCK
+                    encoder.setType(Encoder.JPEG_TYPE_YCCK);
+                }
+            }
             encoder.encode(stream, mlibImage);
         } catch(Throwable t) {
             throw new IIOException("codecLib error", t);

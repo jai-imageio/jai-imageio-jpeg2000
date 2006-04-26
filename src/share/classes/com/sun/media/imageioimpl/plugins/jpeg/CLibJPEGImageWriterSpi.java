@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-03-31 19:43:39 $
+ * $Revision: 1.4 $
+ * $Date: 2006-04-26 00:45:06 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg;
@@ -158,10 +158,8 @@ public class CLibJPEGImageWriterSpi extends ImageWriterSpi {
         }
 
         // Check number of bands.
-        // XXX If codecLib adds support for alpha, then the following
-        // should be modified to allow 2 or 4 bands if alpha is present.
         int numBands = sampleModel.getNumBands();
-        if (!(numBands == 1 || numBands == 3)) {
+        if (numBands < 1 || numBands > 4) {
             return false;
         }
 

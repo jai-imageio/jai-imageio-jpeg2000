@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:17 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-26 21:39:46 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -53,8 +53,29 @@ import java.util.List;
  *
  * <p> The non-baseline tags included in this class are:
  * <ul>
- * <li> ICCProfile
+ * <li> {@link #TAG_JPEG_TABLES JPEGTables}
+ * <li> {@link #TAG_ICC_PROFILE ICC&nbsp;Profile}
  * </ul>
+ * </p>
+ *
+ * <p> The non-baseline values of baseline tags included in this class are
+ * <li>{@link #TAG_COMPRESSION Compression} tag values:
+ * <ul>
+ * <li>{@link #COMPRESSION_JPEG JPEG-in-TIFF&nbsp;compression}</li>
+ * <li>{@link #COMPRESSION_ZLIB Zlib-in-TIFF&nbsp;compression}</li>
+ * <li>{@link #COMPRESSION_DEFLATE Deflate&nbsp;compression}</li>
+ * </ul>
+ * </li>
+ * <li>{@link #TAG_PHOTOMETRIC_INTERPRETATION PhotometricInterpretation}
+ * tag values:
+ * <ul>
+ * <li>{@link #PHOTOMETRIC_INTERPRETATION_ICCLAB ICCLAB&nbsp;
+ * photometric&nbsp;interpretation}</li>
+ * </ul>
+ * </li>
+ * </p>
+ *
+ * @see <a href="http://partners.adobe.com/public/developer/en/tiff/TIFF6.pdf">  TIFF 6.0 Specification</a>
  */
 public class BaselineTIFFTagSet extends TIFFTagSet {
 
@@ -199,6 +220,7 @@ public class BaselineTIFFTagSet extends TIFFTagSet {
      * A value to be used with the "Compression" tag.
      *
      * @see #TAG_COMPRESSION
+     * @see <a href="http://partners.adobe.com/public/developer/en/tiff/TIFFphotoshop.pdf">TIFF Specification Supplement 2</a>
      */
     public static final int COMPRESSION_JPEG = 7;
 
@@ -206,6 +228,7 @@ public class BaselineTIFFTagSet extends TIFFTagSet {
      * A value to be used with the "Compression" tag.
      *
      * @see #TAG_COMPRESSION
+     * @see <a href="http://partners.adobe.com/public/developer/en/tiff/TIFFphotoshop.pdf"> TIFF Specification Supplement 2</a>
      */
     public static final int COMPRESSION_ZLIB = 8;
 
@@ -220,6 +243,8 @@ public class BaselineTIFFTagSet extends TIFFTagSet {
      * A value to be used with the "Compression" tag.
      *
      * @see #TAG_COMPRESSION
+     * @see <a href="http://www.isi.edu/in-notes/rfc1951.txt">DEFLATE specification</a>
+     * @see <a href="http://partners.adobe.com/public/developer/en/tiff/TIFFphotoshop.pdf"> TIFF Specification Supplement 2</a>
      */
     public static final int COMPRESSION_DEFLATE = 32946;
 
@@ -297,6 +322,7 @@ public class BaselineTIFFTagSet extends TIFFTagSet {
      * A value to be used with the "PhotometricInterpretation" tag.
      *
      * @see #TAG_PHOTOMETRIC_INTERPRETATION
+     * @see <a href="http://partners.adobe.com/public/developer/en/tiff/TIFFPM6.pdf">TIFF Specification Supplement 1</a>
      */
     public static final int PHOTOMETRIC_INTERPRETATION_ICCLAB = 9;
 
@@ -890,6 +916,9 @@ public class BaselineTIFFTagSet extends TIFFTagSet {
 
     /**
      * Constant specifying the "JPEGTables" tag.
+     *
+     * @see <a href="http://partners.adobe.com/public/developer/en/tiff/TIFFphotoshop.pdf">TIFF Specification Supplement 2</a>
+     * @see <a href="ftp://ftp.sgi.com/graphics/tiff/TTN2.draft.txt">JPEG-in-TIFF compression</a>
      */
     public static final int TAG_JPEG_TABLES = 347;
 
@@ -1001,7 +1030,9 @@ public class BaselineTIFFTagSet extends TIFFTagSet {
     // 34675 - Embedded ICC Profile               (UNDEFINED/any)
     
     /**
-     * Constant specifying the "ICC_PROFILE" tag.
+     * Constant specifying the "ICC Profile" tag.
+     *
+     * @see <a href="http://www.color.org/ICC1V42.pdf">ICC Specification, section B.4: Embedding ICC profiles in TIFF files</a>
      */
     public static final int TAG_ICC_PROFILE = 34675;
 

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-04-25 19:15:17 $
+ * $Revision: 1.4 $
+ * $Date: 2006-04-26 18:22:03 $
  * $State: Exp $
  */
 
@@ -98,8 +98,6 @@ import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
 import com.sun.media.imageio.stream.RawImageInputStream;
 
 public class CLibJPEGMetadata extends IIOMetadata {
-    private static final boolean DEBUG = true; // XXX testing only
-
     // --- Constants ---
 
     static final String NATIVE_FORMAT = "javax_imageio_jpeg_image_1.0";
@@ -472,9 +470,11 @@ public class CLibJPEGMetadata extends IIOMetadata {
         QTable(ImageInputStream stream) throws IOException {
             elementPrecision = (int)stream.readBits(4);
             tableID = (int)stream.readBits(4);
-            int[] data = new int [QTABLE_SIZE];
+            byte[] tmp = new byte[QTABLE_SIZE];
+            stream.readFully(tmp);
+            int[] data = new int[QTABLE_SIZE];
             for (int i = 0; i < QTABLE_SIZE; i++) {
-                data[i] = stream.read();
+                data[i] = tmp[zigzag[i]] & 0xff;
             }
             table = new JPEGQTable(data);
             length = data.length + 1;
@@ -886,15 +886,25 @@ public class CLibJPEGMetadata extends IIOMetadata {
         IIOMetadataNode markerSequence = new IIOMetadataNode("markerSequence");
         root.appendChild(markerSequence);
 
-        IIOMetadataNode app0JFIF = new IIOMetadataNode("app0JFIF");
-        app0JFIF.setAttribute("majorVersion", Integer.toString(majorVersion));
-        app0JFIF.setAttribute("minorVersion", Integer.toString(minorVersion));
-        app0JFIF.setAttribute("resUnits", Integer.toString(resUnits));
-        app0JFIF.setAttribute("Xdensity", Integer.toString(Xdensity));
-        app0JFIF.setAttribute("Ydensity", Integer.toString(Ydensity));
-        app0JFIF.setAttribute("thumbWidth", Integer.toString(thumbWidth));
-        app0JFIF.setAttribute("thumbHeight", Integer.toString(thumbHeight));
-        JPEGvariety.appendChild(app0JFIF);
+        IIOMetadataNode app0JFIF = null;
+        if(app0JFIFPresent || app0JFXXPresent || app2ICCPresent) {
+            app0JFIF = new IIOMetadataNode("app0JFIF");
+            app0JFIF.setAttribute("majorVersion",
+                                  Integer.toString(majorVersion));
+            app0JFIF.setAttribute("minorVersion",
+                                  Integer.toString(minorVersion));
+            app0JFIF.setAttribute("resUnits",
+                                  Integer.toString(resUnits));
+            app0JFIF.setAttribute("Xdensity",
+                                  Integer.toString(Xdensity));
+            app0JFIF.setAttribute("Ydensity",
+                                  Integer.toString(Ydensity));
+            app0JFIF.setAttribute("thumbWidth",
+                                  Integer.toString(thumbWidth));
+            app0JFIF.setAttribute("thumbHeight",
+                                  Integer.toString(thumbHeight));
+            JPEGvariety.appendChild(app0JFIF);
+        }
 
         IIOMetadataNode JFXX = null;
         if(app0JFXXPresent) {
@@ -1210,25 +1220,38 @@ public class CLibJPEGMetadata extends IIOMetadata {
     }
 
     protected IIOMetadataNode getStandardCompressionNode() {
+        IIOMetadataNode compression = null;
 
-        // Process 55 is JPEG-LS, others are lossless JPEG.
-        boolean isLossless =
-            sofProcess == 3 || sofProcess == 7 || sofProcess == 11 ||
-            sofProcess == 15 || sofProcess == 55;
+        if(sofPresent || sosPresent) {
+            compression = new IIOMetadataNode("Compression");
 
-        IIOMetadataNode compression = new IIOMetadataNode("Compression");
+            if(sofPresent) {
+                // Process 55 is JPEG-LS, others are lossless JPEG.
+                boolean isLossless =
+                    sofProcess == 3 || sofProcess == 7 || sofProcess == 11 ||
+                    sofProcess == 15 || sofProcess == 55;
 
-        // CompressionTypeName
-        IIOMetadataNode name = new IIOMetadataNode("CompressionTypeName");
-        String compressionType = isLossless ?
-            (sofProcess == 55 ? "JPEG-LS" : "JPEG-LOSSLESS") : "JPEG";
-        name.setAttribute("value", compressionType);
-        compression.appendChild(name);
+                // CompressionTypeName
+                IIOMetadataNode name =
+                    new IIOMetadataNode("CompressionTypeName");
+                String compressionType = isLossless ?
+                    (sofProcess == 55 ? "JPEG-LS" : "JPEG-LOSSLESS") : "JPEG";
+                name.setAttribute("value", compressionType);
+                compression.appendChild(name);
 
-        // Lossless - false
-        IIOMetadataNode lossless = new IIOMetadataNode("Lossless");
-        lossless.setAttribute("value", isLossless ? "true" : "false");
-        compression.appendChild(lossless);
+                // Lossless - false
+                IIOMetadataNode lossless = new IIOMetadataNode("Lossless");
+                lossless.setAttribute("value", isLossless ? "true" : "false");
+                compression.appendChild(lossless);
+            }
+
+            if(sosPresent) {
+                IIOMetadataNode prog =
+                    new IIOMetadataNode("NumProgressiveScans");
+                prog.setAttribute("value", "1");
+                compression.appendChild(prog);
+            }
+        }
 
         return compression;
     }
@@ -1362,18 +1385,17 @@ public class CLibJPEGMetadata extends IIOMetadata {
                 if(name.equals("GRAY")) {
                     photometricInterpretation =
                         BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_BLACK_IS_ZERO;
-                } else if(name.equals("YCbCr")) {
+                } else if(name.equals("YCbCr") || name.equals("PhotoYCC")) {
+                    // NOTE: PhotoYCC -> YCbCr
                     photometricInterpretation =
                         BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_Y_CB_CR;
                 } else if(name.equals("RGB")) {
                     photometricInterpretation =
                         BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_RGB;
-                } else if(name.equals("CMYK")) {
+                } else if(name.equals("CMYK") || name.equals("YCCK")) {
+                    // NOTE: YCCK -> CMYK
                     photometricInterpretation =
                         BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_CMYK;
-                } else {
-                    // XXX YCCK -> CMYK?
-                    // XXX PhotoYCC -> YCbCr?
                 }
 
                 if(photometricInterpretation != -1) {

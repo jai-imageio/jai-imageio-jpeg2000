@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.6 $
-$Date: 2006-04-24 21:10:19 $
+$Revision: 1.7 $
+$Date: 2006-04-26 21:55:53 $
 $State: Exp $
 -->
 <body>
@@ -551,7 +551,7 @@ processes from ISO-10918-1/ITU-T.81:
 as well as the following JPEG coding process from ISO-14495-1/ITU-T.87:
 
 <ul>
-<li>near-lossless (encoder and decoder) and lossless (encoder only) context
+<li>near-lossless (encoder only) and lossless (encoder and decoder) context
 modeling with adaptive Golomb-type coding, 2- through 16-bit sample precision
 (<code>compressionType</code> set to "JPEG-LS")</li>
 </ul>
@@ -580,13 +580,19 @@ format. If the JPEG stream contains an EXIF APP1 marker segment, the primary
 IFD contained therein will be available from the metadata tree extracted
 using the TIFF extra metadata format name.</p>
 
-<p>The JPEG reader supports thumbnails. These may be derived from APP0 JFIF,
-APP0 JFXX, or APP1 EXIF marker segments. Although APP0 marker segments are
-not allowed by the EXIF specification, there exist EXIF images which contain
-them. If there is more than one thumbnail present, the JFIF thumbnail will be
-retrieved first, followed by any JFXX thumbnail(s), followed by any EXIF
-thumbnail. The source of each respective thumbnail may be determined by
-consulting the native image metadata.</p>
+<p>The JPEG reader supports thumbnails. These may be derived from JFIF APP0,
+JFXX APP0, or EXIF APP1 marker segments. Although APP0 marker segments are
+not allowed by the EXIF specification, there nevertheless exist EXIF images
+which contain them. If there is more than one thumbnail present, the JFIF
+thumbnail will be retrieved first, followed by any JFXX thumbnail(s), followed
+by any EXIF thumbnail. The source of each respective thumbnail may be
+determined by consulting the native image metadata.</p>
+
+<p>The baseline DCT JPEG writer encodes images with from 1 to 4 bands. If
+the image is 4-banded with a <code>ColorSpace</code> of type
+{@link java.awt.color.ColorSpace#TYPE_CMYK ColorSpace.TYPE_CMYK}, an Adobe
+APP14 marker with transform parameter value 0 will be written and the image
+components will not be subsampled.</p>
 
 <p>
 <table border=1>
@@ -1154,6 +1160,8 @@ TIFF-F</a> Revised Specification,<br/>
 DEFLATE</a> specification (<i>Zip-in-TIFF</i>),<br/>
 <a href="http://www.isi.edu/in-notes/rfc1950.txt">
 ZLIB</a> specification (<i>Zip-in-TIFF</i>),<br/>
+<a href="http://www.color.org/ICC1V42.pdf">ICC Specification</a> (PDF):
+section B.4: Embedding ICC profiles in TIFF files,<br/>
 <a href="http://www.exif.org/">EXIF and related resources</a>
 </td>
 </tr>

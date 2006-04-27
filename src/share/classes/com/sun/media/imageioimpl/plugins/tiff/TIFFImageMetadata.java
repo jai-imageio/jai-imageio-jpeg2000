@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.9 $
- * $Date: 2006-04-18 20:45:29 $
+ * $Revision: 1.10 $
+ * $Date: 2006-04-27 22:17:14 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -90,6 +90,7 @@ public class TIFFImageMetadata extends IIOMetadata {
               nativeMetadataFormatName,
               nativeMetadataFormatClassName,
               null, null);
+        
         this.tagSets = tagSets;
         this.rootIFD = new TIFFIFD(tagSets);        
     }
@@ -1530,8 +1531,10 @@ public class TIFFImageMetadata extends IIOMetadata {
                     int tagNumber =
                         Integer.valueOf(parentTagNumber).intValue();
                     tag = TIFFIFD.getTag(tagNumber, tagSets);
-                } else {
-                    new TIFFTag("unknown", 0, 0, null);
+                }
+
+                if(tag == null) {
+                    tag = new TIFFTag("unknown", 0, 0, null);
                 }
 
                 int type;
@@ -1581,13 +1584,12 @@ public class TIFFImageMetadata extends IIOMetadata {
         } 
         TIFFIFD ifd = parseIFD(node);
 
-        List rootIFDTagSets = new ArrayList();
-        rootIFDTagSets.addAll(rootIFD.getTagSetList());
+        List rootIFDTagSets = rootIFD.getTagSetList();
         Iterator tagSetIter = ifd.getTagSetList().iterator();
         while(tagSetIter.hasNext()) {
             Object o = tagSetIter.next();
-            if(!rootIFDTagSets.contains(o)) {
-                rootIFDTagSets.add(o);
+            if(o instanceof TIFFTagSet && !rootIFDTagSets.contains(o)) {
+                rootIFD.addTagSet((TIFFTagSet)o);
             }
         }
 

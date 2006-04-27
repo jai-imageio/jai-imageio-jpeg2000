@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2006-04-26 19:57:39 $
+ * $Revision: 1.6 $
+ * $Date: 2006-04-27 22:18:52 $
  * $State: Exp $
  */
 
@@ -264,9 +264,6 @@ public class CLibJPEGMetadata extends IIOMetadata {
     static final int ADOBE_TRANSFORM_UNKNOWN = 0;
     static final int ADOBE_TRANSFORM_YCC = 1;
     static final int ADOBE_TRANSFORM_YCCK = 2;
-
-    /** Maximum number of bytes in an ICC profile chunk. */
-    private static final int MAX_ICC_CHUNK_LENGTH = 65520;
 
     // Zig-zag to natural re-ordering array.
     static final int [] zigzag = {
@@ -1338,7 +1335,10 @@ public class CLibJPEGMetadata extends IIOMetadata {
 
         BaselineTIFFTagSet base = BaselineTIFFTagSet.getInstance();
 
-        TIFFDirectory dir = new TIFFDirectory(new TIFFTagSet[] {base}, null);
+        TIFFDirectory dir =
+            new TIFFDirectory(new TIFFTagSet[] {
+                base, EXIFParentTIFFTagSet.getInstance()
+            }, null);
 
         if(sofPresent) {
             // sofProcess -> Compression ?

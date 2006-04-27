@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2006-04-11 22:10:34 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-27 22:15:43 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -187,11 +187,9 @@ public class TIFFDirectory implements Cloneable {
 
             // Determine the format name to use.
             String formatName = null;
-            if(tim.getNativeMetadataFormatName().equals
+            if(TIFFImageMetadata.nativeMetadataFormatName.equals
                (tiffImageMetadata.getNativeMetadataFormatName())) {
-                formatName = tim.getNativeMetadataFormatName();
-            } else if(tiffImageMetadata.isStandardMetadataFormatSupported()) {
-                formatName = IIOMetadataFormatImpl.standardMetadataFormatName;
+                formatName = TIFFImageMetadata.nativeMetadataFormatName;
             } else {
                 String[] extraNames =
                     tiffImageMetadata.getExtraMetadataFormatNames();
@@ -204,8 +202,13 @@ public class TIFFDirectory implements Cloneable {
                 }
 
                 if(formatName == null) {
-                    throw new IllegalArgumentException
-                        ("Parameter does not support required metadata format!");
+                    if(tiffImageMetadata.isStandardMetadataFormatSupported()) {
+                        formatName =
+                            IIOMetadataFormatImpl.standardMetadataFormatName;
+                    } else {
+                        throw new IllegalArgumentException
+                            ("Parameter does not support required metadata format!");
+                    }
                 }
             }
 
@@ -259,7 +262,11 @@ public class TIFFDirectory implements Cloneable {
         if(tagSets == null) {
             throw new IllegalArgumentException("tagSets == null!");
         }
-        this.tagSets = Arrays.asList(tagSets);
+        this.tagSets = new ArrayList(tagSets.length);
+        int numTagSets = tagSets.length;
+        for(int i = 0; i < numTagSets; i++) {
+            this.tagSets.add(tagSets[i]);
+        }
         this.parentTag = parentTag;
     }
 
@@ -271,6 +278,42 @@ public class TIFFDirectory implements Cloneable {
      */
     public TIFFTagSet[] getTagSets() {
         return (TIFFTagSet[])tagSets.toArray(new TIFFTagSet[tagSets.size()]);
+    }
+
+    /**
+     * Adds an element to the list of {@link TIFFTagSet}s of which this
+     * directory is aware.
+     *
+     * @param tagSet The <code>TIFFTagSet</code> to add.
+     * @throws IllegalArgumentException if <code>tagSet</code> is
+     * <code>null</code>.
+     */
+    public void addTagSet(TIFFTagSet tagSet) {
+        if(tagSet == null) {
+            throw new IllegalArgumentException("tagSet == null");
+        }
+
+        if(!tagSets.contains(tagSet)) {
+            tagSets.add(tagSet);
+        }
+    }
+
+    /**
+     * Removes an element from the list of {@link TIFFTagSet}s of which this
+     * directory is aware.
+     *
+     * @param tagSet The <code>TIFFTagSet</code> to remove.
+     * @throws IllegalArgumentException if <code>tagSet</code> is
+     * <code>null</code>.
+     */
+    public void removeTagSet(TIFFTagSet tagSet) {
+        if(tagSet == null) {
+            throw new IllegalArgumentException("tagSet == null");
+        }
+
+        if(tagSets.contains(tagSet)) {
+            tagSets.remove(tagSet);
+        }
     }
 
     /**

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-04-27 22:15:43 $
+ * $Revision: 1.3 $
+ * $Date: 2006-04-28 01:28:49 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -102,7 +102,7 @@ import com.sun.media.imageioimpl.plugins.tiff.TIFFImageMetadata;
  * data field of a <code>TIFFField</code> instance which has a tag field
  * equal to the contained directory's parent tag.</p>
  * 
- * <p>An an example consider an EXIF image. The <code>TIFFDirectory</code>
+ * <p>As an example consider an EXIF image. The <code>TIFFDirectory</code>
  * instance corresponding to the EXIF IFD in the EXIF stream would have parent
  * tag {@link EXIFParentTIFFTagSet#TAG_EXIF_IFD_POINTER TAG_EXIF_IFD_POINTER}
  * and would include {@link EXIFTIFFTagSet} in its group of known tag sets.
@@ -110,7 +110,13 @@ import com.sun.media.imageioimpl.plugins.tiff.TIFFImageMetadata;
  * contained in the data field of a <code>TIFFField</code> which will in turn
  * be contained in the <code>TIFFDirectory</code> corresponding to the primary
  * IFD of the EXIF image which will itself have a <code>null</code>-valued
- * parent tag.</p>.
+ * parent tag.</p>
+ *
+ * <p><b>Note that this implementation is not synchronized.</b> If multiple
+ * threads use a <code>TIFFDirectory</code> instance concurrently, and at
+ * least one of the threads modifies the directory, for example, by adding
+ * or removing <code>TIFFField</code>s or <code>TIFFTagSet</code>s, it
+ * <i>must</i> be synchronized externally.</p>
  *
  * @see IIOMetadata
  * @see TIFFField
@@ -281,7 +287,7 @@ public class TIFFDirectory implements Cloneable {
     }
 
     /**
-     * Adds an element to the list of {@link TIFFTagSet}s of which this
+     * Adds an element to the group of {@link TIFFTagSet}s of which this
      * directory is aware.
      *
      * @param tagSet The <code>TIFFTagSet</code> to add.
@@ -299,7 +305,7 @@ public class TIFFDirectory implements Cloneable {
     }
 
     /**
-     * Removes an element from the list of {@link TIFFTagSet}s of which this
+     * Removes an element from the group of {@link TIFFTagSet}s of which this
      * directory is aware.
      *
      * @param tagSet The <code>TIFFTagSet</code> to remove.

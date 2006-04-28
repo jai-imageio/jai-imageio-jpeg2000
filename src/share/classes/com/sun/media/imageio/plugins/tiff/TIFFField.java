@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-04-18 21:01:52 $
+ * $Revision: 1.4 $
+ * $Date: 2006-04-28 01:28:49 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -645,6 +645,7 @@ public class TIFFField implements Comparable {
      *
      * @param dataType One of the <code>TIFFTag.TIFF_*</code> constants
      * indicating the data type of the field as written to the TIFF stream.
+     * @return The type name corresponding to the supplied type constant.
      * @throws IllegalArgumentException if <code>dataType</code> is not
      * one of the <code>TIFFTag.TIFF_*</code> data type constants.
      */
@@ -727,7 +728,8 @@ public class TIFFField implements Comparable {
      * {@link TIFFTag#isIFDPointer getTag.isIFDPointer()} returns
      * <code>true</code>.
      *
-     * @return a <code>Node</code> named <tt>"TIFFField"</tt>.
+     * @return a <code>Node</code> named <tt>"TIFFField"</tt> or
+     * <tt>"TIFFIFD"</tt>.
      */
     public Node getAsNativeNode() {
         return new TIFFFieldNode(this);

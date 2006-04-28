@@ -38,14 +38,14 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.10 $
-$Date: 2006-03-31 23:22:11 $
+$Revision: 1.11 $
+$Date: 2006-04-28 01:03:06 $
 $State: Exp $
 -->
 
 <html>
 <body>
-Package containing the public classes used by the Sun TIFF plug-in for
+Package containing the public classes used by the TIFF plug-in for
 the Image I/O Framework.
 
 <p>
@@ -113,7 +113,8 @@ controlled by its public interface as well as via a supplied
 
 A {@link com.sun.media.imageio.plugins.tiff.TIFFDecompressor} object may be
 supplied via
-{@link com.sun.media.imageio.plugins.tiff.TIFFImageReadParam#setTIFFDecompressor(TIFFDecompressor)}.
+{@link com.sun.media.imageio.plugins.tiff.TIFFImageReadParam#setTIFFDecompressor
+TIFFImageReadParam.setTIFFDecompressor()}.
 If a {@link com.sun.media.imageio.plugins.tiff.TIFFDecompressor} is specified
 in this manner it will be used and will supersede any internal decompressor
 which might otherwise have been used for a known compression type. This
@@ -124,7 +125,8 @@ decompressors whether or not that compression type is known to the plug-in.
 
 A {@link com.sun.media.imageio.plugins.tiff.TIFFColorConverter} object may be
 supplied via
-{@link com.sun.media.imageio.plugins.tiff.TIFFImageReadParam#setColorConverter(TIFFColorConverter)}.
+{@link com.sun.media.imageio.plugins.tiff.TIFFImageReadParam#setColorConverter
+TIFFImageReadParam.setColorConverter()}.
 If a {@link com.sun.media.imageio.plugins.tiff.TIFFColorConverter} is specified
 in this manner it will be used and will supersede any internal color converter
 which might otherwise have been used. This color converter will be used to
@@ -142,7 +144,7 @@ user-supplied {@link javax.imageio.ImageTypeSpecifier}, will be
 the first among the following which applies:
 
 <ul>
-<li>A color space created from the <a href="#ICCProfilesRead">ICCProfile</a>
+<li>A color space created from the <a href="#ICCProfilesRead">ICC Profile</a>
 metadata field if it is present and compatible with the image data
 layout.</li>
 <a name="nonICCProfile"><li>sRGB if the image is monochrome/bilevel
@@ -235,7 +237,7 @@ space using one of its factory methods which accepts an
 </ol>
 </p>
 
-<p>If the inferred color space not based on the ICCProfile field is compatible
+<p>If the inferred color space not based on the ICC Profile field is compatible
 with the ICC profile-based color space, then a second
 {@link javax.imageio.ImageTypeSpecifier} derived from this inferred color
 space will be included in the {@link java.util.Iterator} returned by
@@ -251,16 +253,26 @@ contain large amounts of data this could be very inefficient. Which fields
 are loaded may be controlled by setting which TIFF tags the reader is allowed
 to recognize and whether it is ignoring metadata. The reader is informed to
 disregard metadata as usual via the <code>ignoreMetadata</code> parameter of
-{@link javax.imageio.ImageReader#setInput(Object,boolean,boolean)}. It is
+{@link javax.imageio.ImageReader#setInput(Object,boolean,boolean)
+javax.imageio.ImageReader.setInput()}. It is
 informed of which {@link com.sun.media.imageio.plugins.tiff.TIFFTag}s to
 recognize or not to recognize via
-{@link com.sun.media.imageio.plugins.tiff.TIFFImageReadParam#addAllowedTagSet(TIFFTagSet)}
+{@link com.sun.media.imageio.plugins.tiff.TIFFImageReadParam#addAllowedTagSet(TIFFTagSet)
+TIFFImageReadParam.addAllowedTagSet()}
 and
-{@link com.sun.media.imageio.plugins.tiff.TIFFImageReadParam#removeAllowedTagSet(TIFFTagSet)}.
+{@link com.sun.media.imageio.plugins.tiff.TIFFImageReadParam#removeAllowedTagSet(TIFFTagSet)
+TIFFImageReadParam.removeAllowedTagSet()}.
 If <code>ignoreMetadata</code> is <code>true</code>, then the reader will
 load into the native image metadata object only those fields which have a
 <code>TIFFTag</code> contained in the one of the allowed
 <code>TIFFTagSet</code>s.
+
+<p>Use of a {@link com.sun.media.imageio.plugins.tiff.TIFFDirectory} object
+may simplify gaining access to metadata values. An instance of
+<code>TIFFDirectory</code> may be created from the <code>IIOMetadata</code>
+object returned by the TIFF reader using the
+{@link com.sun.media.imageio.plugins.tiff.TIFFDirectory#createFromMetadata
+TIFFDirectory.createFromMetadata()} method.</p>
 
 <h5><a name="MapNativeStandard"/>
 Mapping of TIFF Native Image Metadata to the Standard Metadata Format</h5>
@@ -302,7 +314,7 @@ Group 3 Fax => "CCITT T.4"; Group 4 Fax => "CCITT T.6";
 LZW => "LZW";
 JPEG => "Old JPEG"; New JPEG => "JPEG"; Zlib =>> "ZLib"; PackBits =>
 "PackBits";
-Deflate => "Deflate".</td>
+Deflate => "Deflate"; EXIF JPEG => "JPEG".</td>
 </tr>
 <tr>
 <td>/Compression/Lossless@value</td>
@@ -434,7 +446,9 @@ segment after the length are the 6-byte sequence
 by a complete TIFF stream. The embedded TIFF stream contains a primary IFD
 describing the JPEG image optionally followed by a thumbnail IFD and
 compressed or uncompressed thumbnail image data. Note that the embedded TIFF
-stream does not contain any image data associated with the primary IFD.
+stream does not contain any image data associated with the primary IFD
+nor any descriptive fields which duplicate information found in the JPEG
+stream itself.
 
 <p>The parameter content of the <tt>APP1</tt> marker segment may be obtained
 from the user object of the associated <code>Node</code> in a
@@ -452,10 +466,10 @@ ImageReadParam readParam;
 IIOMetadataNode app1EXIFNode;
 
 // Set up input skipping EXIF ID 6-byte sequence.
-byte[] app1Parameters = (byte[])app1EXIFNode.getUserObject();
+byte[] app1Params = (byte[])app1EXIFNode.getUserObject();
 MemoryCacheImageInputStream app1EXIFInput =
-    new MemoryCacheImageInputStream(new ByteArrayInputStream(app1Parameters, 6,
-                                                             app1Parameters.length - 6));
+    new MemoryCacheImageInputStream(new ByteArrayInputStream(app1Params, 6,
+                                                             app1Params.length - 6));
 tiffReader.setInput(app1EXIFInput);
 
 // Read primary IFD.
@@ -480,7 +494,11 @@ empty; the primary image should be obtained using the JPEG reader itself.
 
 TIFF images are written by an {@link javax.imageio.ImageWriter} which may be
 controlled by its public interface as well as via a supplied
-{@link com.sun.media.imageio.plugins.tiff.TIFFImageWriteParam}.
+{@link com.sun.media.imageio.plugins.tiff.TIFFImageWriteParam}. The TIFF
+writer supports many optional capabilities including writing tiled images,
+inserting images, writing or inserting empty images, and replacing image
+data. Pixels may be replaced in either empty or non-empty images but if and
+only if the data are not compressed.
 
 <!-- <h4>Supported Image Types</h4> -->
 
@@ -490,7 +508,8 @@ controlled by its public interface as well as via a supplied
 
 A {@link com.sun.media.imageio.plugins.tiff.TIFFCompressor} object may be
 supplied via
-{@link com.sun.media.imageio.plugins.tiff.TIFFImageWriteParam#setTIFFCompressor(TIFFCompressor)}.
+{@link com.sun.media.imageio.plugins.tiff.TIFFImageWriteParam#setTIFFCompressor
+TIFFImageWriteParam.setTIFFCompressor()}.
 If a {@link com.sun.media.imageio.plugins.tiff.TIFFCompressor} is specified
 in this manner it will be used and will supersede any internal compressor
 which might otherwise have been used for a known compression type. This
@@ -501,7 +520,8 @@ compressors whether or not that compression type is known to the plug-in.
 
 A {@link com.sun.media.imageio.plugins.tiff.TIFFColorConverter} object may be
 supplied via
-{@link com.sun.media.imageio.plugins.tiff.TIFFImageWriteParam#setColorConverter(TIFFColorConverter, int)}.
+{@link com.sun.media.imageio.plugins.tiff.TIFFImageWriteParam#setColorConverter
+TIFFImageWriteParam.setColorConverter()}.
 If a {@link com.sun.media.imageio.plugins.tiff.TIFFColorConverter} is specified
 in this manner it will be used and will supersede any internal color converter
 which might otherwise have been used. This color converter will be used to
@@ -514,14 +534,15 @@ RGB using an internal color converter.</p>
 
 <h4><a name="ICCProfilesWrite"/>ICC Profiles</h4>
 
-An <tt>ICCProfile</tt> field will be written if either:
+An <tt>ICC Profile</tt> field will be written if either:
 <ul>
 <li>one is present in the native metadata
 {@link javax.imageio.metadata.IIOMetadata} instance supplied to the writer,
 or</li>
 <li>the {@link java.awt.color.ColorSpace} of the image is an instance of
 {@link java.awt.color.ICC_ColorSpace} which is not one of the standard
-color spaces defined by the <tt>CS_*</tt> constants in <code>ColorSpace</code>.
+color spaces defined by the <tt>CS_*</tt> constants in the
+<code>ColorSpace</code> class.
 </li>
 </ul>
 
@@ -619,9 +640,20 @@ color space is grayscale.</li>
 <p>Other fields present in the supplied metadata are uninterpreted and will
 be written as supplied.</p>
 
-<p>As for reading, the ICC profile field is not handled automatically. If
-an ICC profile field is desired in the output metadata then it should be
-be set in the metadata object supplied to the writer.</p>
+<p>If an EXIF image is being written, the set of fields present and their
+values will be modified such that the result is in accord with the EXIF 2.2
+specification.</p>
+
+<p>Setting up the image metadata to write to a TIFF stream may be simplified
+by using the {@link com.sun.media.imageio.plugins.tiff.TIFFDirectory} class
+which represents a TIFF IFD. A field in a TIFF IFD is represented by an
+instance of {@link com.sun.media.imageio.plugins.tiff.TIFFField}. For each
+field to be written a <code>TIFFField</code> may be added to the
+<code>TIFFDirectory</code> and the latter converted to an
+<code>IIOMetadata</code> object by invoking
+{@link com.sun.media.imageio.plugins.tiff.TIFFDirectory#getAsMetadata}. The
+<code>IIOMetadata</code> object so obtained may then be passed to the TIFF
+writer.</p>
 
 <h5><a name="MapStandardNative"/>
 Mapping of the Standard Metadata Format to TIFF Native Image Metadata</h5>
@@ -753,7 +785,7 @@ that an uncompressed EXIF image be structured as follows:
 
 <ol>
 <a name="EXIFStructure"/>
-<li>File Header</li>
+<li>Image File Header</li>
 <li>Primary IFD</li>
 <li>Primary IFD Value</li>
 <li>Thumbnail IFD</li>
@@ -816,8 +848,8 @@ if(thumbnail != null) {
 <h5><a name="EXIFWriteJPEG"/>Writing Compressed EXIF Images</h5>
 
 <!-- XXX -->
-The structure of the embedded TIFF stream in the APP1 segment of a
-compressed EXIF image is identical to <a href="#EXIFStructure">
+The structure of the embedded TIFF stream in the <tt>APP1</tt> segment of a
+compressed EXIF image is identical to the <a href="#EXIFStructure">
 uncompressed EXIF image structure</a> except that there are no primary
 image data, i.e., the primary IFD does not refer to any image data.
 

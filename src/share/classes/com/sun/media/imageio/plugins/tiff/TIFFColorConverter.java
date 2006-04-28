@@ -38,15 +38,15 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:18 $
+ * $Revision: 1.2 $
+ * $Date: 2006-04-28 01:01:59 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
 
 /**
  * An abstract class that performs simple color conversion on 3-banded source
- * images, for use with the TIFF ImageIO plug-in.
+ * images, for use with the TIFF Image I/O plug-in.
  */
 public abstract class TIFFColorConverter {
 

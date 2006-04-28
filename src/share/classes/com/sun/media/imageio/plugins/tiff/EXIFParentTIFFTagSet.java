@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2005-10-28 16:56:45 $
+ * $Revision: 1.4 $
+ * $Date: 2006-04-28 01:01:59 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -48,7 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A class containing the TIFF tag used to reference an EXIF IFD.
+ * A class containing the TIFF tags used to reference the EXIF and GPS IFDs.
  * This tag set should be added to the root tag set by means of the 
  * {@link TIFFImageReadParam#addAllowedTagSet(TIFFTagSet)
  * <code>TIFFImageReadParam.addAllowedTagSet</code>} method if EXIF

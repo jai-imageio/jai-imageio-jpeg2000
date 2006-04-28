@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-03-31 22:51:10 $
+ * $Revision: 1.3 $
+ * $Date: 2006-04-28 01:01:59 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -52,7 +52,8 @@ import com.sun.media.imageioimpl.plugins.tiff.TIFFImageWriter;
 
 /**
  * A subclass of {@link ImageWriteParam <code>ImageWriteParam</code>}
- * allowing control over the standard TIFF compression types.
+ * allowing control over the TIFF writing process. The set of innately
+ * supported compression types is listed in the following table:
  *
  * <p>
  * <table border=1>

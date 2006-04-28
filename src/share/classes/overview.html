@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.7 $
-$Date: 2006-04-26 21:55:53 $
+$Revision: 1.8 $
+$Date: 2006-04-28 01:04:04 $
 $State: Exp $
 -->
 <body>
@@ -561,8 +561,9 @@ modeling with adaptive Golomb-type coding, 2- through 16-bit sample precision
 either is required, use of the core JPEG plug-in might be preferable. This
 plug-in performs best when the data are pixel interleaved with pixel stride
 equal to the number of samples per pixel and color component order G
-(grayscale), GA (grayscale with alpha), RGB (red-green-blue), or RGBA
-(red-green-blue with alpha) as appropriate for the color space. Other layouts
+(grayscale), GA (grayscale with alpha), RGB (red-green-blue),
+BGR (blue-green-red), RGBA (red-green-blue with alpha), or CMYK
+(cyan-magenta-yellow-black) as appropriate for the color space. Other layouts
 will cause data to be reformatted in memory.</p>
 
 <p>If the JPEG reader detects an ICC profile in an APP2 marker segment it
@@ -578,7 +579,11 @@ second on the inferred color space.</p>
 <p>The JPEG reader supports TIFF native image metadata as an extra metadata
 format. If the JPEG stream contains an EXIF APP1 marker segment, the primary
 IFD contained therein will be available from the metadata tree extracted
-using the TIFF extra metadata format name.</p>
+using the TIFF extra metadata format name. The <code>IIOMetadata</code>
+object returned by the JPEG reader may also be used in a call to
+{@link com.sun.media.imageio.plugins.tiff.TIFFDirectory#createFromMetadata
+TIFFDirectory.createFromMetadata()} to create a <code>TIFFDirectory</code>
+instance from which <code>TIFFField</code>s may be easily extracted.</p>
 
 <p>The JPEG reader supports thumbnails. These may be derived from JFIF APP0,
 JFXX APP0, or EXIF APP1 marker segments. Although APP0 marker segments are

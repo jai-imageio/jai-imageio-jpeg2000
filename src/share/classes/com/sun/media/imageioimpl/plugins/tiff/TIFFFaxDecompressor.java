@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.9 $
- * $Date: 2006-04-21 23:25:45 $
+ * $Revision: 1.10 $
+ * $Date: 2006-04-29 00:29:21 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -58,7 +58,7 @@ import com.sun.media.imageio.plugins.tiff.TIFFField;
 public class TIFFFaxDecompressor extends TIFFDecompressor {
 
     /**
-     * The lofical order of bits within a byte.
+     * The logical order of bits within a byte.
      * <pre>
      * 1 = MSB-to-LSB
      * 2 = LSB-to-MSB (flipped)
@@ -684,12 +684,12 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
     public void decode1D() throws IIOException {
         for (int i = 0; i < h; i++) {
-            decodeNextScanline();
+            decodeNextScanline(i);
             lineBitNum += bitsPerScanline;
         }
     }
 
-    public void decodeNextScanline() throws IIOException {
+    public void decodeNextScanline(int lineIndex) throws IIOException {
 	int bits = 0, code = 0, isT = 0;
 	int current, entry, twoBits;
 	boolean isWhite = true;
@@ -725,12 +725,12 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		} else if (bits == 0) {     // ERROR
                     warning("Error 0");
 		} else if (bits == 15) {    // EOL
-                    // Instead of throwing an error, assume that the EOL
-                    // was premature. Rewind the pointers to the start
-                    // of the EOL and return, thereby stopping decoding
-                    // this line.
                     //
-                    updatePointer(12);
+                    // Instead of throwing an exception, assume that the
+                    // EOL was premature; emit a warning and return.
+                    //
+                    warning("Premature EOL in white run of line "+lineIndex+
+                            ": read "+bitOffset+" of "+w+" expected pixels.");
                     return;
 		} else {
 		    // 11 bits - 0000 0111 1111 1111 = 0x07ff
@@ -786,14 +786,13 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
 			updatePointer(4 - bits);
 		    } else if (bits == 15) {
-			// EOL code
                         //
-                        // Instead of throwing an error, assume that the EOL
-                        // was premature. Rewind the pointers to the start
-                        // of the EOL and return, thereby stopping decoding
-                        // this line.
+                        // Instead of throwing an exception, assume that the
+                        // EOL was premature; emit a warning and return.
                         //
-                        updatePointer(12);
+                        warning("Premature EOL in black run of line "+
+                                lineIndex+": read "+bitOffset+" of "+w+
+                                " expected pixels.");
                         return;
 		    } else {
                         setToBlack(bitOffset, code);
@@ -853,21 +852,22 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	
 	// The data must start with an EOL code
 	if (readEOL(true) != 1) {
-	    throw new IIOException("Error 3");
+	    throw new IIOException("T.4 compressed data must begin with EOL.");
 	}
 
         int bitOffset;
 
 	// Then the 1D encoded scanline data will occur, changing elements
 	// array gets set.
-	decodeNextScanline();
+	decodeNextScanline(srcMinY);
         lineBitNum += bitsPerScanline;
 
 	for (int lines = 1; lines < height; lines++) {
 
             // Every line must begin with an EOL followed by a bit which
             // indicates whether the following scanline is 1D or 2D encoded.
-	    if (readEOL(false) == 0) {
+            int eolFlag = readEOL(false);
+	    if(eolFlag == 0) {
 		// 2D encoded scanline follows		
 		
 		// Initialize previous scanlines changing elements, and 
@@ -960,9 +960,13 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		// other color too
 		currChangingElems[currIndex++] = bitOffset;
 		changingElemSize = currIndex;
-	    } else {
+	    } else if(eolFlag == 1) {
 		// 1D encoded scanline follows
-		decodeNextScanline();
+		decodeNextScanline(srcMinY+lines);
+            } else { // eolFlag == -1
+                warning("Input exhausted before EOL found at line "+
+                        (srcMinY+lines)+": read 0 of "+w+" expected pixels.");
+                break;
 	    }
 
             lineBitNum += bitsPerScanline;
@@ -1362,11 +1366,17 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
         return false;
     }
 
+    /**
+     * Searchs for the next EOL and if it is found returns 1 if the
+     * mode is 1D, the first bit after the EOL if the mode is 2D, or
+     * -1 if no EOL is found after the current input position.
+     */
     private int readEOL(boolean isFirstEOL) throws IIOException {
         if(oneD == 0) {
             // Seek to the next EOL.
             if(!seekEOL()) {
-                throw new IIOException("Error 9");
+                // End of data reached before EOL.
+                return -1;
             }
         }
 

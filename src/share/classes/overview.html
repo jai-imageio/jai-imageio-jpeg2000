@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.8 $
-$Date: 2006-04-28 01:04:04 $
+$Revision: 1.9 $
+$Date: 2006-05-01 22:10:01 $
 $State: Exp $
 -->
 <body>
@@ -761,10 +761,13 @@ second on the inferred color space.</p>
 
 <p>The PNG writer will write an iCCP chunk to the output if one is in the
 native image metadata object provided to the writer, or if the
-<code>ColorSpace</code> of the <code>ColorModel</code> of the image is
-based on an ICC profile which is not one of the standard
-<code>ColorSpace</code>s defined by the <code>ColorSpace.cs_*</code>
-constants.</p>
+<code>ColorSpace</code> of the <code>ColorModel</code> of the destination
+<code>ImageTypeSpecifier</code> is based on an ICC profile which is not one
+of the standard <code>ColorSpace</code>s corresponding to the
+<code>ColorSpace.cs_*</code> constants. The destination type is set via
+{@link javax.imageio.ImageWriteParam#setDestinationType(ImageTypeSpecifier)
+ImageWriteParam.setDestinationType()} and defaults to the
+<code>ImageTypeSpecifier</code> of the image being written.</p>
 
 <p>
 <table border=1>

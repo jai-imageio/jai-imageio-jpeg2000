@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.21 $
- * $Date: 2006-04-22 00:04:23 $
+ * $Revision: 1.22 $
+ * $Date: 2006-05-01 22:30:17 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -2456,11 +2456,6 @@ public class TIFFImageWriter extends ImageWriter {
 
         this.image = iioimage.getRenderedImage();
         SampleModel sampleModel = image.getSampleModel();
-        ColorModel colorModel = image.getColorModel();
-        this.numBands = sampleModel.getNumBands();
-        this.imageType = new ImageTypeSpecifier(image);
-
-	ImageUtil.canEncodeImage(this, this.imageType);
 
         this.sourceXOffset = image.getMinX();
         this.sourceYOffset = image.getMinY();
@@ -2472,11 +2467,14 @@ public class TIFFImageWriter extends ImageWriter {
                                               sourceWidth,
                                               sourceHeight);
 
+        ColorModel colorModel = null;
         if (p == null) {
             this.param = getDefaultWriteParam();
             this.sourceBands = null;
             this.periodX = 1;
             this.periodY = 1;
+            this.numBands = sampleModel.getNumBands();
+            colorModel = image.getColorModel();
         } else {
             this.param = p;
 
@@ -2507,10 +2505,28 @@ public class TIFFImageWriter extends ImageWriter {
             int[] sBands = param.getSourceBands();
             if (sBands != null) {
                 sourceBands = sBands;
-                numBands = sourceBands.length;
+                this.numBands = sourceBands.length;
+            } else {
+                this.numBands = sampleModel.getNumBands();
+            }
+
+            ImageTypeSpecifier destType = p.getDestinationType();
+            if(destType != null) {
+                ColorModel cm = destType.getColorModel();
+                if(cm.getNumComponents() == numBands) {
+                    colorModel = cm;
+                }
+            }
+
+            if(colorModel == null) {
+                colorModel = image.getColorModel();
             }
         }
             
+        this.imageType = new ImageTypeSpecifier(colorModel, sampleModel);
+
+	ImageUtil.canEncodeImage(this, this.imageType);
+
         // Compute output dimensions
         int destWidth = (sourceWidth + periodX - 1)/periodX;
         int destHeight = (sourceHeight + periodY - 1)/periodY;

@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.11 $
-$Date: 2006-04-28 01:03:06 $
+$Revision: 1.12 $
+$Date: 2006-05-01 22:55:50 $
 $State: Exp $
 -->
 
@@ -536,13 +536,17 @@ RGB using an internal color converter.</p>
 
 An <tt>ICC Profile</tt> field will be written if either:
 <ul>
-<li>one is present in the native metadata
+<li>one is present in the native image metadata
 {@link javax.imageio.metadata.IIOMetadata} instance supplied to the writer,
 or</li>
-<li>the {@link java.awt.color.ColorSpace} of the image is an instance of
+<li>the {@link java.awt.color.ColorSpace} of the destination
+<code>ImageTypeSpecifier</code> is an instance of
 {@link java.awt.color.ICC_ColorSpace} which is not one of the standard
 color spaces defined by the <tt>CS_*</tt> constants in the
-<code>ColorSpace</code> class.
+<code>ColorSpace</code> class. The destination type is set via
+{@link javax.imageio.ImageWriteParam#setDestinationType(ImageTypeSpecifier)
+ImageWriteParam.setDestinationType()} and defaults to the
+<code>ImageTypeSpecifier</code> of the image being written.
 </li>
 </ul>
 

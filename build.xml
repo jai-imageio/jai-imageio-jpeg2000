@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.8 $
-$Date: 2006-04-01 01:08:54 $
+$Revision: 1.9 $
+$Date: 2006-05-03 00:27:13 $
 $State: Exp $
 -->
 <project name="jai_imageio" default="jar" basedir=".">
@@ -144,8 +144,10 @@ $State: Exp $
   <property file="build.properties"/>
 
   <!-- Javadoc properties -->
-  <property name="packageListLoc" value="build-tools"/>
-  <property name="docurl" value="http://java.sun.com/j2se/1.4.2/docs/api"/>
+  <property name="packageListJ2SE" value="build-tools/packageLists/j2se"/>
+  <property name="docurlj2se" value="http://java.sun.com/j2se/1.5.0/docs/api"/>
+  <property name="docurljai" value="http://java.sun.com/products/java-media/jai/forDevelopers/jai-apidocs"/>
+  <property name="packageListJAI" value="build-tools/packageLists/jai"/>
 
   <!-- Other global properties -->
   <property name="src"     value="src/share/classes"/>
@@ -409,8 +411,10 @@ $State: Exp $
     <echo message="src             = ${src}"/>
     <echo message="clib            = ${clib}"/>
     <echo message="textdir         = ${textdir}"/>
-    <echo message="packageListLoc  = ${packageListLoc}"/>
-    <echo message="docurl          = ${docurl}"/>
+    <echo message="packageListJ2SE = ${packageListJ2SE}"/>
+    <echo message="docurlj2se      = ${docurlj2se}"/>
+    <echo message="packageListJAI  = ${packageListJAI}"/>
+    <echo message="docurljai       = ${docurljai}"/>
     <echo message="build           = ${build}"/>
     <echo message="dist            = ${dist}"/>
 
@@ -623,8 +627,11 @@ $State: Exp $
              windowtitle="Java Advanced Imaging Image I/O Tools ${version}"
              overview="${src}/overview.html">
       <link offline="true"
-	    href="${docurl}"
-	    packagelistLoc="${packageListLoc}"/>
+	    href="${docurlj2se}"
+	    packagelistLoc="${packageListJ2SE}"/>
+      <link offline="true"
+	    href="${docurljai}"
+	    packagelistLoc="${packageListJAI}"/>
     </javadoc>
   </target>
 

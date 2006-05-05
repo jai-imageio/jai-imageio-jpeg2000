@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.10 $
- * $Date: 2006-04-29 00:29:21 $
+ * $Revision: 1.11 $
+ * $Date: 2006-05-05 20:36:26 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -702,7 +702,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
 	// While scanline not complete
 	while (bitOffset < w) {
-	    while (isWhite) {
+	    while (isWhite && bitOffset < w) {
 		// White run
 		current = nextNBits(10);
 		entry = white[current];
@@ -754,7 +754,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		break;
 	    }
 
-	    while (isWhite == false) {
+	    while (isWhite == false && bitOffset < w) {
 		// Black run
 		current = nextLesserThan8Bits(4);
 		entry = initBlack[current];

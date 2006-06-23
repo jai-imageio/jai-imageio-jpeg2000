@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.11 $
- * $Date: 2006-05-05 20:36:26 $
+ * $Revision: 1.12 $
+ * $Date: 2006-06-23 23:13:00 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -671,9 +671,9 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
         stream.readFully(data);
 
         if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_RLE) {
-            decode1D();
+            decodeRLE();
         } else if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_T_4) {
-            decode2D();
+            decodeT4();
         } else if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_T_6) {
             this.uncompressedMode = (int)((t6Options & 0x02) >> 1);
             decodeT6();
@@ -682,7 +682,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
         }
     }
 
-    public void decode1D() throws IIOException {
+    public void decodeRLE() throws IIOException {
         for (int i = 0; i < h; i++) {
             decodeNextScanline(i);
             lineBitNum += bitsPerScanline;
@@ -840,7 +840,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	currChangingElems[changingElemSize++] = bitOffset;
     }
 
-    public void decode2D() throws IIOException {
+    public void decodeT4() throws IIOException {
         int height = h;
 
 	int a0, a1, b1, b2;
@@ -1044,7 +1044,8 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                     if (!isWhite) {
                         if(b2 > w) {
                             b2 = w;
-                            warning("Decoded row too long; ignoring extra samples.");
+                            warning("Decoded row "+(srcMinY+lines)+
+                                    " too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, b2 - bitOffset);
                     }
@@ -1067,7 +1068,8 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 			number = decodeBlackCodeWord();
                         if(number > w - bitOffset) {
                             number = w - bitOffset;
-                            warning("Decoded row too long; ignoring extra samples.");
+                            warning("Decoded row "+(srcMinY+lines)+
+                                    " too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, number);
                         bitOffset += number;
@@ -1077,7 +1079,8 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 			number = decodeBlackCodeWord();
                         if(number > w - bitOffset) {
                             number = w - bitOffset;
-                            warning("Decoded row too long; ignoring extra samples.");
+                            warning("Decoded row "+(srcMinY+lines)+
+                                    " too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, number);
                         bitOffset += number;
@@ -1098,7 +1101,8 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                     if (!isWhite) {
                         if(a1 > w) {
                             a1 = w;
-                            warning("Decoded row too long; ignoring extra samples.");
+                            warning("Decoded row "+(srcMinY+lines)+
+                                    " too long; ignoring extra samples.");
                         }
                         setToBlack(bitOffset, a1 - bitOffset);
                     }
@@ -1108,7 +1112,10 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		    updatePointer(7 - bits);
 		} else if (code == 11) {
 		    if (nextLesserThan8Bits(3) != 7) {
-                        throw new IIOException("Error 5");
+                        String msg =
+                            "Unexpected bits after uncompressed mode code "+
+                            "at line "+(srcMinY+lines);
+                        warning(msg);
 		    }
 
 		    int zeros = 0;
@@ -1174,7 +1181,10 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
 		    }
 		} else {
-                    throw new IIOException("Error 5");
+                    String msg =
+                        "Unknown coding mode encountered at line "+
+                        (srcMinY+lines);
+                    warning(msg);
 		}
 	    } // while bitOffset < w
 	    

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-04-11 22:10:37 $
+ * $Revision: 1.3 $
+ * $Date: 2006-06-23 19:48:28 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -99,9 +99,6 @@ public class TIFFYCbCrDecompressor extends TIFFDecompressor {
 
     private BufferedImage tmpImage;
 
-    private static void warning(String message) {
-    }
-
     //
     // If 'decompressor' is not null then it reads the data from the
     // actual stream first and passes the result on to YCrCr decompression
@@ -112,6 +109,12 @@ public class TIFFYCbCrDecompressor extends TIFFDecompressor {
                                  boolean colorConvert) {
         this.decompressor = decompressor;
         this.colorConvert = colorConvert;
+    }
+
+    private void warning(String message) {
+        if(this.reader instanceof TIFFImageReader) {
+            ((TIFFImageReader)reader).forwardWarningMessage(message);
+        }
     }
 
     //

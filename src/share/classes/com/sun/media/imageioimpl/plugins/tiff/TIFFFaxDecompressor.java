@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.12 $
- * $Date: 2006-06-23 23:13:00 $
+ * $Revision: 1.13 $
+ * $Date: 2006-06-27 00:34:12 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -49,6 +49,7 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.io.IOException;
+import java.io.EOFException;
 import javax.imageio.IIOException;
 import javax.imageio.ImageTypeSpecifier;
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
@@ -724,6 +725,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		    updatePointer(4 - bits);
 		} else if (bits == 0) {     // ERROR
                     warning("Error 0");
+                    // XXX return?
 		} else if (bits == 15) {    // EOL
                     //
                     // Instead of throwing an exception, assume that the
@@ -749,7 +751,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	    // advance to next byte boundary for compression = group 3.
 	    if (bitOffset == w) {
 		if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_RLE) {
-		    advancePointer();
+                    advancePointer();
 		}
 		break;
 	    }
@@ -831,7 +833,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	    // Check whether this run completed one width
 	    if (bitOffset == w) {
 		if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_RLE) {
-		    advancePointer();
+                    advancePointer();
 		}
 		break;
 	    }
@@ -849,25 +851,50 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	boolean isWhite;
 	int currIndex = 0;
 	int temp[];
-	
-	// The data must start with an EOL code
-	if (readEOL(true) != 1) {
-	    throw new IIOException("T.4 compressed data must begin with EOL.");
-	}
+
+        if(data.length < 2) {
+            throw new IIOException("Insufficient data to read initial EOL.");
+        }
+
+	// The data should start with an EOL code
+        int next12 = nextNBits(12);
+	if(next12 != 1) {
+	    warning("T.4 compressed data should begin with EOL.");
+        }
+        updatePointer(12);
+
+        // Find the first one-dimensionally encoded line.
+        int modeFlag = 0;
+        int lines = -1; // indicates imaginary line before first actual line.
+        while(modeFlag != 1) {
+            try {
+                modeFlag = findNextLine();
+                lines++; // Normally 'lines' will be 0 on exiting loop.
+            } catch(EOFException eofe) {
+                throw new IIOException("No reference line present.");
+            }
+        }
 
         int bitOffset;
 
 	// Then the 1D encoded scanline data will occur, changing elements
 	// array gets set.
 	decodeNextScanline(srcMinY);
+        lines++;
         lineBitNum += bitsPerScanline;
 
-	for (int lines = 1; lines < height; lines++) {
+	while(lines < height) {
 
             // Every line must begin with an EOL followed by a bit which
             // indicates whether the following scanline is 1D or 2D encoded.
-            int eolFlag = readEOL(false);
-	    if(eolFlag == 0) {
+            try {
+                modeFlag = findNextLine();
+            } catch(EOFException eofe) {
+                warning("Input exhausted before EOL found at line "+
+                        (srcMinY+lines)+": read 0 of "+w+" expected pixels.");
+                break;
+            }
+	    if(modeFlag == 0) {
 		// 2D encoded scanline follows		
 		
 		// Initialize previous scanlines changing elements, and 
@@ -952,7 +979,26 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                             
                         updatePointer(7 - bits);
 		    } else {
-			throw new IIOException("Error 4");
+                        warning("Unknown coding mode encountered at line "+
+                                (srcMinY+lines)+": read "+bitOffset+" of "+w+
+                                " expected pixels.");
+
+                        // Find the next one-dimensionally encoded line.
+                        int numLinesTested = 0;
+                        while(modeFlag != 1) {
+                            try {
+                                modeFlag = findNextLine();
+                                numLinesTested++;
+                            } catch(EOFException eofe) {
+                                warning("Sync loss at line "+
+                                        (srcMinY+lines)+": read "+
+                                        lines+" of "+height+" lines.");
+                                return;
+                            }
+                        }
+                        lines += numLinesTested - 1;
+                        updatePointer(13);
+                        break;
 		    }
 		}
                 
@@ -960,17 +1006,14 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		// other color too
 		currChangingElems[currIndex++] = bitOffset;
 		changingElemSize = currIndex;
-	    } else if(eolFlag == 1) {
+	    } else { // modeFlag == 1
 		// 1D encoded scanline follows
 		decodeNextScanline(srcMinY+lines);
-            } else { // eolFlag == -1
-                warning("Input exhausted before EOL found at line "+
-                        (srcMinY+lines)+": read 0 of "+w+" expected pixels.");
-                break;
 	    }
 
             lineBitNum += bitsPerScanline;
-        }
+            lines++;
+        } // while(lines < height)
     }
 
     public synchronized void decodeT6() throws IIOException {
@@ -1111,10 +1154,11 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
 		    updatePointer(7 - bits);
 		} else if (code == 11) {
-		    if (nextLesserThan8Bits(3) != 7) {
+                    int entranceCode = nextLesserThan8Bits(3);
+		    if (entranceCode != 7) {
                         String msg =
-                            "Unexpected bits after uncompressed mode code "+
-                            "at line "+(srcMinY+lines);
+                            "Unsupported entrance code "+entranceCode+
+                            " for extension mode at line "+(srcMinY+lines)+".";
                         warning(msg);
 		    }
 
@@ -1183,7 +1227,7 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		} else {
                     String msg =
                         "Unknown coding mode encountered at line "+
-                        (srcMinY+lines);
+                        (srcMinY+lines)+".";
                     warning(msg);
 		}
 	    } // while bitOffset < w
@@ -1341,17 +1385,14 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	return runLength;
     }
 
-
-    // Seeks to the next EOL in the compressed bitstream.
-    // Returns 'true' if and only if an EOL is found; if 'false'
-    // is returned it may be inferred that the EOF was reached first.
-    private boolean seekEOL() throws IIOException {
+    private int findNextLine() throws IIOException, EOFException {
         // Set maximum and current bit index into the compressed data.
         int bitIndexMax = data.length*8 - 1;
+        int bitIndexMax12 = bitIndexMax - 12;
         int bitIndex = bytePointer*8 + bitPointer;
 
         // Loop while at least 12 bits are available.
-        while(bitIndex <= bitIndexMax - 12) {
+        while(bitIndex <= bitIndexMax12) {
             // Get the next 12 bits.
             int next12Bits = nextNBits(12);
             bitIndex += 12;
@@ -1365,113 +1406,20 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
                 bitIndex++;
             }
 
-            // If EOL reached, rewind the pointers and return 'true'.
-            if(next12Bits == 1) {
-                updatePointer(12);
-                return true;
-            }
-        }
-
-        // EOL not found: return 'false'.
-        return false;
-    }
-
-    /**
-     * Searchs for the next EOL and if it is found returns 1 if the
-     * mode is 1D, the first bit after the EOL if the mode is 2D, or
-     * -1 if no EOL is found after the current input position.
-     */
-    private int readEOL(boolean isFirstEOL) throws IIOException {
-        if(oneD == 0) {
-            // Seek to the next EOL.
-            if(!seekEOL()) {
-                // End of data reached before EOL.
-                return -1;
-            }
-        }
-
-	if (fillBits == 0) {
-            int next12Bits = nextNBits(12);
-	    if (isFirstEOL && next12Bits == 0) {
-
-                // Might have the case of EOL padding being used even
-                // though it was not flagged in the T4Options field.
-                // This was observed to be the case in TIFFs produced
-                // by a well known vendor who shall remain nameless.
-
-                if(nextNBits(4) == 1) {
-                    //
-                    // EOL must be padded: reset the fillBits flag.
-                    //
-                    fillBits = 1;
+            if(next12Bits == 1) { // now positioned just after EOL
+                if(oneD == 1) { // two-dimensional coding
+                    if(bitIndex < bitIndexMax) {
+                        // check next bit against type of line being sought
+                        return nextLesserThan8Bits(1);
+                    }
+                } else {
                     return 1;
                 }
-	    }
-            if(next12Bits != 1) {
-                throw new IIOException("Error 6");
             }
-	} else if (fillBits == 1) {
-
-	    // First EOL code word xxxx 0000 0000 0001 will occur
-	    // As many fill bits will be present as required to make
-	    // the EOL code of 12 bits end on a byte boundary.
-
-	    int bitsLeft = 8 - bitPointer;
-
-	    if (nextNBits(bitsLeft) != 0) {
-		    throw new IIOException("Error 8");
-	    }
-
-	    // If the number of bitsLeft is less than 4, then to have a 12
-	    // bit EOL sequence, two more bytes are certainly going to be
-	    // required. The first of them has to be all zeros, so ensure 
-	    // that.
-	    if (bitsLeft < 4) {
-		if (nextNBits(8) != 0) {
-		    throw new IIOException("Error 8");
-		}
-	    }
-
-            //
-            // Some encoders under Group 3 Fax compression 1D writes TIFF
-            // files without the fill bits, but say otherwise in T4Options.
-            // Need to check for this here.
-            //
-            int next8 = nextNBits(8);
-
-            if (isFirstEOL && (next8 & 0xf0) == 0x10) {
-                //
-                // Fill bits are not actually used despite what the flag
-                // says. So switch fillBits off and then rewind so that
-                // only 12 bits have effectively been read.
-                //
-                fillBits = 0;
-                updatePointer(4);
-            } else {
-                //
-                // This is the normal case.
-                // There might be a random number of fill bytes with 0s, so
-                // loop till the EOL of 0000 0001 is found, as long as all
-                // the bytes preceding it are 0's.
-                //
-                while(next8 != 1) {
-                    // If not all zeros
-                    if (next8 != 0) {
-                        throw new IIOException("Error 8");
-                    }
-                    next8 = nextNBits(8);
-                }
-            }
-	}
-
-	// If one dimensional encoding mode, then always return 1 
-	if (oneD == 0) {
-	    return 1;
-	} else {
-	    // Otherwise for 2D encoding mode,
-	    // The next one bit signifies 1D/2D encoding of next line.
-	    return nextLesserThan8Bits(1);	    	    
-	}
+        }
+            
+        // EOL not found.
+        throw new EOFException();
     }
 
     private void getNextChangingElement(int a0, boolean isWhite, int[] ret) throws IIOException {

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.9 $
- * $Date: 2006-04-11 22:10:36 $
+ * $Revision: 1.10 $
+ * $Date: 2006-06-28 21:29:03 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -440,7 +440,7 @@ public class TIFFImageReader extends ImageReader {
         return BaselineTIFFTagSet.PLANAR_CONFIGURATION_CHUNKY;
     }
 
-    private long getTileOrStripOffset(int tileIndex) {
+    private long getTileOrStripOffset(int tileIndex) throws IIOException {
         TIFFField f =
             imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_TILE_OFFSETS);
         if (f == null) {
@@ -448,6 +448,11 @@ public class TIFFImageReader extends ImageReader {
         }
         if (f == null) {
             f = imageMetadata.getTIFFField(BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT);
+        }
+
+        if(f == null) {
+            throw new IIOException
+                ("Missing required strip or tile offsets field.");
         }
 
         return f.getAsLong(tileIndex);

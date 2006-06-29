@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.13 $
- * $Date: 2006-06-27 00:34:12 $
+ * $Revision: 1.14 $
+ * $Date: 2006-06-29 22:41:24 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -685,7 +685,16 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
     public void decodeRLE() throws IIOException {
         for (int i = 0; i < h; i++) {
-            decodeNextScanline(i);
+            // Decode the line.
+            decodeNextScanline(srcMinY + i);
+
+            // Advance to the next byte boundary if not already there.
+            if (bitPointer != 0) {
+                bytePointer++;
+                bitPointer = 0;
+            }
+
+            // Update the total number of bits.
             lineBitNum += bitsPerScanline;
         }
     }
@@ -703,6 +712,10 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
 	// While scanline not complete
 	while (bitOffset < w) {
+
+            // Mark start of white run.
+            int runOffset = bitOffset;
+
 	    while (isWhite && bitOffset < w) {
 		// White run
 		current = nextNBits(10);
@@ -747,14 +760,23 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 		}
 	    }
 
-	    // Check whether this run completed one width, if so 
-	    // advance to next byte boundary for compression = group 3.
+	    // Check whether this run completed one width
 	    if (bitOffset == w) {
-		if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_RLE) {
-                    advancePointer();
-		}
+                // If the white run has not been terminated then ensure that
+                // the next code word is a terminating code for a white run
+                // of length zero.
+                int runLength = bitOffset - runOffset;
+                if(isWhite &&
+                   runLength != 0 && runLength % 64 == 0 &&
+                   nextNBits(8) != 0x35) {
+                    warning("Missing zero white run length terminating code!");
+                    updatePointer(8);
+                }
 		break;
 	    }
+
+            // Mark start of black run.
+            runOffset = bitOffset;
 
 	    while (isWhite == false && bitOffset < w) {
 		// Black run
@@ -832,9 +854,16 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 
 	    // Check whether this run completed one width
 	    if (bitOffset == w) {
-		if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_RLE) {
-                    advancePointer();
-		}
+                // If the black run has not been terminated then ensure that
+                // the next code word is a terminating code for a black run
+                // of length zero.
+                int runLength = bitOffset - runOffset;
+                if(!isWhite &&
+                   runLength != 0 && runLength % 64 == 0 &&
+                   nextNBits(10) != 0x37) {
+                    warning("Missing zero black run length terminating code!");
+                    updatePointer(10);
+                }
 		break;
 	    }
 	}
@@ -1584,16 +1613,6 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
 	}
     }
     
-    // Move to the next byte boundary
-    private boolean advancePointer() {
-	if (bitPointer != 0) {
-	    bytePointer++;
-	    bitPointer = 0;
-	}
-	
-	return true;
-    }
-
     // Forward warning message to reader
     private void warning(String msg) {
         if(this.reader instanceof TIFFImageReader) {

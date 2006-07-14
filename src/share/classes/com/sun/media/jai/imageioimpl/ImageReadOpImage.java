@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:54 $
+ * $Revision: 1.2 $
+ * $Date: 2006-07-14 21:43:57 $
  * $State: Exp $
  */
 package com.sun.media.jai.imageioimpl;
@@ -503,9 +503,13 @@ final class ImageReadOpImage extends OpImage {
 
             // Destination fields.
             newParam.setDestination(param.getDestination());
+            if(param.getDestinationType() != null) {
+                // Set the destination type only if non-null as the
+                // setDestinationType() clears the destination field.
+                newParam.setDestinationType(param.getDestinationType());
+            }
             newParam.setDestinationBands(param.getDestinationBands());
             newParam.setDestinationOffset(param.getDestinationOffset());
-            newParam.setDestinationType(param.getDestinationType());
 
             // Source fields.
             newParam.setSourceBands(param.getSourceBands());

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2006-04-21 00:01:47 $
+ * $Revision: 1.6 $
+ * $Date: 2006-07-18 19:41:24 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.common;
@@ -1364,7 +1364,7 @@ public class ImageUtil {
 
 	    // Look for JDK core ImageWriterSpi's
 	    if (provider.getVendorName().startsWith("Sun Microsystems") &&
-		provider.getDescription(locale).equalsIgnoreCase(desc) &&
+		desc.equalsIgnoreCase(provider.getDescription(locale)) &&
 		// not JAI Image I/O plugins
 		!provider.getPluginClassName().startsWith(jiioPath)) {
 

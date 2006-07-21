@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.10 $
- * $Date: 2006-04-27 22:17:14 $
+ * $Revision: 1.11 $
+ * $Date: 2006-07-21 22:56:55 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -226,20 +226,47 @@ public class TIFFImageMetadata extends IIOMetadata {
 
         TIFFField f;
 
+        // Set the PhotometricInterpretation and the palette color flag.
+        int photometricInterpretation = -1;
         boolean isPaletteColor = false;
         f = getTIFFField(BaselineTIFFTagSet.TAG_PHOTOMETRIC_INTERPRETATION);
         if (f != null) {
-            int photometricInterpretation = f.getAsInt(0);
+            photometricInterpretation = f.getAsInt(0);
 
             isPaletteColor =
                 photometricInterpretation ==
                 BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_PALETTE_COLOR;
+        }
 
+        // Determine the number of channels.
+        int numChannels = -1;
+        if(isPaletteColor) {
+            numChannels = 3;
+        } else {
+            f = getTIFFField(BaselineTIFFTagSet.TAG_SAMPLES_PER_PIXEL);
+            if (f != null) {
+                numChannels = f.getAsInt(0);
+            } else { // f == null
+                f = getTIFFField(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE);
+                if(f != null) {
+                    numChannels = f.getCount();
+                }
+            }
+        }
+
+        if(photometricInterpretation != -1) {
             if (photometricInterpretation >= 0 &&
                 photometricInterpretation < colorSpaceNames.length) {
                 node = new IIOMetadataNode("ColorSpaceType");
-                node.setAttribute("name",
-                                  colorSpaceNames[photometricInterpretation]);
+                String csName;
+                if(photometricInterpretation ==
+                   BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_CMYK &&
+                   numChannels == 3) {
+                    csName = "CMY";
+                } else {
+                    csName = colorSpaceNames[photometricInterpretation];
+                }
+                node.setAttribute("name", csName);
                 chroma_node.appendChild(node);
             }
             
@@ -251,18 +278,6 @@ public class TIFFImageMetadata extends IIOMetadata {
             chroma_node.appendChild(node);
         }
 
-        int numChannels = -1;
-        f = getTIFFField(BaselineTIFFTagSet.TAG_SAMPLES_PER_PIXEL);
-        if(isPaletteColor) {
-            numChannels = 3;
-        } else if (f != null) {
-            numChannels = f.getAsInt(0);
-        } else { // f == null
-            f = getTIFFField(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE);
-            if(f != null) {
-                numChannels = f.getCount();
-            }
-        }
         if(numChannels != -1) {
             node = new IIOMetadataNode("NumChannels");
             node.setAttribute("value", Integer.toString(numChannels));

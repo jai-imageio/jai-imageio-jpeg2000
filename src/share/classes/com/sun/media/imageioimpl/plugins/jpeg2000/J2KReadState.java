@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:36 $
+ * $Revision: 1.2 $
+ * $Date: 2006-08-08 00:31:47 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -384,13 +384,7 @@ public class J2KReadState {
                                 J2KMetadata metadata) {
         try {
             iis.mark();
-            InputStream is = new ImageInputStreamWrapper(iis);
-            int dataLen = (int)iis.length();
-            if (dataLen != -1) { // known length => initialize to length
-                in = new ISRandomAccessIO(is, dataLen, 1, dataLen);
-            } else { // unknown length => use defaults
-                in = new ISRandomAccessIO(is);
-            }
+            in = new IISRandomAccessIO(iis);
 
             // **** File Format ****
             // If the codestream is wrapped in the jp2 fileformat, Read the

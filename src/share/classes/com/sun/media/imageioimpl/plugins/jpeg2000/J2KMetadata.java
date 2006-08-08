@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-08-04 00:11:00 $
+ * $Revision: 1.3 $
+ * $Date: 2006-08-08 00:31:47 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -83,7 +83,7 @@ import com.sun.media.imageio.plugins.jpeg2000.J2KImageWriteParam;
 
 import jj2000.j2k.fileformat.FileFormatBoxes;
 import jj2000.j2k.fileformat.reader.FileFormatReader;
-import jj2000.j2k.util.*;
+import jj2000.j2k.io.RandomAccessIO;
 
 /**
  * Metadata for the J2K plug-in.
@@ -125,14 +125,7 @@ public class J2KMetadata extends IIOMetadata implements Cloneable {
     public J2KMetadata(ImageInputStream iis,
                        J2KImageReader reader) throws IOException {
         this();
-        InputStream is = new ImageInputStreamWrapper(iis);
-        int dataLen = (int)iis.length();
-        ISRandomAccessIO in = null;
-        if (dataLen != -1) { // known length => initialize to length
-            in = new ISRandomAccessIO(is, dataLen, 1, dataLen);
-        } else { // unknown length => use defaults
-            in = new ISRandomAccessIO(is);
-        }
+        RandomAccessIO in = new IISRandomAccessIO(iis);
 
         iis.mark();
         // **** File Format ****

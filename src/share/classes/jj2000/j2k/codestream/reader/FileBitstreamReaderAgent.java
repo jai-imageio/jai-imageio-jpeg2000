@@ -1,7 +1,7 @@
 /*
  * $RCSfile: FileBitstreamReaderAgent.java,v $
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:02:01 $
+ * $Revision: 1.2 $
+ * $Date: 2006-08-09 00:51:41 $
  * $State: Exp $
  *
  * Class:                   FileBitstreamReaderAgent
@@ -230,8 +230,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
 	this.printInfo = cdstrInfo;
 	this.hi = hi;
 
-        String strInfo = "Codestream elements information in bytes "+
-            "(offset, total length, header length):\n\n";
+        String strInfo = printInfo ?
+            "Codestream elements information in bytes "+
+            "(offset, total length, header length):\n\n" : null;
 
         // Check whether quit conditiosn used
         //usePOCQuit = j2krparam.getPOCQuit();
@@ -289,8 +290,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
             anbytes = 0;
         }
 
-        strInfo += "Main header length    : "+cdstreamStart+", "+mainHeadLen+
-            ", "+mainHeadLen+"\n";
+        if(printInfo)
+            strInfo += "Main header length    : "+cdstreamStart+", "+mainHeadLen+
+                ", "+mainHeadLen+"\n";
 
         // If cannot even read the first tile-part
         if(anbytes>tnbytes) {
@@ -345,8 +347,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
                 firstPackOff[t][tp] = pos;
                 tilePartHeadLen[t][tp] = (pos-tilePartStart);
 
-                strInfo += "Tile-part "+tp+" of tile "+t+" : "+tilePartStart
-                    +", "+tilePartLen[t][tp]+", "+tilePartHeadLen[t][tp]+"\n";
+                if(printInfo)
+                    strInfo += "Tile-part "+tp+" of tile "+t+" : "+tilePartStart
+                        +", "+tilePartLen[t][tp]+", "+tilePartHeadLen[t][tp]+"\n";
 
                 // Update length counters
                 totTileLen[t] += tilePartLen[t][tp];
@@ -773,8 +776,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
         int numLayers = ((Integer)decSpec.nls.getTileDef(t)).intValue();
         int nPrec = 1;
         int hlen,plen;
-        String strInfo = "Tile "+getTileIdx()+" (tile-part:"+curTilePart+
-            "): offset, length, header length\n";;
+        String strInfo = printInfo ?
+            "Tile "+getTileIdx()+" (tile-part:"+curTilePart+
+            "): offset, length, header length\n" : null;
         boolean pph = false;
         if(((Boolean)decSpec.pphs.getTileDef(t)).booleanValue()) {
             pph = true;
@@ -842,8 +846,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
                         // Reads packet's body
                         status = pktDec.readPktBody(l,r,c,p,cbI[c][r],nBytes);
                         plen = in.getPos()-start;
-                        strInfo+= " Pkt l="+l+",r="+r+",c="+c+",p="+p+": "+
-                            start+", "+plen+", "+hlen+"\n";
+                        if(printInfo)
+                            strInfo+= " Pkt l="+l+",r="+r+",c="+c+",p="+p+": "+
+                                start+", "+plen+", "+hlen+"\n";
 
                         if(status) {
                             if(printInfo) {
@@ -904,8 +909,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
             }
         }
 
-        String strInfo = "Tile "+getTileIdx()+" (tile-part:"+curTilePart+
-            "): offset, length, header length\n";;
+        String strInfo = printInfo ?
+            "Tile "+getTileIdx()+" (tile-part:"+curTilePart+
+            "): offset, length, header length\n" : null;
         int numLayers = ((Integer)decSpec.nls.getTileDef(t)).intValue();
         boolean pph = false;
         if(((Boolean)decSpec.pphs.getTileDef(t)).booleanValue()) {
@@ -979,8 +985,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
                         // Reads packet's body
                         status = pktDec.readPktBody(l,r,c,p,cbI[c][r],nBytes);
                         plen = in.getPos()-start;
-                        strInfo+= " Pkt l="+l+",r="+r+",c="+c+",p="+p+": "+
-                            start+", "+plen+", "+hlen+"\n";
+                        if(printInfo)
+                            strInfo+= " Pkt l="+l+",r="+r+",c="+c+",p="+p+": "+
+                                start+", "+plen+", "+hlen+"\n";
 
                         if(status) {
                             if(printInfo) {
@@ -1106,8 +1113,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
             tilePartLen[t][curTilePart]-1-
             tilePartHeadLen[t][curTilePart];
         int numLayers = ((Integer)decSpec.nls.getTileDef(t)).intValue();
-        String strInfo = "Tile "+getTileIdx()+" (tile-part:"+curTilePart+
-            "): offset, length, header length\n";;
+        String strInfo = printInfo ?
+            "Tile "+getTileIdx()+" (tile-part:"+curTilePart+
+            "): offset, length, header length\n" : null;
         boolean pph = false;
         if(((Boolean)decSpec.pphs.getTileDef(t)).booleanValue()) {
             pph = true;
@@ -1187,9 +1195,10 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
                             status = pktDec.readPktBody(l,r,c,nextPrec[c][r],
                                                         cbI[c][r],nBytes);
                             plen = in.getPos()-start;
-                            strInfo+= " Pkt l="+l+",r="+r+",c="+c+",p="+
-                                nextPrec[c][r]+": "+
-                                start+", "+plen+", "+hlen+"\n";
+                            if(printInfo)
+                                strInfo+= " Pkt l="+l+",r="+r+",c="+c+",p="+
+                                    nextPrec[c][r]+": "+
+                                    start+", "+plen+", "+hlen+"\n";
 
                             if(status) {
                                 if(printInfo) {
@@ -1321,8 +1330,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
             tilePartLen[t][curTilePart]-1-
             tilePartHeadLen[t][curTilePart];
         int numLayers = ((Integer)decSpec.nls.getTileDef(t)).intValue();
-        String strInfo = "Tile "+getTileIdx()+" (tile-part:"+curTilePart+
-            "): offset, length, header length\n";;
+        String strInfo = printInfo ?
+            "Tile "+getTileIdx()+" (tile-part:"+curTilePart+
+            "): offset, length, header length\n" : null;
         boolean pph = false;
         if(((Boolean)decSpec.pphs.getTileDef(t)).booleanValue()) {
             pph = true;
@@ -1391,9 +1401,10 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
                             status = pktDec.readPktBody(l,r,c,nextPrec[c][r],
                                                         cbI[c][r],nBytes);
                             plen = in.getPos()-start;
-                            strInfo+= " Pkt l="+l+",r="+r+",c="+c+",p="+
-                                nextPrec[c][r]+": "+
-                                start+", "+plen+", "+hlen+"\n";
+                            if(printInfo)
+                                strInfo+= " Pkt l="+l+",r="+r+",c="+c+",p="+
+                                    nextPrec[c][r]+": "+
+                                    start+", "+plen+", "+hlen+"\n";
 
                             if(status) {
                                 if(printInfo) {
@@ -1526,8 +1537,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
             tilePartLen[t][curTilePart]-1-
             tilePartHeadLen[t][curTilePart];
         int numLayers = ((Integer)decSpec.nls.getTileDef(t)).intValue();
-        String strInfo = "Tile "+getTileIdx()+" (tile-part:"+curTilePart+
-            "): offset, length, header length\n";;
+        String strInfo = printInfo ?
+            "Tile "+getTileIdx()+" (tile-part:"+curTilePart+
+            "): offset, length, header length\n" : null;
         boolean pph = false;
         if(((Boolean)decSpec.pphs.getTileDef(t)).booleanValue()) {
             pph = true;
@@ -1609,9 +1621,10 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
                             status = pktDec.readPktBody(l,r,c,nextPrec[c][r],
                                                         cbI[c][r],nBytes);
                             plen = in.getPos()-start;
-                            strInfo+= " Pkt l="+l+",r="+r+",c="+c+",p="+
-                                nextPrec[c][r]+": "+
-                                start+", "+plen+", "+hlen+"\n";
+                            if(printInfo)
+                                strInfo+= " Pkt l="+l+",r="+r+",c="+c+",p="+
+                                    nextPrec[c][r]+": "+
+                                    start+", "+plen+", "+hlen+"\n";
 
                             if(status) {
                                 if(printInfo) {
@@ -2113,10 +2126,12 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
         // Check validity of resquested resolution level (according to the
         // "-res" option).
         int maxdl = getSynSubbandTree(t,c).resLvl;
+        /* XXX Suppress error check for speed performance reasons.
         if(r>targetRes+maxdl-decSpec.dls.getMin()) {
             throw new Error("JJ2000 error: requesting a code-block "+
                             "disallowed by the '-res' option.");
         }
+        */
 
         // Check validity of all the arguments
         try {

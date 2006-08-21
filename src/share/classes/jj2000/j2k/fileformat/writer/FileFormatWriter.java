@@ -1,7 +1,7 @@
 /*
  * $RCSfile: FileFormatWriter.java,v $
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:02:11 $
+ * $Revision: 1.2 $
+ * $Date: 2006-08-21 22:58:22 $
  * $State: Exp $
  *
  * Class:                   FileFormatWriter
@@ -284,5 +284,8 @@ public class FileFormatWriter implements FileFormatBoxes {
             stream.write(codestream, 0, len);
             remainder -= len;
         }
+
+        // Close the file.
+        fi.close();
     }
 }

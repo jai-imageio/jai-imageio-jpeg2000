@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-04-28 01:28:49 $
+ * $Revision: 1.4 $
+ * $Date: 2006-08-25 00:16:49 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -199,11 +199,13 @@ public class TIFFDirectory implements Cloneable {
             } else {
                 String[] extraNames =
                     tiffImageMetadata.getExtraMetadataFormatNames();
-                for(int i = 0; i < extraNames.length; i++) {
-                    if(TIFFImageMetadata.nativeMetadataFormatName.equals
-                       (extraNames[i])) {
-                        formatName = extraNames[i];
-                        break;
+                if(extraNames != null) {
+                    for(int i = 0; i < extraNames.length; i++) {
+                        if(TIFFImageMetadata.nativeMetadataFormatName.equals
+                           (extraNames[i])) {
+                            formatName = extraNames[i];
+                            break;
+                        }
                     }
                 }
 

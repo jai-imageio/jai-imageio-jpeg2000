@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:15 $
+ * $Revision: 1.2 $
+ * $Date: 2006-09-20 23:23:30 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.jpeg2000;
@@ -66,6 +66,18 @@ import javax.imageio.ImageWriteParam;
  * <p><table border=1>
  * <caption><b>JPEG 2000 Plugin Decoding Parameters</b></caption>
  * <tr><th>Parameter Name</th> <th>Description</th></tr>
+ * <tr>
+ *    <td>numDecompositionLevels</td>
+ *    <td> The number of decomposition levels to generate. This value must
+ *         be in the range
+ *         <code>0&nbsp;&le;&nbsp;numDecompositionLevels&nbsp;&le;&nbsp;32
+ *         </code>. The default value is <code>5</code>. Note that the number
+ *         of resolution levels is
+ *         <code>numDecompositionLevels&nbsp;+&nbsp;1</code>.
+ *         The number of decomposition levels is constant across
+ *         all components and all tiles.
+ *    </td>
+ * </tr>
  * <tr>
  *    <td>encodingRate</td>
  *    <td> The bitrate in bits-per-pixel for encoding.  Should be set when
@@ -141,6 +153,11 @@ public class J2KImageWriteParam extends ImageWriteParam {
 
     /** The filter for lossless compression. */
     public static final String FILTER_53 = "w5x3";
+
+    /**
+     * The number of decomposition levels.
+     */
+    private int numDecompositionLevels = 5;
 
     /**
      * The bitrate in bits-per-pixel for encoding.  Should be set when lossy
@@ -224,6 +241,32 @@ public class J2KImageWriteParam extends ImageWriteParam {
         compressionTypes = new String[] {"JPEG2000"};
         canWriteCompressed = true;
         tilingMode = MODE_EXPLICIT;
+    }
+
+    /**
+     * Sets <code>numDecompositionLevels</code>.
+     *
+     * @param numDecompositionLevels the number of decomposition levels.
+     * @throws IllegalArgumentException if <code>numDecompositionLevels</code>
+     * is negative or greater than 32.
+     * @see #getNumDecompositionLevels
+     */
+    public void setNumDecompositionLevels(int numDecompositionLevels) {
+        if(numDecompositionLevels < 0 || numDecompositionLevels > 32) {
+            throw new IllegalArgumentException
+                ("numDecompositionLevels < 0 || numDecompositionLevels > 32");
+        }
+        this.numDecompositionLevels = numDecompositionLevels;
+    }
+
+    /**
+     * Gets <code>numDecompositionLevels</code>.
+     *
+     * @return the number of decomposition levels.
+     * @see #setNumDecompositionLevels
+     */
+    public int getNumDecompositionLevels() {
+        return numDecompositionLevels;
     }
 
     /**

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:34 $
+ * $Revision: 1.2 $
+ * $Date: 2006-09-20 23:23:30 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -77,6 +77,7 @@ import com.sun.media.imageioimpl.common.ImageUtil;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.sun.medialib.codec.jp2k.CompParams;
 import com.sun.medialib.codec.jp2k.Constants;
 import com.sun.medialib.codec.jp2k.Encoder;
 import com.sun.medialib.codec.jp2k.Params;
@@ -306,6 +307,8 @@ public class J2KImageWriterCodecLib extends ImageWriter {
             sampleModel.createCompatibleSampleModel(tileWidth, tileHeight);
 
         setSize();
+
+        setCompParameters(param);
 
         encoder.setMode(Constants.JP2K_COMPOSITE_TILE);
 
@@ -738,6 +741,20 @@ public class J2KImageWriterCodecLib extends ImageWriter {
         size.ytsize = tileHeight;
 
         encoder.setSize(size);
+    }
+
+    private void setCompParameters(ImageWriteParam compParamArg) {
+        if (compParamArg == null ||
+            !(compParamArg instanceof J2KImageWriteParam)) {
+            return;
+        }
+
+        J2KImageWriteParam param = (J2KImageWriteParam)compParamArg;
+        CompParams cp = encoder.getCompParams(null, -1);
+        if(cp.maxlvls != param.getNumDecompositionLevels()) {
+            cp.maxlvls = param.getNumDecompositionLevels();
+            encoder.setCompParams(cp, -1);
+        }
     }
 
     private void setParameters(ImageWriteParam paramArg) {

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:34 $
+ * $Revision: 1.2 $
+ * $Date: 2006-09-20 23:23:30 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -661,6 +661,7 @@ public class J2KImageWriteParamJava extends ImageWriteParam {
             j2kParam = new J2KImageWriteParam();
         }
 
+        setDecompositionLevel(""+j2kParam.getNumDecompositionLevels());
         setEncodingRate(j2kParam.getEncodingRate());
         setLossless(j2kParam.getLossless());
         setFilters(j2kParam.getFilter());
@@ -894,6 +895,7 @@ public class J2KImageWriteParamJava extends ImageWriteParam {
     }
 
     /** Sets <code>filters</code> */
+    // NOTE This also sets quantizationType and componentTransformation.
     public void setFilters(String values) {
 	if (J2KImageWriteParam.FILTER_97.equals(values))
 	    setQuantizationType ("expounded");
@@ -922,6 +924,11 @@ public class J2KImageWriteParamJava extends ImageWriteParam {
                                              this,
                                              values,
                                              "5");
+
+        // NOTE The precinctPartition depends upon decompositionLevel
+        // so it needs to be re-initialized. Note that the parameter of
+        // setPrecinctPartition() is not used in the current implementation.
+        setPrecinctPartition(null);
     }
 
     /** Gets <code>decompositionLevel</code> */
@@ -930,6 +937,7 @@ public class J2KImageWriteParamJava extends ImageWriteParam {
     }
 
     /** Sets <code>componentTransformation</code> */
+    // NOTE This requires filters having been set previously.
     public void setComponentTransformation(String values) {
         componentTransformation =
             new ForwCompTransfSpec(numTiles,

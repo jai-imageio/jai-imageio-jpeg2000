@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-08-08 00:31:47 $
+ * $Revision: 1.4 $
+ * $Date: 2006-09-22 23:07:25 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -182,6 +182,35 @@ public class J2KMetadata extends IIOMetadata implements Cloneable {
             }
         }
 
+        int[] bitDepths = null;
+        if(colorModel != null) {
+            bitDepths = colorModel.getComponentSize();
+        } else if(sampleModel != null) {
+            bitDepths = sampleModel.getSampleSize();
+        }
+
+        int bitsPerComponent = 0xff;
+        if(bitDepths != null) {
+            bitsPerComponent = bitDepths[0];
+            int numComponents = bitDepths.length;
+            for(int i = 1; i < numComponents; i++) {
+                /* XXX: This statement should be removed when BPC behavior
+                   is corrected as derscribed below. */
+                if(bitDepths[i] > bitsPerComponent) {
+                    bitsPerComponent = bitDepths[i];
+                }
+                /* XXX: When the number of bits per component is not the
+                   same for all components the BPC parameter of the Image
+                   Header box should be set to 0xff and the actual number of
+                   bits per component written in the Bits Per Component box.
+                if(bitDepths[i] != bitsPerComponent) {
+                    bitsPerComponent = 0xff;
+                    break;
+                }
+                */
+            }
+        }
+
         if (colorModel != null) {
             ColorSpace cs = colorModel.getColorSpace();
             boolean iccColor = (cs instanceof ICC_ColorSpace);
@@ -227,11 +256,13 @@ public class J2KMetadata extends IIOMetadata implements Cloneable {
                 width = sampleModel.getWidth();
             if (height <= 0)
                 height = sampleModel.getHeight();
+            int bpc = bitsPerComponent == 0xff ?
+                0xff : ((bitsPerComponent - 1) |
+                        (isOriginalSigned(sampleModel) ? 0x80 : 0));
             addNode(new HeaderBox(height,
                                   width,
                                   sampleModel.getNumBands(),
-                                  (sampleModel.getSampleSize(0) - 1) |
-                                  (isOriginalSigned(sampleModel) ? 0x80 : 0),
+                                  bpc,
                                   7,
                                   colorModel == null ? 1 : 0,
                                   getElement("JPEG2000IntellectualPropertyRightsBox")==null ? 0 : 1));

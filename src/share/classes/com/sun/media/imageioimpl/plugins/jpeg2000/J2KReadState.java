@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-08-08 00:31:47 $
+ * $Revision: 1.3 $
+ * $Date: 2006-09-22 23:07:25 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -99,6 +99,7 @@ public class J2KReadState {
     private ImageInputStream iis = null;
 
     private FileFormatReader ff;
+    private HeaderInfo hi;
     private HeaderDecoder hd;
     private RandomAccessIO in;
     private BitstreamReaderAgent breader;
@@ -393,7 +394,7 @@ public class J2KReadState {
             ff.readFileFormat();
             in.seek(ff.getFirstCodeStreamPos());
 
-	    HeaderInfo hi = new HeaderInfo();
+	    hi = new HeaderInfo();
             try{
                 hd = new HeaderDecoder(in, j2krparam, hi);
             } catch(EOFException e){
@@ -859,9 +860,56 @@ public class J2KReadState {
         if (colorModel != null)
             return colorModel;
 
+        // Attempt to get the ColorModel from the JP2 boxes.
         colorModel = ff.getColorModel();
         if (colorModel != null)
             return colorModel;
+
+        if(hi.siz.csiz <= 4) {
+            // XXX: Code essentially duplicated from FileFormatReader.getColorModel().
+            // Create the ColorModel from the SIZ marker segment parameters.
+            ColorSpace cs;
+            if(hi.siz.csiz > 2) {
+                cs = ColorSpace.getInstance(ColorSpace.CS_sRGB);
+            } else {
+                cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
+            }
+
+            int[] bitsPerComponent = new int[hi.siz.csiz];
+            boolean isSigned = false;
+            int maxBitDepth = -1;
+            for(int i = 0; i < hi.siz.csiz; i++) {
+                bitsPerComponent[i] = hi.siz.getOrigBitDepth(i);
+                if(maxBitDepth < bitsPerComponent[i]) {
+                    maxBitDepth = bitsPerComponent[i];
+                }
+                isSigned |= hi.siz.isOrigSigned(i);
+            }
+
+            boolean hasAlpha = hi.siz.csiz % 2 == 0;
+
+            int type = -1;
+
+            if (maxBitDepth <= 8) {
+                type = DataBuffer.TYPE_BYTE;
+            } else if (maxBitDepth <= 16) {
+                type = isSigned ? DataBuffer.TYPE_SHORT : DataBuffer.TYPE_USHORT;
+            } else if (maxBitDepth <= 32) {
+                type = DataBuffer.TYPE_INT;
+            }
+
+            if (type != -1) {
+                colorModel = new ComponentColorModel(cs,
+                                                     bitsPerComponent,
+                                                     hasAlpha,
+                                                     false,
+                                                     hasAlpha ?
+                                                     Transparency.TRANSLUCENT :
+                                                     Transparency.OPAQUE ,
+                                                     type);
+                return colorModel;
+            }
+        }
 
         if(sampleModel == null) {
             sampleModel = getSampleModel();

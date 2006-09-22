@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:37 $
+ * $Revision: 1.2 $
+ * $Date: 2006-09-22 23:07:25 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -47,6 +47,7 @@ package com.sun.media.imageioimpl.plugins.jpeg2000;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.image.ColorModel;
 import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
@@ -92,6 +93,7 @@ public class RenderedImageSrc implements BlkImgDataSrc {
     private int nc;
 
     /** The number of bits that determine the nominal dynamic range */
+    // XXX: Should be an int[] of length 'nc'.
     private int rb;
 
     /** Buffer for the 3 components of each pixel(in the current block) */
@@ -125,6 +127,7 @@ public class RenderedImageSrc implements BlkImgDataSrc {
     private Rectangle destinationRegion;
     private Rectangle sourceRegion;
 
+    private ColorModel cm;
     private SampleModel sm;
 
     private boolean noTransform = true;
@@ -203,6 +206,7 @@ public class RenderedImageSrc implements BlkImgDataSrc {
             throw new RuntimeException(I18N.getString("J2KImageWriterCodecLib0"));
 
         sm = src.getSampleModel();
+        cm = src.getColorModel();
         getFromParam();
         setSampleModelAndMore();
     }
@@ -280,12 +284,22 @@ public class RenderedImageSrc implements BlkImgDataSrc {
         nc = sm.getNumBands();
         isBinary = ImageUtil.isBinary(sm);
 
-	rb = sm.getSampleSize(0);
-	for (int i = 1; i < sm.getNumBands(); i++)
-	    if (rb < sm.getSampleSize(i))
-		rb = sm.getSampleSize(i);
+        if(cm != null) {
+            // XXX: rb should be set to getComponentSize();
+            rb = cm.getComponentSize(0);
+            for (int i = 1; i < cm.getNumComponents(); i++)
+                if (rb < cm.getComponentSize(i))
+                    rb = cm.getComponentSize(i);
+        } else {
+            // XXX: rb should be set to getSampleSize();
+            rb = sm.getSampleSize(0);
+            for (int i = 1; i < sm.getNumBands(); i++)
+                if (rb < sm.getSampleSize(i))
+                    rb = sm.getSampleSize(i);
+        }
 
 	if (!isOrigSigned(0) && rb > 1)
+            // XXX: if rb is an int[] this will have to change.
 	    dcOffset = 1 << rb - 1;
     }
 
@@ -655,6 +669,7 @@ public class RenderedImageSrc implements BlkImgDataSrc {
      * */
     public int getNomRangeBits(int c) {
         // Check component index
+        // XXX: Should be component-dependent.
         return rb;
     }
 

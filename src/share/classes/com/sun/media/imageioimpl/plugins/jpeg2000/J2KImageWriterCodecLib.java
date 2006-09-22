@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-09-20 23:23:30 $
+ * $Revision: 1.3 $
+ * $Date: 2006-09-22 23:07:25 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -308,7 +308,7 @@ public class J2KImageWriterCodecLib extends ImageWriter {
 
         setSize();
 
-        setCompParameters(param);
+        setCompParameters(colorModel, sampleModel, param);
 
         encoder.setMode(Constants.JP2K_COMPOSITE_TILE);
 
@@ -743,17 +743,83 @@ public class J2KImageWriterCodecLib extends ImageWriter {
         encoder.setSize(size);
     }
 
-    private void setCompParameters(ImageWriteParam compParamArg) {
-        if (compParamArg == null ||
-            !(compParamArg instanceof J2KImageWriteParam)) {
+    private void setCompParameters(ColorModel colorModel,
+                                   SampleModel sampleModel,
+                                   ImageWriteParam compParamArg) {
+        // Check the parameters.
+        if (colorModel == null && sampleModel == null &&
+            (compParamArg == null ||
+             !(compParamArg instanceof J2KImageWriteParam))) {
             return;
         }
 
-        J2KImageWriteParam param = (J2KImageWriteParam)compParamArg;
+        // Get the bit depths.
+        int[] bitDepths = null;
+        boolean isSigned = false;
+        if(colorModel != null) {
+            bitDepths = colorModel.getComponentSize();
+            isSigned = colorModel.getTransferType() == DataBuffer.TYPE_SHORT;
+        } else if(sampleModel != null) {
+            bitDepths = sampleModel.getSampleSize();
+            isSigned = sampleModel.getDataType() == DataBuffer.TYPE_SHORT;
+        }
+
+        // Get the number of decomposition levels.
+        int numDecompositionLevels = -1;
+        if(compParamArg != null) {
+            // Cast is safe due to parameter check above.
+            numDecompositionLevels =
+                ((J2KImageWriteParam)compParamArg).getNumDecompositionLevels();
+        }
+
+        // Return if nothing to set.
+        if(bitDepths == null && numDecompositionLevels == -1) return;
+
+        // Check for unequal bit depths.
+        boolean bitDepthVaries = false;
+        if(bitDepths != null) {
+            for(int i = 1; i < bitDepths.length; i++) {
+                if(bitDepths[i] != bitDepths[0]) {
+                    bitDepthVaries = true;
+                    break;
+                }
+            }
+        }
+
         CompParams cp = encoder.getCompParams(null, -1);
-        if(cp.maxlvls != param.getNumDecompositionLevels()) {
-            cp.maxlvls = param.getNumDecompositionLevels();
+
+        // Update the COD segment if needed.
+        if((numDecompositionLevels != -1 &&
+            numDecompositionLevels != cp.maxlvls) ||
+           (bitDepths != null &&
+            ((isSigned ? 0x80 : 0x00) | (bitDepths[0] - 1)) != cp.depth)) {
+
+            if(numDecompositionLevels != -1) {
+                cp.maxlvls = numDecompositionLevels;
+            }
+
+            // Set the main COD bit depth to bitDepths[0].
+            if(bitDepths != null) {
+                cp.depth = (isSigned ? 0x80 : 0x00) | (bitDepths[0] - 1);
+            }
+
             encoder.setCompParams(cp, -1);
+        }
+
+        // Update COC segments if needed.
+        if(bitDepthVaries) { // only true if bitDepths != null
+            // Loop over component zero even though unnecessary.
+            for(int i = 0; i < numComp; i++) {
+                cp = encoder.getCompParams(null, i);
+
+                if(numDecompositionLevels != -1) {
+                    cp.maxlvls = numDecompositionLevels;
+                }
+
+                cp.depth = (isSigned ? 0x80 : 0x00) | (bitDepths[i] - 1);
+
+                encoder.setCompParams(cp, i);
+            }
         }
     }
 

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-07-29 01:16:11 $
+ * $Revision: 1.3 $
+ * $Date: 2006-09-22 23:07:25 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -111,6 +111,7 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
     /** Caches the medialib decoder. */
     private Decoder decoder;
     private Size size;
+    private CompParams compParam;
     private int xStep, yStep; // JPEG 2000 internal subsampling parameters
 
     /** The destination bounds. */
@@ -165,7 +166,7 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
 
         size = decoder.decodeSize(null);
 
-        CompParams compParam = new CompParams();
+        compParam = new CompParams();
         for (int i = 0; i < size.csize; i++) {
             decoder.decodeCompParams(compParam, i);
             if(i == 0) {
@@ -902,6 +903,52 @@ public class J2KRenderedImageCodecLib extends SimpleRenderedImage {
 
         if (colorModel != null)
             return colorModel;
+
+        if(nComp <= 4) {
+            // XXX: Code essentially duplicated from FileFormatReader.getColorModel().
+            // Create the ColorModel from the SIZ marker segment parameters.
+            ColorSpace cs;
+            if(nComp > 2) {
+                cs = ColorSpace.getInstance(ColorSpace.CS_sRGB);
+            } else {
+                cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
+            }
+
+            int[] bitsPerComponent = new int[nComp];
+            boolean isSigned = false;
+            int maxBitDepth = -1;
+            for(int i = 0; i < nComp; i++) {
+                bitsPerComponent[i] = (compParam.depth & 0x7f) + 1;
+                if(maxBitDepth < bitsPerComponent[i]) {
+                    maxBitDepth = bitsPerComponent[i];
+                }
+                isSigned |= (compParam.depth & 0x80) != 0;
+            }
+
+            boolean hasAlpha = nComp % 2 == 0;
+
+            int type = -1;
+
+            if (maxBitDepth <= 8) {
+                type = DataBuffer.TYPE_BYTE;
+            } else if (maxBitDepth <= 16) {
+                type = isSigned ? DataBuffer.TYPE_SHORT : DataBuffer.TYPE_USHORT;
+            } else if (maxBitDepth <= 32) {
+                type = DataBuffer.TYPE_INT;
+            }
+
+            if (type != -1) {
+                colorModel = new ComponentColorModel(cs,
+                                                     bitsPerComponent,
+                                                     hasAlpha,
+                                                     false,
+                                                     hasAlpha ?
+                                                     Transparency.TRANSLUCENT :
+                                                     Transparency.OPAQUE ,
+                                                     type);
+                return colorModel;
+            }
+        }
 
         return ImageUtil.createColorModel(null, getSampleModel());
     }

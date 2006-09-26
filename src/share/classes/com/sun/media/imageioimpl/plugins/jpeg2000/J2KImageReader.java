@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:33 $
+ * $Revision: 1.2 $
+ * $Date: 2006-09-26 18:26:22 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -86,7 +86,7 @@ import jj2000.j2k.*;
  *  and shift the decoded image origin if the proper decoding parameter
  *  are set in the provided <code>J2KImageReadParam</code>.
  */
-public class J2KImageReader extends ImageReader {
+public class J2KImageReader extends ImageReader implements MsgLogger {
     /** The input stream where reads from */
     private ImageInputStream iis = null;
 
@@ -246,6 +246,11 @@ public class J2KImageReader extends ImageReader {
      */
     public J2KImageReader(ImageReaderSpi originator) {
         super(originator);
+
+        if(Boolean.getBoolean("jj2000.j2k.decoder.log")) {
+            FacilityManager.registerMsgLogger(Thread.currentThread(),
+                                              this);
+        }
     }
 
     /** Overrides the method defined in the superclass. */
@@ -490,4 +495,35 @@ public class J2KImageReader extends ImageReader {
         }
         return null;
     }
+
+    // --- Begin jj2000.j2k.util.MsgLogger implementation ---
+    public void flush() {
+        // Do nothing.
+    }
+
+    public void println(String str, int flind, int ind) {
+        printmsg(INFO, str);
+    }
+
+    public void printmsg(int sev, String msg) {
+        String msgSev;
+        switch(sev) {
+        case ERROR:
+            msgSev = "ERROR";
+            break;
+        case INFO:
+            msgSev = "INFO";
+            break;
+        case LOG:
+            msgSev = "LOG";
+            break;
+        case WARNING:
+        default:
+            msgSev = "WARNING";
+            break;
+        }
+
+        processWarningOccurred("[JJ2000 "+msgSev+"] "+msg);
+    }
+    // --- End jj2000.j2k.util.MsgLogger implementation ---
 }

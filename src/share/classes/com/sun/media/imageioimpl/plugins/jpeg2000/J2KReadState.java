@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-09-22 23:07:25 $
+ * $Revision: 1.4 $
+ * $Date: 2006-09-26 18:26:22 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -485,10 +485,12 @@ public class J2KReadState {
 
             // **** Bitstream reader ****
             try {
+                boolean logJJ2000Messages =
+                    Boolean.getBoolean("jj2000.j2k.decoder.log");
                 breader =
                     BitstreamReaderAgent.createInstance(in, hd,
                                                         j2krparam, decSpec,
-							false, hi);
+							logJJ2000Messages, hi);
             } catch (IOException e) {
                 throw new RuntimeException(I18N.getString("J2KReadState3") + " " +
                           ((e.getMessage() != null) ?

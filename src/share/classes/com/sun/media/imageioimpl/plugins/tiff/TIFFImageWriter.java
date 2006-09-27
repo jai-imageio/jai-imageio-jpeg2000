@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.22 $
- * $Date: 2006-05-01 22:30:17 $
+ * $Revision: 1.23 $
+ * $Date: 2006-09-27 23:56:54 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -2559,8 +2559,13 @@ public class TIFFImageWriter extends ImageWriter {
             // Write the header.
 	    writeHeader();
 
-            // Write the pointer to the first IFD after the header.
+            // Seek to the position of the IFD pointer in the header.
             stream.seek(headerPosition + 4);
+
+            // Ensure IFD is written on a word boundary
+            nextSpace = (nextSpace + 3) & ~0x3;
+
+            // Write the pointer to the first IFD after the header.
             stream.writeInt((int)nextSpace);
 	}
 
@@ -2884,6 +2889,9 @@ public class TIFFImageWriter extends ImageWriter {
         if(ifdpos[0] + 4 > nextSpace) {
             nextSpace = ifdpos[0] + 4;
         }
+
+        // Ensure IFD is written on a word boundary
+        nextSpace = (nextSpace + 3) & ~0x3;
 
         // Update the value to point to the next available space.
 	stream.writeInt((int)nextSpace);

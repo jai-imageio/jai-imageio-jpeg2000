@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2006-04-11 22:10:36 $
+ * $Revision: 1.7 $
+ * $Date: 2006-09-27 23:56:30 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -450,10 +450,9 @@ public class TIFFIFD extends TIFFDirectory {
             long pos;
 
             if (size > 4 || tag.isIFDPointer()) {
-                if (tag.isIFDPointer()) {
-                    // Ensure IFD is written on a word boundary
-                    nextSpace = (nextSpace + 3) & ~0x3;
-                }
+                // Ensure IFD or value is written on a word boundary
+                nextSpace = (nextSpace + 3) & ~0x3;
+
                 stream.writeInt((int)nextSpace);
                 stream.seek(nextSpace);
                 pos = nextSpace;

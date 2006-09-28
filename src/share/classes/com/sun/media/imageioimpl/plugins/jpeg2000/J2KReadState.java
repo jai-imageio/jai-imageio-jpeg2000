@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-09-26 18:26:22 $
+ * $Revision: 1.5 $
+ * $Date: 2006-09-28 00:57:57 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -222,22 +222,39 @@ public class J2KReadState {
 
             ictransf.setTile(tileX, tileY);
 
-                // The offset of the active tiles is the same for all components,
-                // since we don't support different component dimensions.
-            int tOffx = ictransf.getCompULX(0) -
-                        (ictransf.getImgULX() + ictransf.getCompSubsX(0) - 1) /
-                        ictransf.getCompSubsX(0) + destinationRegion.x;
-            int tOffy = ictransf.getCompULY(0)-
-                        (ictransf.getImgULY() + ictransf.getCompSubsY(0) - 1) /
-                        ictransf.getCompSubsY(0) + destinationRegion.y;
+            // The offset of the active tiles is the same for all components,
+            // since we don't support different component dimensions.
+            int tOffx;
+            int tOffy;
+            int cTileWidth;
+            int cTileHeight;
+            if(raster != null &&
+               (j2krparam != null && j2krparam.getResolution() >= 0 &&
+                j2krparam.getResolution() <
+                hd.getDecoderSpecs().dls.getMax()) ||
+               hd.getCompSubsX(0) != 1 || hd.getCompSubsY(0) != 1) {
+                tOffx = raster.getMinX();
+                tOffy = raster.getMinY();
+                cTileWidth = Math.min(raster.getWidth(),
+                                      ictransf.getTileWidth());
+                cTileHeight = Math.min(raster.getHeight(),
+                                       ictransf.getTileHeight());
+            } else {
+                tOffx = ictransf.getCompULX(0) -
+                    (ictransf.getImgULX() + ictransf.getCompSubsX(0) - 1) /
+                    ictransf.getCompSubsX(0) + destinationRegion.x;
+                tOffy = ictransf.getCompULY(0)-
+                    (ictransf.getImgULY() + ictransf.getCompSubsY(0) - 1) /
+                    ictransf.getCompSubsY(0) + destinationRegion.y;
+                cTileWidth = ictransf.getTileWidth();
+                cTileHeight = ictransf.getTileHeight();
+            }
 
             if (raster == null)
                 raster = Raster.createWritableRaster(sampleModel,
                                                      new Point(tOffx, tOffy));
 
             int numBands = sampleModel.getNumBands();
-            int cTileHeight = ictransf.getTileHeight();
-            int cTileWidth = ictransf.getTileWidth();
 
             if (tOffx + cTileWidth >=
                 destinationRegion.width + destinationRegion.x)
@@ -411,6 +428,53 @@ public class J2KReadState {
             sourceRegion =
                 new Rectangle(hd.getImgULX(), hd.getImgULY(),
                               this.width, this.height);
+
+            // if the subsample rate for components are not consistent
+            boolean compConsistent = true;
+            int sx = hd.getCompSubsX(0);
+            int sy = hd.getCompSubsY(0);
+            for (int i = 1; i < nComp; i++) {
+                if (sx != hd.getCompSubsX(i) || sy != hd.getCompSubsY(i))
+                    throw new RuntimeException(I18N.getString("J2KReadState12"));
+            }
+
+            if(sx != 1 || sy != 1) {
+                if(sx != 1) {
+                    int x2 =
+                        (sourceRegion.x + sourceRegion.width + sx - 1)/sx;
+                    sourceRegion.x = (sourceRegion.x + sx - 1)/sx;
+                    sourceRegion.width = x2 - sourceRegion.x;
+                }
+                if(sy != 1) {
+                    int y2 =
+                        (sourceRegion.y + sourceRegion.height + sy - 1)/sy;
+                    sourceRegion.y = (sourceRegion.y + sy - 1)/sy;
+                    sourceRegion.height = y2 - sourceRegion.y;
+                }
+            }
+
+            // Set current and maximum resolution level.
+            // The condition resolution == -1 denotes maximum resolution.
+            int resolution = -1;
+            int maxResLevel = -1;
+            if(param != null) {
+                resolution = param.getResolution();
+                if(resolution != -1) {
+                    int dlsMax = hd.getDecoderSpecs().dls.getMax();
+                    if(resolution < -1 || resolution >= dlsMax) {
+                        // Default to full resolution
+                        resolution = -1;
+                    } else {
+                        // Convert source region to lower resolution level.
+                        maxResLevel = dlsMax;
+                        sourceRegion =
+                            J2KImageReader.getLowlevelRect(sourceRegion,
+                                                           maxResLevel,
+                                                           resolution);
+                    }
+                }
+            }
+
             destinationRegion = (Rectangle)sourceRegion.clone();
 
             J2KImageReader.computeRegionsWrapper(param,
@@ -427,15 +491,48 @@ public class J2KReadState {
             xOffset = param.getSubsamplingXOffset();
             yOffset = param.getSubsamplingYOffset();
 
-            Point tileOffset = hd.getTilingOrigin(null);
-            tileXOffset = tileOffset.x;
-            tileYOffset = tileOffset.y;
-
             this.width = destinationRegion.width;
             this.height = destinationRegion.height;
 
+            Point tileOffset = hd.getTilingOrigin(null);
+
             this.tileWidth = hd.getNomTileWidth();
             this.tileHeight = hd.getNomTileHeight();
+
+            if(sx != 1 || sy != 1) {
+                Rectangle tileRect = new Rectangle(tileOffset);
+                tileRect.width = tileWidth;
+                tileRect.height = tileHeight;
+                if(sx != 1) {
+                    int x2 = (tileRect.x + tileRect.width + sx - 1)/sx;
+                    tileRect.x = (tileRect.x + sx - 1)/sx;
+                    tileRect.width = x2 - tileRect.x;
+                }
+                if(sy != 1) {
+                    int y2 = (tileRect.y + tileRect.height + sy - 1)/sy;
+                    tileRect.y = (tileRect.y + sy - 1)/sy;
+                    tileRect.height = y2 - tileRect.y;
+                }
+                tileOffset = tileRect.getLocation();
+                tileWidth = tileRect.width;
+                tileHeight = tileRect.height;
+            }
+
+            // Convert tile (0,0) dimensions to lower resolution level.
+            if(resolution != -1) {
+                Rectangle tileRect = new Rectangle(tileOffset);
+                tileRect.width = tileWidth;
+                tileRect.height = tileHeight;
+                tileRect = J2KImageReader.getLowlevelRect(tileRect,
+                                                          maxResLevel,
+                                                          resolution);
+                tileOffset = tileRect.getLocation();
+                tileWidth = tileRect.width;
+                tileHeight = tileRect.height;
+            }
+
+            tileXOffset = tileOffset.x;
+            tileYOffset = tileOffset.y;
 
             if (!destinationRegion.equals(sourceRegion))
                 noTransform = false;
@@ -447,15 +544,6 @@ public class J2KReadState {
             // **** Instantiate decoding chain ****
             // Get demixed bitdepths
             nComp = hd.getNumComps();
-
-            // if the subsample rate for components are not consistent
-            boolean compConsistent = true;
-            int sx = hd.getCompSubsX(0);
-            int sy = hd.getCompSubsY(0);
-            for (int i = 1; i < nComp; i++) {
-                if (sx != hd.getCompSubsX(i) || sy != hd.getCompSubsY(i))
-                    throw new RuntimeException(I18N.getString("J2KReadState12"));
-            }
 
             int[] depth = new int[nComp];
             for (int i=0; i<nComp;i++)
@@ -681,8 +769,10 @@ public class J2KReadState {
 
 		ictransf.setTile(x,y);
 
-                int cTileHeight = ictransf.getTileHeight();
-                int cTileWidth = ictransf.getTileWidth();
+                int sx = hd.getCompSubsX(0);
+                int cTileWidth = (ictransf.getTileWidth() + sx - 1)/sx;
+                int sy = hd.getCompSubsY(0);
+                int cTileHeight = (ictransf.getTileHeight() + sy - 1)/sy;
 
                 // Offsets within the tile.
                 int tx = 0;
@@ -921,6 +1011,14 @@ public class J2KReadState {
             return null;
 
         return ImageUtil.createColorModel(null, sampleModel);
+    }
+
+    /**
+     * Returns the bounding rectangle of the upper left tile at
+     * the current resolution level.
+     */
+    Rectangle getTile0Rect() {
+        return new Rectangle(tileXOffset, tileYOffset, tileWidth, tileHeight);
     }
 
     private int clip(int value, int min, int max) {

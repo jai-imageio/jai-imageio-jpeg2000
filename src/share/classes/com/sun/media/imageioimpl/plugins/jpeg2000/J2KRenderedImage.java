@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:36 $
+ * $Revision: 1.2 $
+ * $Date: 2006-09-28 00:57:57 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -85,17 +85,14 @@ public class J2KRenderedImage extends SimpleRenderedImage {
         minX = destinationRegion.x;
         minY = destinationRegion.y;
 
-        tileWidth = hd.getNomTileWidth();
-        tileHeight = hd.getNomTileHeight();
-        Point tileOffset = hd.getTilingOrigin(null);
-        tileGridXOffset = tileOffset.x;
-        tileGridYOffset = tileOffset.y;
+        Rectangle tile0Rect = readState.getTile0Rect();
+        tileWidth = tile0Rect.width;
+        tileHeight = tile0Rect.height;
+        tileGridXOffset = tile0Rect.x;
+        tileGridYOffset = tile0Rect.y;
+
         sampleModel = readState.getSampleModel();
         colorModel = readState.getColorModel();
-        tileGridXOffset +=
-          (XToTileX(minX) - XToTileX(tileGridXOffset)) * tileWidth;
-        tileGridYOffset +=
-          (YToTileY(minY) - YToTileY(tileGridYOffset)) * tileHeight;
     }
 
     public synchronized Raster getTile(int tileX, int tileY) {

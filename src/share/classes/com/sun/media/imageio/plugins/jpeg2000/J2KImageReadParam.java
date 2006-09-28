@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:15 $
+ * $Revision: 1.2 $
+ * $Date: 2006-09-28 00:51:13 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.jpeg2000;
@@ -134,7 +134,7 @@ public class J2KImageReadParam extends ImageReadParam {
      * @see #getResolution()
      */
     public void setResolution(int resolution) {
-        this.resolution = resolution;
+        this.resolution = Math.max(resolution, -1);
     }
 
     /**

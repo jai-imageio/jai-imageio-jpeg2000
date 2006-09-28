@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-09-26 18:26:22 $
+ * $Revision: 1.3 $
+ * $Date: 2006-09-28 00:03:55 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -89,6 +89,9 @@ import jj2000.j2k.*;
 public class J2KImageReader extends ImageReader implements MsgLogger {
     /** The input stream where reads from */
     private ImageInputStream iis = null;
+
+    /** Stream position when setInput() was called. */
+    private long streamPosition0;
 
     /** Indicates whether the header is read. */
     private boolean gotHeader = false;
@@ -217,6 +220,46 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
         checkReadParamBandSettings(param, numSrcBands, numDstBands);
     }
 
+    /**
+     * Convert a rectangle provided in the coordinate system of the JPEG2000
+     * reference grid to coordinates at a lower resolution level where zero
+     * denotes the lowest resolution level.
+     *
+     * @param r A rectangle in references grid coordinates.
+     * @param maxLevel The highest resolution level in the image.
+     * @param level The resolution level of the returned rectangle.
+     * @return The parameter rectangle converted to a lower resolution level.
+     * @throws IllegalArgumentException if <core>r</code> is <code>null</code>,
+     * <code>maxLevel</code> or <code>level</code> is negative, or
+     * <code>level</code> is greater than <code>maxLevel</code>.
+     */
+    static Rectangle getLowlevelRect(Rectangle r, int maxLevel, int level) {
+        if(r == null) {
+            throw new IllegalArgumentException("r == null!");
+        } else if(maxLevel < 0 || level < 0) {
+            throw new IllegalArgumentException("maxLevel < 0 || level < 0!");
+        } else if(level > maxLevel) {
+            throw new IllegalArgumentException("level > maxLevel");
+        }
+
+        // At the highest level; return the parameter.
+        if(level == maxLevel) {
+            return r;
+        }
+
+        // Divisor is 2^(maxLevel - level).
+        int divisor = 1 << (maxLevel - level);
+
+        // Convert upper left and lower right corners.
+        int x1 = (r.x + divisor - 1)/divisor;
+        int y1 = (r.y + divisor - 1)/divisor;
+        int x2 = (r.x + r.width + divisor - 1)/divisor;
+        int y2 = (r.y + r.height + divisor - 1)/divisor;
+
+        // Create lower resolution rectangle and return.
+        return new Rectangle(x1, y1, x2 - x1, y2 - y1);
+    }
+
     /** Wrapper for the protected method <code>processImageUpdate</code>
      *  So it can be access from the classes which are not in
      *  <code>ImageReader</code> hierachy.
@@ -261,6 +304,11 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
         this.ignoreMetadata = ignoreMetadata;
         iis = (ImageInputStream) input; // Always works
         imageMetadata = null;
+        try {
+            this.streamPosition0 = iis.getStreamPosition();
+        } catch(IOException e) {
+            // XXX ignore
+        }
     }
 
     /** Overrides the method defined in the superclass. */
@@ -314,11 +362,18 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
         if (gotHeader)
             return;
 
-        if (readState == null)
+        if (readState == null) {
+            try {
+                iis.seek(streamPosition0);
+            } catch(IOException e) {
+                // XXX ignore
+            }
+
             readState =
                 new J2KReadState(iis,
                                  new J2KImageReadParamJava(getDefaultReadParam()),
                                  this);
+        }
 
         hd = readState.getHeader();
         gotHeader = true;
@@ -375,14 +430,17 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
 
         if (!ignoreMetadata) {
             imageMetadata = new J2KMetadata();
+            iis.seek(streamPosition0);
             readState = new J2KReadState(iis,
                                          (J2KImageReadParamJava)param,
                                          imageMetadata,
                                          this);
-        } else
+        } else {
+            iis.seek(streamPosition0);
             readState = new J2KReadState(iis,
                                          (J2KImageReadParamJava)param,
                                          this);
+        }
 
         BufferedImage bi = readState.readBufferedImage();
         if (abortRequested())
@@ -438,14 +496,17 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
 
         if (!ignoreMetadata) {
             imageMetadata = new J2KMetadata();
+            iis.seek(streamPosition0);
             readState = new J2KReadState(iis,
                                          (J2KImageReadParamJava)param,
                                          imageMetadata,
                                          this);
-        } else
+        } else {
+            iis.seek(streamPosition0);
             readState = new J2KReadState(iis,
                                          (J2KImageReadParamJava)param,
                                          this);
+        }
 
         Raster ras = readState.readAsRaster();
         if (abortRequested())

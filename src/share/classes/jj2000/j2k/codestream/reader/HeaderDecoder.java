@@ -1,7 +1,7 @@
 /*
  * $RCSfile: HeaderDecoder.java,v $
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:02:01 $
+ * $Revision: 1.2 $
+ * $Date: 2006-09-28 00:55:20 $
  * $State: Exp $
  *
  * Class:                   HeaderDecoder
@@ -1947,9 +1947,16 @@ public class HeaderDecoder implements ProgressionType, Markers,
             break;
         case TLM:
             if((nfMarkSeg & TLM_FOUND) != 0) {
+                FacilityManager.getMsgLogger().
+                    printmsg(MsgLogger.INFO,
+                             "More than one TLM "+
+                             "marker "+
+                             "found in main header");
+                /** XXX It is legal to have multiple TLM segments.
                 throw new CorruptedCodestreamException("More than one TLM "+
                                                       "marker "+
                                                       "found in main header");
+                */
             }
             nfMarkSeg |= TLM_FOUND;
             break;

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-07-30 00:26:33 $
+ * $Revision: 1.3 $
+ * $Date: 2006-09-28 00:59:41 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -67,6 +67,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import javax.imageio.metadata.IIOMetadata;
 import java.awt.image.BufferedImage;
+
+import com.sun.media.imageioimpl.common.SimpleRenderedImage;
 
 import com.sun.medialib.codec.jp2k.Decoder;
 import com.sun.medialib.codec.jp2k.Size;
@@ -125,7 +127,7 @@ public class J2KImageReaderCodecLib extends ImageReader {
     private J2KMetadata imageMetadata = null;
 
     /** The RenderedImage decoded from the stream. */
-    J2KRenderedImageCodecLib image = null;
+    SimpleRenderedImage image = null;
 
     public J2KImageReaderCodecLib(ImageReaderSpi originator) {
           super(originator);
@@ -267,9 +269,11 @@ public class J2KImageReaderCodecLib extends ImageReader {
             try {
                 iis.reset(); // Reset to initial position.
                 iis.mark(); // Re-mark initial position.
-                if (image == null)
+                if (image == null ||
+                    !(image instanceof J2KRenderedImageCodecLib))
                     image = new J2KRenderedImageCodecLib(iis, this, null);
-                imageMetadata = image.readImageMetadata();
+                imageMetadata =
+                    ((J2KRenderedImageCodecLib)image).readImageMetadata();
             } catch(IOException ioe) {
                 throw ioe;
             } catch(RuntimeException re) {
@@ -297,9 +301,22 @@ public class J2KImageReaderCodecLib extends ImageReader {
         clearAbortRequest();
         processImageStarted(0);
 
-        image = new J2KRenderedImageCodecLib(iis,
-                                             this,
-                                             param);
+        if(param instanceof J2KImageReadParam &&
+           ((J2KImageReadParam)param).getResolution() >= 0) {
+            // XXX Workaround for java.sun.com change request 5089981:
+            // fall back to Java reader for lower resolution levels.
+            // This code should be removed when this problem is fixed
+            // in the codecLib JPEG2000 decoder.
+            ImageReader jreader = new J2KImageReader(null);
+            jreader.setInput(getInput());
+            image =
+                (SimpleRenderedImage)jreader.readAsRenderedImage(imageIndex,
+                                                                 param);
+        } else {
+            image = new J2KRenderedImageCodecLib(iis,
+                                                 this,
+                                                 param);
+        }
         if (abortRequested())
             processReadAborted();
         else
@@ -315,6 +332,21 @@ public class J2KImageReaderCodecLib extends ImageReader {
             param = getDefaultReadParam();
         processImageStarted(imageIndex);
 
+        if(param instanceof J2KImageReadParam &&
+           ((J2KImageReadParam)param).getResolution() >= 0) {
+            // XXX Workaround for java.sun.com change request 5089981:
+            // fall back to Java reader for lower resolution levels.
+            // This code should be removed when this problem is fixed
+            // in the codecLib JPEG2000 decoder.
+            ImageReader jreader = new J2KImageReader(null);
+            jreader.setInput(getInput());
+            if (abortRequested())
+                processReadAborted();
+            else
+                processImageComplete();
+            return jreader.read(imageIndex, param);
+        }
+
         BufferedImage bi = param.getDestination();
         iis.reset(); // Reset to initial position.
         iis.mark(); // Re-mark initial position.
@@ -322,12 +354,13 @@ public class J2KImageReaderCodecLib extends ImageReader {
         image = new J2KRenderedImageCodecLib(iis,
                                              this,
                                              param);
+        J2KRenderedImageCodecLib jclibImage = (J2KRenderedImageCodecLib)image;
         Point offset = param.getDestinationOffset();
         WritableRaster raster;
 
         if (bi == null) {
-            ColorModel colorModel = image.getColorModel();
-            SampleModel sampleModel = image.getSampleModel();
+            ColorModel colorModel = jclibImage.getColorModel();
+            SampleModel sampleModel = jclibImage.getSampleModel();
 
             // If the destination type is specified, use the color model of it.
             ImageTypeSpecifier type = param.getDestinationType();
@@ -335,10 +368,10 @@ public class J2KImageReaderCodecLib extends ImageReader {
                 colorModel = type.getColorModel();
 
             raster = Raster.createWritableRaster(
-                sampleModel.createCompatibleSampleModel(image.getMinX()+
-                                                        image.getWidth(),
-                                                        image.getMinY() +
-                                                        image.getHeight()),
+                sampleModel.createCompatibleSampleModel(jclibImage.getMinX()+
+                                                        jclibImage.getWidth(),
+                                                        jclibImage.getMinY() +
+                                                        jclibImage.getHeight()),
                 new Point(0, 0));
 
             bi = new BufferedImage(colorModel,
@@ -350,9 +383,9 @@ public class J2KImageReaderCodecLib extends ImageReader {
             raster = bi.getWritableTile(0, 0);
         }
 
-        image.setDestImage(bi);
-        image.readAsRaster(raster);
-        image.clearDestImage();
+        jclibImage.setDestImage(bi);
+        jclibImage.readAsRaster(raster);
+        jclibImage.clearDestImage();
 
         if (abortRequested())
             processReadAborted();

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-09-28 00:03:55 $
+ * $Revision: 1.4 $
+ * $Date: 2006-09-28 23:59:20 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -117,6 +117,11 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
      *  and J2KImageReadParam.
      */
     private J2KReadState readState = null;
+
+    /**
+     * Whether to log JJ2000 messages.
+     */
+    private boolean logJJ2000Msg = false;
 
     /** Wrapper for the protected method <code>computeRegions</code>.  So it
      *  can be access from the classes which are not in <code>ImageReader</code>
@@ -290,10 +295,10 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
     public J2KImageReader(ImageReaderSpi originator) {
         super(originator);
 
-        if(Boolean.getBoolean("jj2000.j2k.decoder.log")) {
-            FacilityManager.registerMsgLogger(Thread.currentThread(),
-                                              this);
-        }
+        this.logJJ2000Msg = Boolean.getBoolean("jj2000.j2k.decoder.log");
+
+        FacilityManager.registerMsgLogger(Thread.currentThread(),
+                                          this);
     }
 
     /** Overrides the method defined in the superclass. */
@@ -567,24 +572,26 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
     }
 
     public void printmsg(int sev, String msg) {
-        String msgSev;
-        switch(sev) {
-        case ERROR:
-            msgSev = "ERROR";
-            break;
-        case INFO:
-            msgSev = "INFO";
-            break;
-        case LOG:
-            msgSev = "LOG";
-            break;
-        case WARNING:
-        default:
-            msgSev = "WARNING";
-            break;
-        }
+        if(logJJ2000Msg) {
+            String msgSev;
+            switch(sev) {
+            case ERROR:
+                msgSev = "ERROR";
+                break;
+            case INFO:
+                msgSev = "INFO";
+                break;
+            case LOG:
+                msgSev = "LOG";
+                break;
+            case WARNING:
+            default:
+                msgSev = "WARNING";
+                break;
+            }
 
-        processWarningOccurred("[JJ2000 "+msgSev+"] "+msg);
+            processWarningOccurred("[JJ2000 "+msgSev+"] "+msg);
+        }
     }
     // --- End jj2000.j2k.util.MsgLogger implementation ---
 }

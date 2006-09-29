@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-09-28 00:59:41 $
+ * $Revision: 1.4 $
+ * $Date: 2006-09-29 20:19:55 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -102,6 +102,9 @@ public class J2KImageReaderCodecLib extends ImageReader {
     /** The input stream where reads from */
     private ImageInputStream iis = null;
 
+    /** Stream position when setInput() was called. */
+    private long streamPosition0;
+
     /** Indicates whether the header is read. */
     private boolean gotHeader = false;
 
@@ -142,6 +145,11 @@ public class J2KImageReaderCodecLib extends ImageReader {
         iis = (ImageInputStream) input; // Always works
         iis.mark(); // Mark the initial position.
         imageMetadata = null;
+        try {
+            this.streamPosition0 = iis.getStreamPosition();
+        } catch(IOException e) {
+            // XXX ignore
+        }
     }
 
     public ImageReadParam getDefaultReadParam() {
@@ -308,7 +316,8 @@ public class J2KImageReaderCodecLib extends ImageReader {
             // This code should be removed when this problem is fixed
             // in the codecLib JPEG2000 decoder.
             ImageReader jreader = new J2KImageReader(null);
-            jreader.setInput(getInput());
+            iis.seek(streamPosition0);
+            jreader.setInput(iis);
             image =
                 (SimpleRenderedImage)jreader.readAsRenderedImage(imageIndex,
                                                                  param);
@@ -339,7 +348,8 @@ public class J2KImageReaderCodecLib extends ImageReader {
             // This code should be removed when this problem is fixed
             // in the codecLib JPEG2000 decoder.
             ImageReader jreader = new J2KImageReader(null);
-            jreader.setInput(getInput());
+            iis.seek(streamPosition0);
+            jreader.setInput(iis);
             if (abortRequested())
                 processReadAborted();
             else

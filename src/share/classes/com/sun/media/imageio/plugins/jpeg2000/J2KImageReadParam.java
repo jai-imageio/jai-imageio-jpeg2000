@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-09-28 00:51:13 $
+ * $Revision: 1.3 $
+ * $Date: 2006-09-29 19:25:32 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.jpeg2000;
@@ -59,9 +59,8 @@ import javax.imageio.ImageReadParam;
  *    <td>decodingRate</td>
  *    <td>Specifies the decoding rate in bits per pixel (bpp) where the
  *    number of pixels is related to the image's original size (Note:
- *    this parameter is not affected by <code>resolution</code>).  The
- *    codestream is either parsed (default) or truncated depending
- *    <code>parsingEnabled</code>.  The default is <code>Double.MAX_VALUE</code>.
+ *    this parameter is not affected by <code>resolution</code>).
+ *    The default is <code>Double.MAX_VALUE</code>.
  *    It means decoding with the encoding rate.
  *    </td>
  * </tr>
@@ -83,9 +82,7 @@ import javax.imageio.ImageReadParam;
 public class J2KImageReadParam extends ImageReadParam {
     /** Specifies the decoding rate in bits per pixel (bpp) where the
      *  number of  pixels is related to the image's original size
-     *  (Note: this number is not affected by <code>resolution</code>). The
-     *  codestream is either parsed (default) or truncated depending
-     *  <code>parsingEnabled</code>.
+     *  (Note: this number is not affected by <code>resolution</code>).
      */
     private double decodingRate = Double.MAX_VALUE;
 

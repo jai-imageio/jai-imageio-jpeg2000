@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-09-28 23:59:20 $
+ * $Revision: 1.5 $
+ * $Date: 2006-09-29 00:55:15 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -125,7 +125,7 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
 
     /** Wrapper for the protected method <code>computeRegions</code>.  So it
      *  can be access from the classes which are not in <code>ImageReader</code>
-     *  hierachy.
+     *  hierarchy.
      */
     public static void computeRegionsWrapper(ImageReadParam param,
                                              boolean allowZeroDestOffset,
@@ -217,7 +217,7 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
 
     /** Wrapper for the protected method <code>checkReadParamBandSettings</code>.
      *  So it can be access from the classes which are not in
-     *  <code>ImageReader</code> hierachy.
+     *  <code>ImageReader</code> hierarchy.
      */
     public static void checkReadParamBandSettingsWrapper(ImageReadParam param,
                                                   int numSrcBands,
@@ -267,7 +267,7 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
 
     /** Wrapper for the protected method <code>processImageUpdate</code>
      *  So it can be access from the classes which are not in
-     *  <code>ImageReader</code> hierachy.
+     *  <code>ImageReader</code> hierarchy.
      */
     public void processImageUpdateWrapper(BufferedImage theImage,
                                       int minX, int minY,
@@ -283,7 +283,7 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
 
     /** Wrapper for the protected method <code>processImageProgress</code>
      *  So it can be access from the classes which are not in
-     *  <code>ImageReader</code> hierachy.
+     *  <code>ImageReader</code> hierarchy.
      */
     public void processImageProgressWrapper(float percentageDone) {
         processImageProgress(percentageDone);

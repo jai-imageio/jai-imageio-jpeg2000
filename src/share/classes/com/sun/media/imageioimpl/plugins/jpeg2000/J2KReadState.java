@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2006-09-28 00:57:57 $
+ * $Revision: 1.6 $
+ * $Date: 2006-10-02 23:51:01 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -146,6 +146,15 @@ public class J2KReadState {
 
     private boolean noTransform = true;
 
+    /** The resolution level requested. */
+    private int resolution;
+
+    /** The subsampling step sizes. */
+    private int stepX, stepY;
+
+    /** Tile step sizes. */
+    private int tileStepX, tileStepY;
+
     private J2KMetadata metadata;
 
     private BufferedImage destImage;
@@ -220,7 +229,7 @@ public class J2KReadState {
             if (tileX >= nT.x || tileY >= nT.y)
                 throw new IllegalArgumentException(I18N.getString("J2KImageReader0"));
 
-            ictransf.setTile(tileX, tileY);
+            ictransf.setTile(tileX*tileStepX, tileY*tileStepY);
 
             // The offset of the active tiles is the same for all components,
             // since we don't support different component dimensions.
@@ -431,48 +440,26 @@ public class J2KReadState {
 
             // if the subsample rate for components are not consistent
             boolean compConsistent = true;
-            int sx = hd.getCompSubsX(0);
-            int sy = hd.getCompSubsY(0);
+            stepX = hd.getCompSubsX(0);
+            stepY = hd.getCompSubsY(0);
             for (int i = 1; i < nComp; i++) {
-                if (sx != hd.getCompSubsX(i) || sy != hd.getCompSubsY(i))
+                if (stepX != hd.getCompSubsX(i) || stepY != hd.getCompSubsY(i))
                     throw new RuntimeException(I18N.getString("J2KReadState12"));
             }
 
-            if(sx != 1 || sy != 1) {
-                if(sx != 1) {
-                    int x2 =
-                        (sourceRegion.x + sourceRegion.width + sx - 1)/sx;
-                    sourceRegion.x = (sourceRegion.x + sx - 1)/sx;
-                    sourceRegion.width = x2 - sourceRegion.x;
-                }
-                if(sy != 1) {
-                    int y2 =
-                        (sourceRegion.y + sourceRegion.height + sy - 1)/sy;
-                    sourceRegion.y = (sourceRegion.y + sy - 1)/sy;
-                    sourceRegion.height = y2 - sourceRegion.y;
-                }
+            // Set current and maximum resolution level.
+            int maxResolution = hd.getDecoderSpecs().dls.getMax();
+            this.resolution = param != null ?
+                param.getResolution() : maxResolution;
+            if(resolution < 0 || resolution > maxResolution) {
+                resolution = maxResolution;
             }
 
-            // Set current and maximum resolution level.
-            // The condition resolution == -1 denotes maximum resolution.
-            int resolution = -1;
-            int maxResLevel = -1;
-            if(param != null) {
-                resolution = param.getResolution();
-                if(resolution != -1) {
-                    int dlsMax = hd.getDecoderSpecs().dls.getMax();
-                    if(resolution < -1 || resolution >= dlsMax) {
-                        // Default to full resolution
-                        resolution = -1;
-                    } else {
-                        // Convert source region to lower resolution level.
-                        maxResLevel = dlsMax;
-                        sourceRegion =
-                            J2KImageReader.getLowlevelRect(sourceRegion,
-                                                           maxResLevel,
-                                                           resolution);
-                    }
-                }
+            // Convert source region to lower resolution level.
+            if(resolution != maxResolution || stepX != 1 || stepY != 1) {
+                sourceRegion =
+                    J2KImageReader.getReducedRect(sourceRegion, maxResolution,
+                                                  resolution, stepX, stepY);
             }
 
             destinationRegion = (Rectangle)sourceRegion.clone();
@@ -499,33 +486,14 @@ public class J2KReadState {
             this.tileWidth = hd.getNomTileWidth();
             this.tileHeight = hd.getNomTileHeight();
 
-            if(sx != 1 || sy != 1) {
+            // Convert tile 0 to lower resolution level.
+            if(resolution != maxResolution || stepX != 1 || stepY != 1) {
                 Rectangle tileRect = new Rectangle(tileOffset);
                 tileRect.width = tileWidth;
                 tileRect.height = tileHeight;
-                if(sx != 1) {
-                    int x2 = (tileRect.x + tileRect.width + sx - 1)/sx;
-                    tileRect.x = (tileRect.x + sx - 1)/sx;
-                    tileRect.width = x2 - tileRect.x;
-                }
-                if(sy != 1) {
-                    int y2 = (tileRect.y + tileRect.height + sy - 1)/sy;
-                    tileRect.y = (tileRect.y + sy - 1)/sy;
-                    tileRect.height = y2 - tileRect.y;
-                }
-                tileOffset = tileRect.getLocation();
-                tileWidth = tileRect.width;
-                tileHeight = tileRect.height;
-            }
-
-            // Convert tile (0,0) dimensions to lower resolution level.
-            if(resolution != -1) {
-                Rectangle tileRect = new Rectangle(tileOffset);
-                tileRect.width = tileWidth;
-                tileRect.height = tileHeight;
-                tileRect = J2KImageReader.getLowlevelRect(tileRect,
-                                                          maxResLevel,
-                                                          resolution);
+                tileRect =
+                    J2KImageReader.getReducedRect(tileRect, maxResolution,
+                                                  resolution, stepX, stepY);
                 tileOffset = tileRect.getLocation();
                 tileWidth = tileRect.width;
                 tileHeight = tileRect.height;
@@ -533,6 +501,30 @@ public class J2KReadState {
 
             tileXOffset = tileOffset.x;
             tileYOffset = tileOffset.y;
+
+
+            // Set the tile step sizes. These values are used because it
+            // is possible that tiles will be empty. In particular at lower
+            // resolution levels when subsampling is used this may be the
+            // case. This method of calculation will work at least for
+            // Profile-0 images.
+            if(tileWidth*(1 << (maxResolution - resolution))*stepX >
+               hd.getNomTileWidth()) {
+                tileStepX =
+                    (tileWidth*(1 << (maxResolution - resolution))*stepX +
+                     hd.getNomTileWidth() - 1)/hd.getNomTileWidth();
+            } else {
+                tileStepX = 1;
+            }
+
+            if(tileHeight*(1 << (maxResolution - resolution))*stepY >
+               hd.getNomTileHeight()) {
+                tileStepY =
+                    (tileHeight*(1 << (maxResolution - resolution))*stepY +
+                     hd.getNomTileHeight() - 1)/hd.getNomTileHeight();
+            } else {
+                tileStepY = 1;
+            }
 
             if (!destinationRegion.equals(sourceRegion))
                 noTransform = false;
@@ -767,7 +759,7 @@ public class J2KReadState {
                 float initialFraction =
                     (x - startXTile + (y - startYTile)*totalXTiles)/totalTiles;
 
-		ictransf.setTile(x,y);
+		ictransf.setTile(x*tileStepX,y*tileStepY);
 
                 int sx = hd.getCompSubsX(0);
                 int cTileWidth = (ictransf.getTileWidth() + sx - 1)/sx;

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2006-09-29 00:55:15 $
+ * $Revision: 1.6 $
+ * $Date: 2006-10-02 23:51:01 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -233,12 +233,15 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
      * @param r A rectangle in references grid coordinates.
      * @param maxLevel The highest resolution level in the image.
      * @param level The resolution level of the returned rectangle.
+     * @param subX The horizontal subsampling step size.
+     * @param subY The vertical subsampling step size.
      * @return The parameter rectangle converted to a lower resolution level.
      * @throws IllegalArgumentException if <core>r</code> is <code>null</code>,
      * <code>maxLevel</code> or <code>level</code> is negative, or
      * <code>level</code> is greater than <code>maxLevel</code>.
      */
-    static Rectangle getLowlevelRect(Rectangle r, int maxLevel, int level) {
+    static Rectangle getReducedRect(Rectangle r, int maxLevel, int level,
+                                    int subX, int subY) {
         if(r == null) {
             throw new IllegalArgumentException("r == null!");
         } else if(maxLevel < 0 || level < 0) {
@@ -248,18 +251,20 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
         }
 
         // At the highest level; return the parameter.
-        if(level == maxLevel) {
+        if(level == maxLevel && subX == 1 && subY == 1) {
             return r;
         }
 
-        // Divisor is 2^(maxLevel - level).
+        // Resolution divisor is step*2^(maxLevel - level).
         int divisor = 1 << (maxLevel - level);
+        int divX = divisor*subX;
+        int divY = divisor*subY;
 
         // Convert upper left and lower right corners.
-        int x1 = (r.x + divisor - 1)/divisor;
-        int y1 = (r.y + divisor - 1)/divisor;
-        int x2 = (r.x + r.width + divisor - 1)/divisor;
-        int y2 = (r.y + r.height + divisor - 1)/divisor;
+        int x1 = (r.x + divX - 1)/divX;
+        int x2 = (r.x + r.width + divX - 1)/divX;
+        int y1 = (r.y + divY - 1)/divY;
+        int y2 = (r.y + r.height + divY - 1)/divY;
 
         // Create lower resolution rectangle and return.
         return new Rectangle(x1, y1, x2 - x1, y2 - y1);

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.7 $
- * $Date: 2006-10-03 22:22:27 $
+ * $Revision: 1.8 $
+ * $Date: 2006-10-03 23:40:14 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -984,14 +984,20 @@ public class J2KReadState {
             }
 
             if (type != -1) {
-                colorModel = new ComponentColorModel(cs,
-                                                     bitsPerComponent,
-                                                     hasAlpha,
-                                                     false,
-                                                     hasAlpha ?
-                                                     Transparency.TRANSLUCENT :
-                                                     Transparency.OPAQUE ,
-                                                     type);
+                if(hi.siz.csiz == 1 &&
+                   (maxBitDepth == 1 || maxBitDepth == 2 || maxBitDepth == 4)) {
+                    colorModel = ImageUtil.createColorModel(getSampleModel());
+                } else {
+                    colorModel = new ComponentColorModel(cs,
+                                                         bitsPerComponent,
+                                                         hasAlpha,
+                                                         false,
+                                                         hasAlpha ?
+                                                         Transparency.TRANSLUCENT :
+                                                         Transparency.OPAQUE ,
+                                                         type);
+                }
+
                 return colorModel;
             }
         }

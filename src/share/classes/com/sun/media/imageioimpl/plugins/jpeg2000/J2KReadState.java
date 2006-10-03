@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2006-10-02 23:51:01 $
+ * $Revision: 1.7 $
+ * $Date: 2006-10-03 22:22:27 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -238,10 +238,8 @@ public class J2KReadState {
             int cTileWidth;
             int cTileHeight;
             if(raster != null &&
-               (j2krparam != null && j2krparam.getResolution() >= 0 &&
-                j2krparam.getResolution() <
-                hd.getDecoderSpecs().dls.getMax()) ||
-               hd.getCompSubsX(0) != 1 || hd.getCompSubsY(0) != 1) {
+               (this.resolution < hd.getDecoderSpecs().dls.getMin()) ||
+               stepX != 1 || stepY != 1) {
                 tOffx = raster.getMinX();
                 tOffy = raster.getMinY();
                 cTileWidth = Math.min(raster.getWidth(),
@@ -447,18 +445,21 @@ public class J2KReadState {
                     throw new RuntimeException(I18N.getString("J2KReadState12"));
             }
 
-            // Set current and maximum resolution level.
-            int maxResolution = hd.getDecoderSpecs().dls.getMax();
+            // Get minimum number of resolution levels available across
+            // all tile-components.
+            int minResLevels = hd.getDecoderSpecs().dls.getMin();
+
+            // Set current resolution level.
             this.resolution = param != null ?
-                param.getResolution() : maxResolution;
-            if(resolution < 0 || resolution > maxResolution) {
-                resolution = maxResolution;
+                param.getResolution() : minResLevels;
+            if(resolution < 0 || resolution > minResLevels) {
+                resolution = minResLevels;
             }
 
             // Convert source region to lower resolution level.
-            if(resolution != maxResolution || stepX != 1 || stepY != 1) {
+            if(resolution != minResLevels || stepX != 1 || stepY != 1) {
                 sourceRegion =
-                    J2KImageReader.getReducedRect(sourceRegion, maxResolution,
+                    J2KImageReader.getReducedRect(sourceRegion, minResLevels,
                                                   resolution, stepX, stepY);
             }
 
@@ -487,12 +488,12 @@ public class J2KReadState {
             this.tileHeight = hd.getNomTileHeight();
 
             // Convert tile 0 to lower resolution level.
-            if(resolution != maxResolution || stepX != 1 || stepY != 1) {
+            if(resolution != minResLevels || stepX != 1 || stepY != 1) {
                 Rectangle tileRect = new Rectangle(tileOffset);
                 tileRect.width = tileWidth;
                 tileRect.height = tileHeight;
                 tileRect =
-                    J2KImageReader.getReducedRect(tileRect, maxResolution,
+                    J2KImageReader.getReducedRect(tileRect, minResLevels,
                                                   resolution, stepX, stepY);
                 tileOffset = tileRect.getLocation();
                 tileWidth = tileRect.width;
@@ -508,19 +509,19 @@ public class J2KReadState {
             // resolution levels when subsampling is used this may be the
             // case. This method of calculation will work at least for
             // Profile-0 images.
-            if(tileWidth*(1 << (maxResolution - resolution))*stepX >
+            if(tileWidth*(1 << (minResLevels - resolution))*stepX >
                hd.getNomTileWidth()) {
                 tileStepX =
-                    (tileWidth*(1 << (maxResolution - resolution))*stepX +
+                    (tileWidth*(1 << (minResLevels - resolution))*stepX +
                      hd.getNomTileWidth() - 1)/hd.getNomTileWidth();
             } else {
                 tileStepX = 1;
             }
 
-            if(tileHeight*(1 << (maxResolution - resolution))*stepY >
+            if(tileHeight*(1 << (minResLevels - resolution))*stepY >
                hd.getNomTileHeight()) {
                 tileStepY =
-                    (tileHeight*(1 << (maxResolution - resolution))*stepY +
+                    (tileHeight*(1 << (minResLevels - resolution))*stepY +
                      hd.getNomTileHeight() - 1)/hd.getNomTileHeight();
             } else {
                 tileStepY = 1;

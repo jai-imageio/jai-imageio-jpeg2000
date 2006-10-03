@@ -1,7 +1,7 @@
 /*
  * $RCSfile: FileBitstreamReaderAgent.java,v $
- * $Revision: 1.2 $
- * $Date: 2006-08-09 00:51:41 $
+ * $Revision: 1.3 $
+ * $Date: 2006-10-03 22:27:40 $
  * $State: Exp $
  *
  * Class:                   FileBitstreamReaderAgent
@@ -57,6 +57,8 @@ import jj2000.j2k.*;
 
 import java.util.*;
 import java.io.*;
+import javax.imageio.stream.ImageInputStream;
+import javax.imageio.stream.MemoryCacheImageInputStream;
 
 import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageReadParamJava;
 
@@ -169,6 +171,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
     /** The number of tile-parts in each tile */
     private int[] tileParts;
 
+    /** The total number of tile-parts in each tile */
+    private int[] totTileParts;
+
     /** The current tile part being used */
     private int curTilePart;
 
@@ -221,9 +226,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
      * */
     public FileBitstreamReaderAgent(HeaderDecoder hd,RandomAccessIO ehs,
                                     DecoderSpecs decSpec,
-				    J2KImageReadParamJava j2krparam,
+                                    J2KImageReadParamJava j2krparam,
                                     boolean cdstrInfo,HeaderInfo hi)
-				    throws IOException {
+        throws IOException {
         super(hd,decSpec);
 
         this.j2krparam = j2krparam;
@@ -263,6 +268,7 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
         pktDec = new PktDecoder(decSpec,hd,ehs,this,isTruncMode, ncbQuit);
 
         tileParts = new int[nt];
+        totTileParts = new int[nt];
         totTileLen = new int[nt];
 	tilePartLen = new int[nt][];
         tilePartNum = new int[nt][];
@@ -276,10 +282,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
 
 
 	this.isTruncMode = isTruncMode;
-        int t=0, pos, tp=0, tptot=0;
 
         // Keeps main header's length, takes file format overhead into account
-        int cdstreamStart = hd.mainHeadOff; // Codestream offset in the file
+        cdstreamStart = hd.mainHeadOff; // Codestream offset in the file
         mainHeadLen = in.getPos() - cdstreamStart;
         headLen = mainHeadLen;
 
@@ -299,19 +304,214 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
             throw new Error("Requested bitrate is too small.");
         }
 
-        // Read all tile-part headers from all tiles.
-        int tilePartStart;
-        boolean rateReached = false;
-        int mdl;
-        int numtp = 0;
+        // Initialize variables used when reading tile-part headers.
         totAllTileLen = 0;
         remainingTileParts = nt; // at least as many tile-parts as tiles
-        int maxTP = nt; // If maximum 1 tile part per tile specified
+        lastPos = in.getPos();
+
+        // Update 'res' value according to the parameter and the main header.
+        if(j2krparam.getResolution()== -1) {
+            targetRes = decSpec.dls.getMin();
+        } else {
+                targetRes = j2krparam.getResolution();
+                if(targetRes<0) {
+                    throw new
+                        IllegalArgumentException("Specified negative "+
+                                                 "resolution level index: "+
+                                                 targetRes);
+                }
+        }
+
+        // Verify reduction in resolution level
+        int mdl = decSpec.dls.getMin();
+        if(targetRes>mdl) {
+            FacilityManager.getMsgLogger().
+                printmsg(MsgLogger.WARNING,
+                         "Specified resolution level ("+targetRes+
+                         ") is larger"+
+                         " than the maximum possible. Setting it to "+
+                         mdl +" (maximum possible)");
+            targetRes = mdl;
+        }
+
+        // Initialize tile part positions from TLM marker segment.
+        initTLM();
+    }
+
+    // An array of the positions of tile parts:
+    // - length of tilePartPositions is nt.
+    // - length of tilePartPositions[i] is totTileParts[i].
+    long[][] tilePartPositions = null;
+
+    //
+    // Initialize the tilePartPositions positions array if a TLM marker
+    // segment is present in the main header. If no such marker segment
+    // is present the array will remain null. This method rewinds to the
+    // start of the codestream and scans until the first SOT marker is
+    // encountered. Before return the stream is returned to its position
+    // when the method was invoked.
+    //
+    private void initTLM() throws IOException {
+        // Save the position to return to at the end of this method.
+        int savePos = in.getPos();
+
+        // Array to store contents of TLM segments. The first index is
+        // Ztlm. The contents of tlmSegments[i] is the bytes in the TLM
+        // segment with Ztlm == i after the Ztlm byte.
+        byte[][] tlmSegments = null;
+
+        // Number of TLM segments. The first numTLM elements of tlmSegments
+        // should be non-null if the segments are correct.
+        int numTLM = 0;
 
         try {
-            while(remainingTileParts!=0) {
+            // Rewind to the start of the main header.
+            in.seek(cdstreamStart + 2); // skip SOC
 
+            // Loop over marker segments.
+            short marker;
+            while((marker = in.readShort()) != SOT) {
+                // Get the length (which includes the 2-byte length parameter).
+                int markerLength = in.readUnsignedShort();
+
+                // Process TLM segments.
+                if(marker == TLM) {
+                    numTLM++;
+
+                    if(tlmSegments == null) {
+                        tlmSegments = new byte[256][]; // 0 <= Ztlm <= 255
+                    }
+
+                    // Save contents after Ztlm in array.
+                    int Ztlm = in.read();
+                    tlmSegments[Ztlm] = new byte[markerLength - 3];
+                    in.readFully(tlmSegments[Ztlm], 0, markerLength - 3);
+                } else {
+                    in.skipBytes(markerLength - 2);
+                }
+            }
+        } catch(IOException e) {
+            // Reset so that the TLM segments are not processed further.
+            tlmSegments = null;
+        }
+
+        if(tlmSegments != null) {
+            ArrayList[] tlmOffsets = null;
+
+            // Tiles start after the main header.
+            long tilePos = cdstreamStart + mainHeadLen;
+
+            // Tile counter for when tile indexes are not included.
+            int tileCounter = 0;
+
+            for(int itlm = 0; itlm < numTLM; itlm++) {
+                if(tlmSegments[itlm] == null) {
+                    // Null segment among first numTLM entries: error.
+                    tlmOffsets = null;
+                    break;
+                } else if(tlmOffsets == null) {
+                    tlmOffsets = new ArrayList[nt];
+                }
+
+                // Create a stream.
+                ByteArrayInputStream bais =
+                    new ByteArrayInputStream(tlmSegments[itlm]);
+                ImageInputStream iis = new MemoryCacheImageInputStream(bais);
+
+                try {
+                    int Stlm = iis.read();
+                    int ST = (Stlm >> 4) & 0x3;
+                    int SP = (Stlm >> 6) & 0x1;
+
+                    int tlmLength = tlmSegments[itlm].length;
+                    while(iis.getStreamPosition() < tlmLength) {
+                        int tileIndex = tileCounter;
+                        switch(ST) {
+                        case 1:
+                            tileIndex = iis.read();
+                            break;
+                        case 2:
+                            tileIndex = iis.readUnsignedShort();
+                        }
+
+                        if(tlmOffsets[tileIndex] == null) {
+                            tlmOffsets[tileIndex] = new ArrayList();
+                        }
+                        tlmOffsets[tileIndex].add(new Long(tilePos));
+
+                        long tileLength = 0L;
+                        switch(SP) {
+                        case 0:
+                            tileLength = iis.readUnsignedShort();
+                            break;
+                        case 1:
+                            tileLength = iis.readUnsignedInt();
+                            break;
+                        }
+
+                        tilePos += tileLength;
+
+                        if(ST == 0) tileCounter++;
+                    }
+                } catch(IOException e) {
+                    // XXX?
+                }
+            }
+
+            if(tlmOffsets != null) {
+                tilePartPositions = new long[nt][];
+                for(int i = 0; i < nt; i++) {
+                    if(tlmOffsets[i] == null) {
+                        tilePartPositions = null;
+                        break;
+                    } else {
+                        ArrayList list = tlmOffsets[i];
+                        int count = list.size();
+                        tilePartPositions[i] = new long[count];
+                        long[] tpPos = tilePartPositions[i];
+                        for(int j = 0; j < count; j++) {
+                            tpPos[j] = ((Long)list.get(j)).longValue();
+                        }
+                    }
+                }
+            }
+        }
+
+        in.seek(savePos);
+    }
+
+    int cdstreamStart = 0;
+    int t=0, pos=-1, tp=0, tptot=0;
+    int tilePartStart = 0;
+    boolean rateReached = false;
+    int numtp = 0;
+    int maxTP = nt; // If maximum 1 tile part per tile specified
+    int lastPos = 0;
+
+    /**
+     * Read all tile-part headers of the requested tile. All tile-part
+     * headers prior to the last tile-part header of the current tile will
+     * also be read.
+     *
+     * @param tileNum The index of the tile for which to read tile-part
+     * headers.
+     */
+    private void initTile(int tileNum) throws IOException {
+        if(tilePartPositions == null) in.seek(lastPos);
+        String strInfo = "";
+        int ncbQuit = -1;
+        boolean isEOFEncountered = false;
+        try {
+            int tpNum = 0;
+            while(remainingTileParts!=0 &&
+                  (totTileParts[tileNum] == 0 ||
+                   tilePartsRead[tileNum] < totTileParts[tileNum])) {
+
+                if(tilePartPositions != null) {
+                    in.seek((int)tilePartPositions[tileNum][tpNum++]);
+                }
                 tilePartStart = in.getPos();
+
                 // Read tile-part header
                 try {
                     t = readTilePartHeader();
@@ -383,7 +583,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
 
                 // Go to the beginning of next tile part
                 tilePartsRead[t]++;
-                in.seek(tilePartStart+tilePartLen[t][tp]);
+                if(tilePartPositions == null) {
+                    in.seek(tilePartStart+tilePartLen[t][tp]);
+                }
                 remainingTileParts--;
                 maxTP--;
                 tptot++;
@@ -399,6 +601,8 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
                 }
             }
         } catch(EOFException e) {
+            isEOFEncountered = true;
+
             if(printInfo) {
                FacilityManager.getMsgLogger().
                    printmsg(MsgLogger.INFO,strInfo);
@@ -413,44 +617,14 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
                 trate = tnbytes*8f/hd.getMaxCompImgWidth()/
                     hd.getMaxCompImgHeight();
             }
-
-            // Bit-rate allocation
-            if(!isTruncMode) {
-                allocateRate();
-            }
-            // Update 'res' value once all tile-part headers are read
-            if(j2krparam.getResolution()==-1) {
-                targetRes = decSpec.dls.getMin();
-            } else {
-                    targetRes = j2krparam.getResolution();
-                    if(targetRes<0) {
-                        throw new
-                            IllegalArgumentException("Specified negative "+
-                                                     "resolution level "+
-                                                     "index: "+targetRes);
-                    }
-            }
-
-            // Verify reduction in resolution level
-            mdl = decSpec.dls.getMin();
-            if(targetRes>mdl) {
-                FacilityManager.getMsgLogger().
-                    printmsg(MsgLogger.WARNING,
-                             "Specified resolution level ("+targetRes+
-                             ") is larger"+
-                             " than the maximum value. Setting it to "+
-                             mdl +" (maximum value)");
-                targetRes = mdl;
-            }
-
-            // Backup nBytes
-            for (int tIdx=0; tIdx<nt; tIdx++) {
-                baknBytes[tIdx] = nBytes[tIdx];
-            }
-
-            return;
         }
-        remainingTileParts = 0;
+
+        /* XXX: BEGIN Updating the resolution here is logical when all tile-part
+           headers are read as was the case with the original version of this
+           class. With initTile() however the tiles could be read in random
+           order so modifying the resolution value could cause unexpected
+           results if a given tile-part has fewer levels than the main header
+           indicated.
         // Update 'res' value once all tile-part headers are read
         if(j2krparam.getResolution()== -1) {
             targetRes = decSpec.dls.getMin();
@@ -465,7 +639,7 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
         }
 
         // Verify reduction in resolution level
-        mdl = decSpec.dls.getMin();
+        int mdl = decSpec.dls.getMin();
         if(targetRes>mdl) {
             FacilityManager.getMsgLogger().
                 printmsg(MsgLogger.WARNING,
@@ -475,34 +649,42 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
                          mdl +" (maximum possible)");
             targetRes = mdl;
         }
+        XXX: END */
 
-        if(printInfo) {
-            FacilityManager.getMsgLogger().printmsg(MsgLogger.INFO,strInfo);
-        }
-
-        // Check presence of EOC marker is decoding rate not reached or if
-        // this marker has not been found yet
-        if(!isEOCFound && !isPsotEqualsZero) {
-            try {
-                if(!rateReached && !isPsotEqualsZero && in.readShort()!=EOC) {
-                    FacilityManager.getMsgLogger().
-                        printmsg(MsgLogger.WARNING,"EOC marker not found. "+
-                                 "Codestream is corrupted.");
-                }
-            } catch(EOFException e) {
-                FacilityManager.getMsgLogger().
-                    printmsg(MsgLogger.WARNING,"EOC marker is missing");
+        if(!isEOFEncountered) {
+            if(printInfo) {
+                FacilityManager.getMsgLogger().printmsg(MsgLogger.INFO,strInfo);
             }
-	}
+
+            if(remainingTileParts == 0) {
+                // Check presence of EOC marker is decoding rate not reached or
+                // if this marker has not been found yet
+                if(!isEOCFound && !isPsotEqualsZero) {
+                    try {
+                        if(!rateReached && !isPsotEqualsZero &&
+                           in.readShort()!=EOC) {
+                            FacilityManager.getMsgLogger().
+                                printmsg(MsgLogger.WARNING,"EOC marker not found. "+
+                                         "Codestream is corrupted.");
+                        }
+                    } catch(EOFException e) {
+                        FacilityManager.getMsgLogger().
+                            printmsg(MsgLogger.WARNING,"EOC marker is missing");
+                    }
+                }
+            }
+        }
 
         // Bit-rate allocation
         if(!isTruncMode) {
             allocateRate();
-        } else {
+        } else if(remainingTileParts == 0 && !isEOFEncountered) {
             // Take EOC into account if rate is not reached
             if(in.getPos()>=tnbytes)
                 anbytes += 2;
         }
+
+        if(tilePartPositions == null) lastPos = in.getPos();
 
         // Backup nBytes
         for (int tIdx=0; tIdx<nt; tIdx++) {
@@ -527,7 +709,7 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
 	// length in the bit stream
 
         // EOC marker's length
-        anbytes += 2;
+        if(remainingTileParts == 0) anbytes += 2;
 
         // If there are too few bytes to read the tile part headers throw an
         // error
@@ -654,6 +836,7 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
             }
         } else { // The number of tile-parts is specified in the tile-part
             // header
+            totTileParts[tile] = nrOfTileParts;
 
             // Check if it is consistant with what was found in previous
             // tile-part headers
@@ -1975,6 +2158,11 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
             throw new IllegalArgumentException();
         }
         int t = (y*ntX+x);
+        try {
+            initTile(t);
+        } catch(IOException ioe) {
+            // XXX Do something!
+        }
 
         // Reset number of read bytes if needed
         if(t==0) {

@@ -1,7 +1,7 @@
 /*
  * $RCSfile: FileBitstreamReaderAgent.java,v $
- * $Revision: 1.3 $
- * $Date: 2006-10-03 22:27:40 $
+ * $Revision: 1.4 $
+ * $Date: 2006-10-05 01:10:31 $
  * $State: Exp $
  *
  * Class:                   FileBitstreamReaderAgent
@@ -307,7 +307,7 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
         // Initialize variables used when reading tile-part headers.
         totAllTileLen = 0;
         remainingTileParts = nt; // at least as many tile-parts as tiles
-        lastPos = in.getPos();
+        maxPos = lastPos = in.getPos();
 
         // Update 'res' value according to the parameter and the main header.
         if(j2krparam.getResolution()== -1) {
@@ -486,7 +486,7 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
     boolean rateReached = false;
     int numtp = 0;
     int maxTP = nt; // If maximum 1 tile part per tile specified
-    int lastPos = 0;
+    int lastPos = 0, maxPos = 0;
 
     /**
      * Read all tile-part headers of the requested tile. All tile-part
@@ -500,12 +500,14 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
         if(tilePartPositions == null) in.seek(lastPos);
         String strInfo = "";
         int ncbQuit = -1;
+        boolean isTilePartRead = false;
         boolean isEOFEncountered = false;
         try {
             int tpNum = 0;
             while(remainingTileParts!=0 &&
                   (totTileParts[tileNum] == 0 ||
                    tilePartsRead[tileNum] < totTileParts[tileNum])) {
+                isTilePartRead = true;
 
                 if(tilePartPositions != null) {
                     in.seek((int)tilePartPositions[tileNum][tpNum++]);
@@ -583,8 +585,12 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
 
                 // Go to the beginning of next tile part
                 tilePartsRead[t]++;
+                int nextMarkerPos = tilePartStart+tilePartLen[t][tp];
                 if(tilePartPositions == null) {
-                    in.seek(tilePartStart+tilePartLen[t][tp]);
+                    in.seek(nextMarkerPos);
+                }
+                if(nextMarkerPos > maxPos) {
+                    maxPos = nextMarkerPos;
                 }
                 remainingTileParts--;
                 maxTP--;
@@ -618,6 +624,9 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
                     hd.getMaxCompImgHeight();
             }
         }
+
+        // If no tile-parts read then return.
+        if(!isTilePartRead) return;
 
         /* XXX: BEGIN Updating the resolution here is logical when all tile-part
            headers are read as was the case with the original version of this
@@ -659,14 +668,16 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
             if(remainingTileParts == 0) {
                 // Check presence of EOC marker is decoding rate not reached or
                 // if this marker has not been found yet
-                if(!isEOCFound && !isPsotEqualsZero) {
+                if(!isEOCFound && !isPsotEqualsZero && !rateReached) {
                     try {
-                        if(!rateReached && !isPsotEqualsZero &&
-                           in.readShort()!=EOC) {
+                        int savePos = in.getPos();
+                        in.seek(maxPos);
+                        if(in.readShort()!=EOC) {
                             FacilityManager.getMsgLogger().
                                 printmsg(MsgLogger.WARNING,"EOC marker not found. "+
                                          "Codestream is corrupted.");
                         }
+                        in.seek(savePos);
                     } catch(EOFException e) {
                         FacilityManager.getMsgLogger().
                             printmsg(MsgLogger.WARNING,"EOC marker is missing");

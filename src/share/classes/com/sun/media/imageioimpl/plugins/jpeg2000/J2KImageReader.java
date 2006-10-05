@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2006-10-02 23:51:01 $
+ * $Revision: 1.7 $
+ * $Date: 2006-10-05 01:08:30 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -302,8 +302,7 @@ public class J2KImageReader extends ImageReader implements MsgLogger {
 
         this.logJJ2000Msg = Boolean.getBoolean("jj2000.j2k.decoder.log");
 
-        FacilityManager.registerMsgLogger(Thread.currentThread(),
-                                          this);
+        FacilityManager.registerMsgLogger(null, this);
     }
 
     /** Overrides the method defined in the superclass. */

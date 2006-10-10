@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:37 $
+ * $Revision: 1.2 $
+ * $Date: 2006-10-10 23:48:57 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -66,7 +66,7 @@ public class UUIDListBox extends Box {
      *  number should consistent with the size of the uuid array.
      */
     public UUIDListBox(short num, byte[][] uuids) {
-        super(10 + (uuids.length << 4), 0x75637374, null);
+        super(10 + (uuids.length << 4), 0x756c7374, null);
         this.num = num;
         this.uuids = uuids;
     }
@@ -75,7 +75,7 @@ public class UUIDListBox extends Box {
      *  data array.
      */
     public UUIDListBox(byte[] data) {
-        super(8 + data.length, 0x75637374, data);
+        super(8 + data.length, 0x756c7374, data);
     }
 
     /** Constructs a <code>UUIDListBox</code> based on the provided

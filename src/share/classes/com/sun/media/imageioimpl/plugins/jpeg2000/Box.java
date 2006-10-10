@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2005-04-27 18:23:01 $
+ * $Revision: 1.3 $
+ * $Date: 2006-10-10 23:48:57 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -108,7 +108,7 @@ public class Box {
                               "JPEG2000DefaultDisplayResolutionBox");
 
         // Children of JPEG2000UUIDInfoBox
-        names.put(new Integer(0x75637374), "JPEG2000UUIDListBox");
+        names.put(new Integer(0x756c7374), "JPEG2000UUIDListBox");
         names.put(new Integer(0x75726c20), "JPEG2000DataEntryURLBox");
     }
 
@@ -146,7 +146,7 @@ public class Box {
         boxClasses.put(new Integer(0x72657364), ResolutionBox.class);
 
         // Children of JPEG2000UUIDInfoBox
-        boxClasses.put(new Integer(0x75637374), UUIDListBox.class);
+        boxClasses.put(new Integer(0x756c7374), UUIDListBox.class);
         boxClasses.put(new Integer(0x75726c20), DataEntryURLBox.class);
     }
 

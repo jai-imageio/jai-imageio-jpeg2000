@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2006-02-27 17:25:04 $
+ * $Revision: 1.7 $
+ * $Date: 2006-11-01 22:37:00 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.png;
@@ -168,6 +168,9 @@ final class CLibPNGImageWriter extends CLibImageWriter {
         } catch(Throwable t) {
             throw new IIOException("codecLib error", t);
         }
+
+        // Set the maximum length of the iDAT chunk.
+        encoder.setIDATSize(8192);
 
         // Determine the image type.
         ImageTypeSpecifier imageType;

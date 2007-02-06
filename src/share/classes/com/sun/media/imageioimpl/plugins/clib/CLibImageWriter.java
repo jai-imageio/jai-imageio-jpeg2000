@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-02-02 22:36:21 $
+ * $Revision: 1.5 $
+ * $Date: 2007-02-06 22:12:06 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -711,6 +711,7 @@ public abstract class CLibImageWriter extends ImageWriter {
             // No reformatting needed.
             raster = getContiguousData(image, sourceRegion).createTranslatedChild(0, 0);
             sampleModel = raster.getSampleModel();
+            mediaLibFormat = getMediaLibFormat(sampleModel, image.getColorModel());
         }
 
         // The mediaLib image.

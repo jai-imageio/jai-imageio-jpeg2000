@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2007-02-06 22:12:06 $
+ * $Revision: 1.6 $
+ * $Date: 2007-02-06 22:14:59 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.clib;
@@ -256,7 +256,12 @@ public abstract class CLibImageWriter extends ImageWriter {
 
     /**
      * Returns a contiguous <code>Raster</code> of data over the specified
-     * <code>Rectangle</code>.
+     * <code>Rectangle</code>. If the region is a sub-region of a single
+     * tile, then a child of that tile will be returned. If the region
+     * overlaps more than one tile and has 8 bits per sample, then a
+     * pixel interleaved Raster having band offsets 0,1,... will be returned.
+     * Otherwise the Raster returned by <code>im.copyData(null)</code> will
+     * be returned.
      */
     private static final Raster getContiguousData(RenderedImage im,
                                                   Rectangle region) {
@@ -711,6 +716,9 @@ public abstract class CLibImageWriter extends ImageWriter {
             // No reformatting needed.
             raster = getContiguousData(image, sourceRegion).createTranslatedChild(0, 0);
             sampleModel = raster.getSampleModel();
+
+            // Update mediaLibFormat indicator in case getContiguousData()
+            // has changed the layout of the data.
             mediaLibFormat = getMediaLibFormat(sampleModel, image.getColorModel());
         }
 

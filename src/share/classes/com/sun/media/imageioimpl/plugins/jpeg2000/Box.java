@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2007-03-07 22:07:29 $
+ * $Revision: 1.5 $
+ * $Date: 2007-03-07 22:26:19 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -151,7 +151,8 @@ public class Box {
     }
 
     /** Returns the XML tag name defined in JP2 XML xsd/dtd for the box
-     *  with the provided <code>type</code>.
+     *  with the provided <code>type</code>. If the <code>type</code> is
+     * not known, the string <code>"unknown"</code> is returned.
      */
     public static String getName(int type) {
         String name = (String)names.get(new Integer(type));

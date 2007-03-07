@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-10-10 23:48:57 $
+ * $Revision: 1.4 $
+ * $Date: 2007-03-07 22:07:29 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -154,7 +154,8 @@ public class Box {
      *  with the provided <code>type</code>.
      */
     public static String getName(int type) {
-        return (String)names.get(new Integer(type));
+        String name = (String)names.get(new Integer(type));
+        return name == null ? "unknown" : name;
     }
 
     /** Returns the Box class for the box with the provided <code>type</code>.

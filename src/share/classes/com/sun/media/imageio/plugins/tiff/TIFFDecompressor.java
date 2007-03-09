@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2006-02-16 00:18:55 $
+ * $Revision: 1.3 $
+ * $Date: 2007-03-09 20:14:40 $
  * $State: Exp $
  */
 package com.sun.media.imageio.plugins.tiff;
@@ -57,6 +57,7 @@ import java.awt.image.DataBufferFloat;
 import java.awt.image.DataBufferInt;
 import java.awt.image.DataBufferShort;
 import java.awt.image.DataBufferUShort;
+import java.awt.image.IndexColorModel;
 import java.awt.image.MultiPixelPackedSampleModel;
 import java.awt.image.PixelInterleavedSampleModel;
 import java.awt.image.Raster;
@@ -823,9 +824,11 @@ public abstract class TIFFDecompressor {
         // 8,8-bit gray+alpha
         // 16,16-bit gray+alpha
         // 8,8,8-bit RGB
+        // 8,8,8,8-bit CMYK
         // 8,8,8,8-bit RGB+alpha
         // 16,16,16-bit RGB
         // 16,16,16,16-bit RGB+alpha
+        // 1,1,1,1 or 2,2,2,2 or 4,4,4,4 CMYK
         // R+G+B = 8-bit RGB
         // R+G+B+A = 8-bit RGB
         // R+G+B = 16-bit RGB
@@ -1054,6 +1057,27 @@ public abstract class TIFFDecompressor {
                                                         dataType,
                                                         true,
                                                         alphaPremultiplied);
+        }
+        
+        // Support for Tiff files containing half-tone data
+        // in more than 1 channel
+        if((photometricInterpretation ==
+            BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_CMYK) &&
+           (bitsPerSample[0] == 1 || bitsPerSample[0] == 2 ||
+            bitsPerSample[0] == 4)) {
+            ColorSpace cs = null;
+            if(samplesPerPixel == 4)
+                cs = SimpleCMYKColorSpace.getInstance();
+            else
+                cs = new BogusColorSpace(samplesPerPixel);
+            // By specifying the bits per sample the color values
+            // will scale on display
+            ColorModel cm =
+                new ComponentColorModel(cs, bitsPerSample, false, false,
+                                        Transparency.OPAQUE,
+                                        DataBuffer.TYPE_BYTE);            
+            return new ImageTypeSpecifier(cm,
+                                          cm.createCompatibleSampleModel(1, 1));
         }
 
         // Compute bits per pixel.
@@ -1898,12 +1922,35 @@ public abstract class TIFFDecompressor {
             }
 
             ColorSpace csGray = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-            ImageTypeSpecifier its =
-                ImageTypeSpecifier.createInterleaved(csGray,
+            
+            ImageTypeSpecifier its = null;
+            // For planar images with 1, 2 or 4 bits per sample, we need to
+            // use a MultiPixelPackedSampleModel so that when the TIFF
+            // decoder properly decodes the data per pixel, we know how to
+            // extract it back out into individual pixels.  This is how the
+            // pixels are actually stored in the planar bands.
+            if(bps == 1 || bps == 2 || bps == 4) {
+                int bits = bps;
+                int size = 1 << bits;
+                byte[] r = new byte[size];
+                byte[] g = new byte[size];
+                byte[] b = new byte[size];
+                for(int j=0; j<r.length; j++) {
+                    r[j] = 0;
+                    g[j] = 0;
+                    b[j] = 0;
+                }
+                ColorModel cmGray= new IndexColorModel(bits,size,r,g,b);
+                SampleModel smGray = new MultiPixelPackedSampleModel(DataBuffer.TYPE_BYTE, 1, 1, bits);
+                its = new ImageTypeSpecifier(cmGray, smGray);
+            }
+            else {
+                its = ImageTypeSpecifier.createInterleaved(csGray,
                                                      new int[] {0},
                                                      dataType,
                                                      false,
                                                      false);
+            }
 
             return its.createBufferedImage(srcWidth, srcHeight);
 
@@ -2174,11 +2221,18 @@ public abstract class TIFFDecompressor {
             destBitsPerSample = image.getSampleModel().getSampleSize();
         }
 
-        for (int b = 0; b < numBands; b++) {
-            if (destBitsPerSample[destinationBands[b]] !=
-                bitsPerSample[sourceBands[b]]) {
-                adjustBitDepths = true;
-                break;
+        // Make sure that the image is not CMYK (separated) or does not have
+        // bits per sample of 1, 2, or 4 before trying adjust.
+        if(photometricInterpretation !=
+           BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_CMYK || 
+           bitsPerSample[0] != 1 && bitsPerSample[0] != 2 &&
+           bitsPerSample[0] != 4) {
+            for (int b = 0; b < numBands; b++) {
+                if (destBitsPerSample[destinationBands[b]] !=
+                    bitsPerSample[sourceBands[b]]) {
+                    adjustBitDepths = true;
+                    break;
+                }
             }
         }
 

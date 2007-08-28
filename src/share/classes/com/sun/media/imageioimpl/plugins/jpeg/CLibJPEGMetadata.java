@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2006-04-27 22:18:52 $
+ * $Revision: 1.7 $
+ * $Date: 2007-08-28 18:45:53 $
  * $State: Exp $
  */
 
@@ -95,7 +95,6 @@ import com.sun.media.imageio.plugins.tiff.TIFFDirectory;
 import com.sun.media.imageio.plugins.tiff.TIFFField;
 import com.sun.media.imageio.plugins.tiff.TIFFTag;
 import com.sun.media.imageio.plugins.tiff.TIFFTagSet;
-import com.sun.media.imageio.stream.RawImageInputStream;
 
 public class CLibJPEGMetadata extends IIOMetadata {
     // --- Constants ---

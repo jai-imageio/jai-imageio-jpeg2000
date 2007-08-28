@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.6 $
- * $Date: 2006-07-18 19:41:24 $
+ * $Revision: 1.7 $
+ * $Date: 2007-08-28 18:45:06 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.common;
@@ -86,8 +86,6 @@ import javax.imageio.spi.ImageReaderWriterSpi;
 import javax.imageio.spi.ImageWriterSpi;
 import javax.imageio.spi.ServiceRegistry;
 import javax.imageio.stream.ImageInputStream;
-
-import com.sun.medialib.codec.jiio.Util;
 
 public class ImageUtil {
     /* XXX testing only

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:20 $
+ * $Revision: 1.2 $
+ * $Date: 2007-08-28 01:12:56 $
  * $State: Exp $
  */
 package com.sun.media.imageio.stream;
@@ -96,6 +96,17 @@ class StreamSegmentMapperImpl implements StreamSegmentMapper {
         seg.setStartPos(-1);
         seg.setSegmentLength(-1);
         return;
+    }
+
+    long length() {
+        int numSegments = segmentLengths.length;
+        long len = 0L;
+
+        for(int i = 0; i < numSegments; i++) {
+            len += segmentLengths[i];
+        }
+
+        return len;
     }
 }
 
@@ -157,6 +168,10 @@ class SectorStreamSegmentMapper implements StreamSegmentMapper {
 
         seg.setStartPos(segmentPositions[index] + position);
         seg.setSegmentLength(len);
+    }
+
+    long length() {
+        return (long)totalLength;
     }
 }
 
@@ -355,5 +370,27 @@ public class SegmentedImageInputStream extends ImageInputStreamImpl {
         int nbytes = stream.read(b, off, streamSegmentLength);
         streamPos += nbytes;
         return nbytes;
+    }
+
+    public long length() {
+        long len;
+        if(mapper instanceof StreamSegmentMapperImpl) {
+            len = ((StreamSegmentMapperImpl)mapper).length();
+        } else if(mapper instanceof SectorStreamSegmentMapper) {
+            len = ((SectorStreamSegmentMapper)mapper).length();
+        } else if(mapper != null) {
+            long pos = len = 0L;
+            StreamSegment seg = mapper.getStreamSegment(pos, Integer.MAX_VALUE);
+            while((len = seg.getSegmentLength()) > 0) {
+                pos += len;
+                seg.setSegmentLength(0);
+                mapper.getStreamSegment(pos, Integer.MAX_VALUE, seg);
+            }
+            len = pos;
+        } else {
+            len = super.length();
+        }
+
+        return len;
     }
 }

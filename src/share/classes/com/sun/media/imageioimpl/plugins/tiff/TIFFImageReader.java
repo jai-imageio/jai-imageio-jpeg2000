@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.10 $
- * $Date: 2006-06-28 21:29:03 $
+ * $Revision: 1.11 $
+ * $Date: 2007-08-28 19:18:40 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -1387,6 +1387,7 @@ public class TIFFImageReader extends ImageReader {
             TIFFImageWriter.YToTileY(srcRegion.y + srcRegion.height - 1,
                                      0, tileOrStripHeight);
 
+        boolean isAbortRequested = false;
         if (planarConfiguration ==
             BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR) {
             
@@ -1403,25 +1404,47 @@ public class TIFFImageReader extends ImageReader {
                         decompressor.setDestinationBands(db);
                         //XXX decompressor.beginDecoding();
 
+                        // The method abortRequested() is synchronized
+                        // so check it only once per loop just before
+                        // doing any actual decoding.
+                        if(abortRequested()) {
+                            isAbortRequested = true;
+                            break;
+                        }
+
                         decodeTile(ti, tj, band);
                     }
 
+                    if(isAbortRequested) break;
+
                     reportProgress();
                 }
+
+                if(isAbortRequested) break;
             }
         } else {
             //XXX decompressor.beginDecoding();
 
             for (int tj = minTileY; tj <= maxTileY; tj++) {
                 for (int ti = minTileX; ti <= maxTileX; ti++) {
+                    // The method abortRequested() is synchronized
+                    // so check it only once per loop just before
+                    // doing any actual decoding.
+                    if(abortRequested()) {
+                        isAbortRequested = true;
+                        break;
+                    }
+
                     decodeTile(ti, tj, -1);
 
                     reportProgress();
                 }
+
+                if(isAbortRequested) break;
             }
         }
 
-        if (abortRequested()) {
+        if (isAbortRequested) {
             processReadAborted();
         } else {
             processImageComplete();

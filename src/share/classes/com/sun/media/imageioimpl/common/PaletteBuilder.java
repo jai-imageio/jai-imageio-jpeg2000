@@ -37,8 +37,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2006-03-24 22:28:43 $
+ * $Revision: 1.2 $
+ * $Date: 2007-08-29 18:41:42 $
  * $State: Exp $
  */
 
@@ -318,7 +318,7 @@ public class PaletteBuilder {
 
     protected IndexColorModel getIndexColorModel() {
         int size = currSize;
-        if (transparency == Transparency.BITMASK) {
+        if (transparency != Transparency.OPAQUE) {
             size ++; // we need place for transparent color;
         }
 
@@ -328,14 +328,14 @@ public class PaletteBuilder {
 
         int index = 0;
         palette = new ColorNode[size];
-        if (transparency == Transparency.BITMASK) {
+        if (transparency != Transparency.OPAQUE) {
             index ++;
         }
 
         int lastIndex = findPaletteEntry(root, index, red, green, blue);
 
         IndexColorModel icm = null;
-        if (transparency == Transparency.BITMASK) {
+        if (transparency != Transparency.OPAQUE) {
             icm = new IndexColorModel(8, size, red, green, blue, 0);
         } else {
             icm = new IndexColorModel(8, currSize, red, green, blue);

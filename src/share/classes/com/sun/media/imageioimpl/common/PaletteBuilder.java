@@ -37,8 +37,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2007-08-29 18:41:42 $
+ * $Revision: 1.3 $
+ * $Date: 2007-08-31 00:06:00 $
  * $State: Exp $
  */
 
@@ -188,9 +188,11 @@ public class PaletteBuilder {
 			      BufferedImage.TYPE_BYTE_INDEXED, icm);
 
 	WritableRaster wr = dst.getRaster();
+        int minX = src.getMinX();
+        int minY = src.getMinY();
 	for (int y =0; y < dst.getHeight(); y++) {
 	    for (int x = 0; x < dst.getWidth(); x++) {
-		Color aColor = getSrcColor(x,y);
+		Color aColor = getSrcColor(x + minX, y + minY);
 		wr.setSample(x, y, 0, findColorIndex(root, aColor));
 	    }
 	}
@@ -260,10 +262,12 @@ public class PaletteBuilder {
 	
         int w = src.getWidth();
         int h = src.getHeight();
+        int minX = src.getMinX();
+        int minY = src.getMinY();
 	for (int y = 0; y < h; y++) {
 	    for (int x = 0; x < w; x++) {
 
-                Color aColor = getSrcColor(w - x - 1, h - y - 1);
+                Color aColor = getSrcColor(w - x + minX - 1, h - y + minY - 1);
                 /*
                  * If transparency of given image is not opaque we assume all 
                  * colors with alpha less than 1.0 as fully transparent.

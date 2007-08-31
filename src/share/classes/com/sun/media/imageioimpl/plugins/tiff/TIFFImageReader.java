@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.11 $
- * $Date: 2007-08-28 19:18:40 $
+ * $Revision: 1.12 $
+ * $Date: 2007-08-31 23:16:41 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -1126,6 +1126,22 @@ public class TIFFImageReader extends ImageReader {
         
         long offset = getTileOrStripOffset(tileIndex);
         long byteCount = getTileOrStripByteCount(tileIndex);
+
+        //
+        // Attempt to handle truncated streams, i.e., where reading the
+        // compressed strip or tile would result in an EOFException. The
+        // number of bytes to read is clamped to the number available
+        // from the stream starting at the indicated position in the hope
+        // that the decompressor will handle it.
+        //
+        long streamLength = stream.length();
+        if(streamLength > 0 && offset + byteCount > streamLength) {
+            processWarningOccurred("Attempting to process truncated stream.");
+            if(Math.max(byteCount = streamLength - offset, 0) == 0) {
+                processWarningOccurred("No bytes in strip/tile: skipping.");
+                return;
+            }
+        }
 
         decompressor.setStream(stream);
         decompressor.setOffset(offset);

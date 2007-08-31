@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.14 $
- * $Date: 2006-06-29 22:41:24 $
+ * $Revision: 1.15 $
+ * $Date: 2007-08-31 23:17:28 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -48,8 +48,10 @@ import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.EOFException;
+import java.io.PrintStream;
 import javax.imageio.IIOException;
 import javax.imageio.ImageTypeSpecifier;
 import com.sun.media.imageio.plugins.tiff.BaselineTIFFTagSet;
@@ -671,15 +673,22 @@ public class TIFFFaxDecompressor extends TIFFDecompressor {
         stream.seek(offset);
         stream.readFully(data);
 
-        if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_RLE) {
-            decodeRLE();
-        } else if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_T_4) {
-            decodeT4();
-        } else if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_T_6) {
-            this.uncompressedMode = (int)((t6Options & 0x02) >> 1);
-            decodeT6();
-        } else {
-            throw new IIOException("Unknown compression type " + compression);
+        try {
+            if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_RLE) {
+                decodeRLE();
+            } else if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_T_4) {
+                decodeT4();
+            } else if (compression == BaselineTIFFTagSet.COMPRESSION_CCITT_T_6) {
+                this.uncompressedMode = (int)((t6Options & 0x02) >> 1);
+                decodeT6();
+            } else {
+                throw new IIOException("Unknown compression type " + compression);
+            }
+        } catch(ArrayIndexOutOfBoundsException e) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(baos));
+            String s = new String(baos.toByteArray());
+            warning("Ignoring exception:\n "+s);
         }
     }
 

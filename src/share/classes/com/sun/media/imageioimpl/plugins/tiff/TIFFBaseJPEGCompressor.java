@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.4 $
- * $Date: 2006-03-31 01:30:12 $
+ * $Revision: 1.5 $
+ * $Date: 2007-09-01 00:27:20 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -217,7 +217,7 @@ public abstract class TIFFBaseJPEGCompressor extends TIFFCompressor {
      * A <code>ByteArrayOutputStream</code> which allows writing to an
      * <code>ImageOutputStream</code>.
      */
-    private class IIOByteArrayOutputStream extends ByteArrayOutputStream {
+    private static class IIOByteArrayOutputStream extends ByteArrayOutputStream {
         IIOByteArrayOutputStream() {
             super();
         }

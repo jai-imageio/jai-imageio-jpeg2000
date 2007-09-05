@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.5 $
- * $Date: 2007-03-07 22:26:19 $
+ * $Revision: 1.6 $
+ * $Date: 2007-09-05 20:03:20 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.jpeg2000;
@@ -50,6 +50,7 @@ import java.lang.reflect.InvocationTargetException;
 import javax.imageio.metadata.IIOInvalidTreeException;
 import javax.imageio.metadata.IIOMetadataNode;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -59,6 +60,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.imageio.IIOException;
 import javax.imageio.stream.ImageOutputStream;
 import javax.imageio.stream.ImageInputStream;
 
@@ -588,10 +590,40 @@ public class Box {
         iis.seek(pos);
         length = iis.readInt();
         type = iis.readInt();
-        int dataLength = length - 8;
-        if (length == 1) {
+        int dataLength = 0;
+        if(length == 0) {
+            // Length unknown at time of stream creation.
+            long streamLength = iis.length();
+            if(streamLength != -1)
+                // Calculate box length from known stream length.
+                dataLength = (int)(streamLength - iis.getStreamPosition());
+            else {
+                // Calculate box length by reading to EOF.
+                long dataPos = iis.getStreamPosition();
+                int bufLen = 1024;
+                byte[] buf = new byte[bufLen];
+                long savePos = dataPos;
+                try {
+                    iis.readFully(buf);
+                    dataLength += bufLen;
+                    savePos = iis.getStreamPosition();
+                } catch(EOFException eofe) {
+                    iis.seek(savePos);
+                    while(iis.read() != -1) dataLength++;
+                }
+                iis.seek(dataPos);
+            }
+        } else if(length == 1) {
+            // Length given by XL parameter.
             extraLength = iis.readLong();
             dataLength = (int)(extraLength - 16);
+        } else if(length >= 8 && length < (1 << 32)) {
+            // Length given by L parameter.
+            dataLength = length - 8;
+        } else {
+            // Illegal value for L parameter.
+            throw new IIOException("Illegal value "+length+
+                                   " for box length parameter.");
         }
         data = new byte[dataLength];
         iis.readFully(data);

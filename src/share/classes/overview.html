@@ -38,8 +38,8 @@ You acknowledge that this software is not designed or intended for
 use in the design, construction, operation or maintenance of any 
 nuclear facility. 
 
-$Revision: 1.10 $
-$Date: 2006-08-30 17:53:40 $
+$Revision: 1.11 $
+$Date: 2007-09-05 00:21:45 $
 $State: Exp $
 -->
 <body>
@@ -81,6 +81,7 @@ revert to the respective defaults for reading and writing.
 <th><a href=#GIF>GIF</a></th>
 <th><a href=#JPEG>JPEG</a></th>
 <th><a href=#JPEG2000>JPEG 2000</a></th>
+<th><a href=#PCX>PCX</a></th>
 <th><a href=#PNG>PNG</a></th>
 <th><a href=#PNM>PNM</a></th>
 <th><a href=#RAW>Raw</a></th>
@@ -94,6 +95,7 @@ revert to the respective defaults for reading and writing.
 <td>F</td>
 <td>T</td>
 <td>F</td>
+<td>F</td>
 <td>T</td>
 <td>T</td>
 <td>F</td>
@@ -103,6 +105,7 @@ revert to the respective defaults for reading and writing.
 <td>{@link javax.imageio.ImageReader#isRandomAccessEasy(int)}</td>
 <td>U</td>
 <td>X</td>
+<td>F</td>
 <td>F</td>
 <td>F</td>
 <td>F</td>
@@ -122,6 +125,7 @@ revert to the respective defaults for reading and writing.
 <td>F</td>
 <td>F</td>
 <td>F</td>
+<td>F</td>
 </tr>
 <tr>
 <td>{@link javax.imageio.ImageWriteParam#canWriteCompressed()}</td>
@@ -129,6 +133,7 @@ revert to the respective defaults for reading and writing.
 <td>T</td>
 <td>T</td>
 <td>T</td>
+<td>F</td>
 <td>T</td>
 <td>F</td>
 <td>F</td>
@@ -141,6 +146,7 @@ revert to the respective defaults for reading and writing.
 <td>T</td>
 <td>F</td>
 <td>T</td>
+<td>F</td>
 <td>T</td>
 <td>F</td>
 <td>F</td>
@@ -155,12 +161,14 @@ revert to the respective defaults for reading and writing.
 <td>T</td>
 <td>F</td>
 <td>F</td>
+<td>F</td>
 <td>T</td>
 <td>T</td>
 <td>F</td>
 </tr>
 <tr>
 <td>{@link javax.imageio.ImageWriter#canInsertEmpty(int)}</td>
+<td>F</td>
 <td>F</td>
 <td>F</td>
 <td>F</td>
@@ -180,11 +188,13 @@ revert to the respective defaults for reading and writing.
 <td>F</td>
 <td>F</td>
 <td>F</td>
+<td>F</td>
 <td>T</td>
 <td>F</td>
 </tr>
 <tr>
 <td>{@link javax.imageio.ImageWriter#canReplacePixels(int)}</td>
+<td>F</td>
 <td>F</td>
 <td>F</td>
 <td>F</td>
@@ -202,6 +212,7 @@ revert to the respective defaults for reading and writing.
 <td>F</td>
 <td>T</td>
 <td>F</td>
+<td>F</td>
 <td>T</td>
 <td>T</td>
 <td>F</td>
@@ -209,6 +220,7 @@ revert to the respective defaults for reading and writing.
 </tr>
 <tr>
 <td>{@link javax.imageio.ImageWriter#canWriteEmpty()}</td>
+<td>F</td>
 <td>F</td>
 <td>F</td>
 <td>F</td>
@@ -228,6 +240,7 @@ revert to the respective defaults for reading and writing.
 <td>F</td>
 <td>F</td>
 <td>F</td>
+<td>F</td>
 <td>T</td>
 <td>F</td>
 </tr>
@@ -235,6 +248,7 @@ revert to the respective defaults for reading and writing.
 <td>Stream Metadata</td>
 <td>F</td>
 <td>T</td>
+<td>F</td>
 <td>F</td>
 <td>F</td>
 <td>F</td>
@@ -249,6 +263,7 @@ revert to the respective defaults for reading and writing.
 <td>T</td>
 <td>T (reader only)</td>
 <td>T</td>
+<td>F</td>
 <td>T</td>
 <td>T</td>
 <td>F</td>
@@ -261,6 +276,7 @@ revert to the respective defaults for reading and writing.
 <td>T</td>
 <td>T (reader only)</td>
 <td>T</td>
+<td>F</td>
 <td>T</td>
 <td>T</td>
 <td>F</td>
@@ -724,6 +740,41 @@ href="./com/sun/media/imageio/plugins/jpeg2000/package-summary.html#ImageMetadat
 <td>References</td>
 <td>
 <a href="http://www.jpeg.org/JPEG2000.html">JPEG 2000 Links</a>
+</td>
+</tr>
+</table>
+</p>
+
+<h3><a name="PCX">PCX</a></h3>
+
+<code>ImageReader</code> and <code>ImageWriter</code> plug-ins are provided
+for the PCX image format. A summary of the attributes of these plug-ins is
+given in the following table.
+
+<p>
+<table border=1>
+<caption><b>PCX Reader/Writer Plug-in Attributes</b></caption>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+<tr>
+<td>Format Name</td>
+<td>pcx</td>
+</tr>
+<tr>
+<td>MIME Types</td>
+<td>image/pcx, image/x-pcx, image/x-windows-pcx, image/x-pc-paintbrush</td>
+</tr>
+<tr>
+<td>Suffixes</td>
+<td>pcx</td>
+</tr>
+<tr>
+<td>References</td>
+<td>
+<a href="http://www.fileformat.info/format/pcx/">
+PCX Summary from the Encyclopedia of Graphics File Formats</a><br/>
 </td>
 </tr>
 </table>

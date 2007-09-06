@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2007-09-05 00:21:08 $
+ * $Revision: 1.2 $
+ * $Date: 2007-09-06 23:41:36 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.pcx;
@@ -365,16 +365,13 @@ public class PCXImageReader extends ImageReader implements PCXConstants {
 	for (int j = 0; j < max;) {
 	    int val = iis.readUnsignedByte();
 
-	    int count;
-
 	    if ((val & 0xC0) == 0xC0) {
-		count = val & ~0xC0;
+		int count = val & ~0xC0;
 		val = iis.readUnsignedByte();
+                for (int k = 0; k < count && j < max; k++) {
+                    buffer[j++] = (byte) (val & 0xFF);
+                }
 	    } else {
-		count = 1;
-	    }
-
-	    for (int k = 0; k < count && j < max; k++) {
 		buffer[j++] = (byte) (val & 0xFF);
 	    }
 	}

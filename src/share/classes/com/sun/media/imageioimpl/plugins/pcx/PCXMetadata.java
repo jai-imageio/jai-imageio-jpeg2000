@@ -38,106 +38,42 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2007-09-05 00:21:08 $
+ * $Revision: 1.2 $
+ * $Date: 2007-09-07 19:12:25 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.pcx;
 
-import javax.imageio.metadata.*;
+import javax.imageio.metadata.IIOInvalidTreeException;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataFormatImpl;
+import javax.imageio.metadata.IIOMetadataNode;
 
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import com.sun.media.imageioimpl.common.ImageUtil;
 
 public class PCXMetadata extends IIOMetadata implements Cloneable, PCXConstants {
 
+    short version;
     byte bitsPerPixel;
-    int vdpi=72,hdpi=72;
+    boolean gotxmin, gotymin;
+    short xmin, ymin;
+    int vdpi, hdpi;
     int hsize,vsize;
 
-    private void addXYZPoints(IIOMetadataNode root, String name, double x, double y, double z) {
-        IIOMetadataNode node = addChildNode(root, name, null);
-        addChildNode(node, "X", new Double(x));
-        addChildNode(node, "Y", new Double(y));
-        addChildNode(node, "Z", new Double(z));
-    }
-
-    private IIOMetadataNode addChildNode(IIOMetadataNode root,
-                                         String name,
-                                         Object object) {
-        IIOMetadataNode child = new IIOMetadataNode(name);
-        if (object != null) {
-            child.setUserObject(object);
-	    child.setNodeValue(ImageUtil.convertObjectToString(object));
-	}
-        root.appendChild(child);
-        return child;
-    }
-
-    private Object getObjectValue(Node node) {
-        Object tmp = node.getNodeValue();
-
-        if(tmp == null && node instanceof IIOMetadataNode) {
-            tmp = ((IIOMetadataNode)node).getUserObject();
-        }
-
-        return tmp;
-    }
-
-    private String getStringValue(Node node) {
-        Object tmp = getObjectValue(node);
-        return tmp instanceof String ? (String)tmp : null;
-    }
-
-    private Byte getByteValue(Node node) {
-        Object tmp = getObjectValue(node);
-        Byte value = null;
-        if(tmp instanceof String) {
-            value = Byte.valueOf((String)tmp);
-        } else if(tmp instanceof Byte) {
-            value = (Byte)tmp;
-        }
-        return value;
-    }
-
-    private Short getShortValue(Node node) {
-        Object tmp = getObjectValue(node);
-        Short value = null;
-        if(tmp instanceof String) {
-            value = Short.valueOf((String)tmp);
-        } else if(tmp instanceof Short) {
-            value = (Short)tmp;
-        }
-        return value;
-    }
-
-    private Integer getIntegerValue(Node node) {
-        Object tmp = getObjectValue(node);
-        Integer value = null;
-        if(tmp instanceof String) {
-            value = Integer.valueOf((String)tmp);
-        } else if(tmp instanceof Integer) {
-            value = (Integer)tmp;
-        } else if(tmp instanceof Byte) {
-            value = new Integer(((Byte)tmp).byteValue() & 0xff);
-        }
-        return value;
-    }
-
-    private Double getDoubleValue(Node node) {
-        Object tmp = getObjectValue(node);
-        Double value = null;
-        if(tmp instanceof String) {
-            value = Double.valueOf((String)tmp);
-        } else if(tmp instanceof Double) {
-            value = (Double)tmp;
-        }
-        return value;
+    PCXMetadata() {
+        super(true, null, null, null, null);
+        reset();
     }
 
     public Node getAsTree(String formatName) {
-	return null;
+        if (formatName.equals(IIOMetadataFormatImpl.standardMetadataFormatName)) {
+            return getStandardTree();
+        } else {
+            throw new IllegalArgumentException("Not a recognized format!");
+        }
     }
 
     public boolean isReadOnly() {
@@ -145,8 +81,147 @@ public class PCXMetadata extends IIOMetadata implements Cloneable, PCXConstants 
     }
 
     public void mergeTree(String formatName, Node root) throws IIOInvalidTreeException {
+        if (formatName.equals(IIOMetadataFormatImpl.standardMetadataFormatName)) {
+            if (root == null) {
+                throw new IllegalArgumentException("root == null!");
+            }
+            mergeStandardTree(root);
+        } else {
+            throw new IllegalArgumentException("Not a recognized format!");
+        }   
     }
 
     public void reset() {
+        version = VERSION_3_0;
+        bitsPerPixel = 0;
+        gotxmin = false;
+        gotymin = false;
+        xmin = 0;
+        ymin = 0;
+        vdpi = 72;
+        hdpi = 72;
+        hsize = 0;
+        vsize = 0;
+    }
+
+    public IIOMetadataNode getStandardDocumentNode() {
+        String versionString;
+        switch(version) {
+        case VERSION_2_5:
+            versionString = "2.5";
+            break;
+        case VERSION_2_8_W_PALETTE:
+            versionString = "2.8 with palette";
+            break;
+        case VERSION_2_8_WO_PALETTE:
+            versionString = "2.8 without palette";
+            break;
+        case VERSION_PC_WINDOWS:
+            versionString = "PC Paintbrush for Windows";
+            break;
+        case VERSION_3_0:
+            versionString = "3.0";
+            break;
+        default:
+            // unknown
+            versionString = null;
+        }
+
+        IIOMetadataNode documentNode = null;
+        if(versionString != null) {
+            documentNode = new IIOMetadataNode("Document");
+            IIOMetadataNode node = new IIOMetadataNode("FormatVersion");
+            node.setAttribute("value", versionString);
+            documentNode.appendChild(node);
+        }
+
+        return documentNode;
+    }
+
+    public IIOMetadataNode getStandardDimensionNode() {
+        IIOMetadataNode dimensionNode = new IIOMetadataNode("Dimension");
+        IIOMetadataNode node = null; // scratch node
+
+        node = new IIOMetadataNode("HorizontalPixelOffset");
+        node.setAttribute("value", String.valueOf(xmin));
+        dimensionNode.appendChild(node);
+
+        node = new IIOMetadataNode("VerticalPixelOffset");
+        node.setAttribute("value", String.valueOf(ymin));
+        dimensionNode.appendChild(node);
+
+        node = new IIOMetadataNode("HorizontalPixelSize");
+        node.setAttribute("value", String.valueOf(254.0/hdpi));
+        dimensionNode.appendChild(node);
+
+        node = new IIOMetadataNode("VerticalPixelSize");
+        node.setAttribute("value", String.valueOf(254.0/vdpi));
+        dimensionNode.appendChild(node);
+
+        if(hsize != 0) {
+            node = new IIOMetadataNode("HorizontalScreenSize");
+            node.setAttribute("value", String.valueOf(hsize));
+            dimensionNode.appendChild(node);
+        }
+
+        if(vsize != 0) {
+            node = new IIOMetadataNode("VerticalScreenSize");
+            node.setAttribute("value", String.valueOf(vsize));
+            dimensionNode.appendChild(node);
+        }
+
+        return dimensionNode;
+    }
+
+    private void mergeStandardTree(Node root) throws IIOInvalidTreeException {
+        Node node = root;
+        if (!node.getNodeName().equals(IIOMetadataFormatImpl.standardMetadataFormatName))
+            throw new IIOInvalidTreeException("Root must be " +
+                                              IIOMetadataFormatImpl.standardMetadataFormatName,
+                                              node);
+
+        node = node.getFirstChild();
+        while (node != null) {
+            String name = node.getNodeName();
+
+            if (name.equals("Dimension")) {
+                Node child = node.getFirstChild();
+
+                while (child != null) {
+                    String childName = child.getNodeName();
+                    if (childName.equals("HorizontalPixelOffset")) {
+                        String hpo = getAttribute(child, "value");
+                        xmin = Short.valueOf(hpo).shortValue();
+                        gotxmin = true;
+                    } else if (childName.equals("VerticalPixelOffset")) {
+                        String vpo = getAttribute(child, "value");
+                        ymin = Short.valueOf(vpo).shortValue();
+                        gotymin = true;
+                    } else if (childName.equals("HorizontalPixelSize")) {
+                        String hps = getAttribute(child, "value");
+                        hdpi = (int)(254.0F/Float.parseFloat(hps) + 0.5F);
+                    } else if (childName.equals("VerticalPixelSize")) {
+                        String vps = getAttribute(child, "value");
+                        vdpi = (int)(254.0F/Float.parseFloat(vps) + 0.5F);
+                    } else if (childName.equals("HorizontalScreenSize")) {
+                        String hss = getAttribute(child, "value");
+                        hsize = Integer.valueOf(hss).intValue();
+                    } else if (childName.equals("VerticalScreenSize")) {
+                        String vss = getAttribute(child, "value");
+                        vsize = Integer.valueOf(vss).intValue();
+                    }
+
+                    child = child.getNextSibling();
+                }
+            }
+
+            node = node.getNextSibling();
+        }
+    }
+
+    private static String getAttribute(Node node, String attrName) {
+        NamedNodeMap attrs = node.getAttributes();
+        Node attr = attrs.getNamedItem(attrName);
+        return attr != null ? attr.getNodeValue() : null;
     }
 }

@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.2 $
- * $Date: 2007-09-06 23:41:36 $
+ * $Revision: 1.3 $
+ * $Date: 2007-09-07 19:13:02 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.pcx;
@@ -62,7 +62,7 @@ public class PCXImageReader extends ImageReader implements PCXConstants {
     private boolean gotHeader = false;
     private byte manufacturer;
     private byte encoding;
-    private short xmin, ymin, xmax, ymax;
+    private short xmax, ymax;
     private byte[] smallPalette = new byte[3 * 16];
     private byte[] largePalette = new byte[3 * 256];
     private byte colorPlanes;
@@ -117,6 +117,7 @@ public class PCXImageReader extends ImageReader implements PCXConstants {
 
     public IIOMetadata getImageMetadata(int imageIndex) throws IOException {
 	checkIndex(imageIndex);
+        readHeader();
 	return metadata;
     }
 
@@ -394,15 +395,15 @@ public class PCXImageReader extends ImageReader implements PCXConstants {
 	manufacturer = iis.readByte(); // manufacturer
 	if (manufacturer != MANUFACTURER)
 	    throw new IllegalStateException("image is not a PCX file");
-	iis.readByte(); // version
+	metadata.version = iis.readByte(); // version
 	encoding = iis.readByte(); // encoding
 	if (encoding != ENCODING)
 	    throw new IllegalStateException("image is not a PCX file, invalid encoding " + encoding);
 
 	metadata.bitsPerPixel = iis.readByte();
 
-	xmin = iis.readShort();
-	ymin = iis.readShort();
+	metadata.xmin = iis.readShort();
+	metadata.ymin = iis.readShort();
 	xmax = iis.readShort();
 	ymax = iis.readShort();
 
@@ -422,8 +423,8 @@ public class PCXImageReader extends ImageReader implements PCXConstants {
 
 	iis.skipBytes(54); // skip filler
 
-	width = xmax - xmin + 1;
-	height = ymax - ymin + 1;
+	width = xmax - metadata.xmin + 1;
+	height = ymax - metadata.ymin + 1;
 
 	if (colorPlanes == 1) {
 	    if (paletteType == PALETTE_GRAYSCALE) {

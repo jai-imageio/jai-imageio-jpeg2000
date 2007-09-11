@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2007-09-05 00:21:08 $
+ * $Revision: 1.2 $
+ * $Date: 2007-09-11 20:45:42 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.pcx;
@@ -298,6 +298,8 @@ public class PCXImageWriter extends ImageWriter implements PCXConstants {
 	    if (count >= 1) {
 		writeRLE(last, count);
 	    }
+
+            processImageProgress(100.0F * line / sourceRegion.height);
 	}
     }
     
@@ -336,6 +338,8 @@ public class PCXImageWriter extends ImageWriter implements PCXConstants {
 	    if (count >= 1) {
 		writeRLE(last, count);
 	    }
+
+            processImageProgress(100.0F * line / sourceRegion.height);
 	}
     }
     
@@ -364,6 +368,8 @@ public class PCXImageWriter extends ImageWriter implements PCXConstants {
 	    if(count>=1) {
 		writeRLE(last,count);
 	    }
+
+            processImageProgress(100.0F * line / sourceRegion.height);
 	}
     }
     

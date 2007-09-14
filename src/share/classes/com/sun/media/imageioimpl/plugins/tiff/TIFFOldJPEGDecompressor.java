@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.3 $
- * $Date: 2006-04-11 22:10:37 $
+ * $Revision: 1.4 $
+ * $Date: 2007-09-14 01:14:56 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -229,6 +229,7 @@ public class TIFFOldJPEGDecompressor extends TIFFJPEGDecompressor {
                 if(DEBUG) System.out.println("OLD JPEG CASE 1");
                 ((TIFFImageReader)reader).forwardWarningMessage("SOI marker detected at start of strip or tile.");
                 isInitialized = true;
+                stream.reset();
                 return;
             }
             stream.reset();
@@ -238,20 +239,23 @@ public class TIFFOldJPEGDecompressor extends TIFFJPEGDecompressor {
                 long jpegInterchangeOffset =
                     JPEGInterchangeFormatField.getAsLong(0);
 
+                // Check that the value of JPEGInterchangeFormat points to SOI.
+                stream.mark();
+                stream.seek(jpegInterchangeOffset);
+                if(stream.read() == 0xff && stream.read() == SOI)
+                    // JPEGInterchangeFormat offset points to SOI.
+                    JPEGStreamOffset = new Long(jpegInterchangeOffset);
+                else
+                    ((TIFFImageReader)reader).forwardWarningMessage("JPEGInterchangeFormat does not point to SOI");
+                stream.reset();
+
                 // Get the JPEGInterchangeFormatLength field.
                 TIFFField JPEGInterchangeFormatLengthField =
                     tim.getTIFFField(BaselineTIFFTagSet.TAG_JPEG_INTERCHANGE_FORMAT_LENGTH);
 
                 if(JPEGInterchangeFormatLengthField == null) {
-                    // JPEGInterchangeFormat stream is of indeterminate
-                    // length so use it as a complete JPEG stream.
-                    JPEGStreamOffset = new Long(jpegInterchangeOffset);
-                        
-                    // Set initialization flag and return.
                     if(DEBUG) System.out.println("OLD JPEG CASE 2");
                     ((TIFFImageReader)reader).forwardWarningMessage("JPEGInterchangeFormatLength field is missing");
-                    isInitialized = true;
-                    return;
                 } else {
                     // Get the JPEGInterchangeFormatLength field's value.
                     long jpegInterchangeLength =
@@ -260,16 +264,17 @@ public class TIFFOldJPEGDecompressor extends TIFFJPEGDecompressor {
                     if(jpegInterchangeOffset < segmentOffsets[0] &&
                        (jpegInterchangeOffset + jpegInterchangeLength) >
                        segmentOffsets[0]) {
-                        // JPEGInterchangeFormat points to a position
-                        // below the segment start position and ends at
-                        // a position after the segment start position.
-                        JPEGStreamOffset = new Long(jpegInterchangeOffset);
-
-                        // Set initialization flag and return.
                         if(DEBUG) System.out.println("OLD JPEG CASE 3");
-                        isInitialized = true;
-                        return;
+                    } else {
+                        if(DEBUG) System.out.println("OLD JPEG CASE 3A");
+                        ((TIFFImageReader)reader).forwardWarningMessage("JPEGInterchangeFormatLength field value is invalid");
                     }
+                }
+
+                // Return if JPEGInterchangeFormat pointed to SOI.
+                if(JPEGStreamOffset != null) {
+                    isInitialized = true;
+                    return;
                 }
             }
         }

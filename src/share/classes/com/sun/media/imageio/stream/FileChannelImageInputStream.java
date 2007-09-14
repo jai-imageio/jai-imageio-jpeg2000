@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.1 $
- * $Date: 2005-02-11 05:01:19 $
+ * $Revision: 1.2 $
+ * $Date: 2007-09-14 22:57:55 $
  * $State: Exp $
  */
 package com.sun.media.imageio.stream;
@@ -166,8 +166,11 @@ public class FileChannelImageInputStream extends ImageInputStreamImpl {
             mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY,
                                        mappedPos,
                                        mappedSize);
-        }
+            
+            mappedBuffer.order(super.getByteOrder());
 
+        }
+        
         return mappedBuffer;
     }
 

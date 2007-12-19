@@ -38,8 +38,8 @@
  * use in the design, construction, operation or maintenance of any 
  * nuclear facility. 
  *
- * $Revision: 1.12 $
- * $Date: 2007-08-31 23:16:41 $
+ * $Revision: 1.13 $
+ * $Date: 2007-12-19 20:17:02 $
  * $State: Exp $
  */
 package com.sun.media.imageioimpl.plugins.tiff;
@@ -1500,4 +1500,73 @@ public class TIFFImageReader extends ImageReader {
     void forwardWarningMessage(String warning) {
         processWarningOccurred(warning);
     }
+    
+    protected static BufferedImage getDestination(ImageReadParam param,
+                                                  Iterator imageTypes,
+                                                  int width, int height)
+            throws IIOException {
+        if (imageTypes == null || !imageTypes.hasNext()) {
+            throw new IllegalArgumentException("imageTypes null or empty!");
+        }        
+        
+        BufferedImage dest = null;
+        ImageTypeSpecifier imageType = null;
+
+        // If param is non-null, use it
+        if (param != null) {
+            // Try to get the image itself
+            dest = param.getDestination();
+            if (dest != null) {
+                return dest;
+            }
+        
+            // No image, get the image type
+            imageType = param.getDestinationType();
+        }
+
+        // No info from param, use fallback image type
+        if (imageType == null) {
+            Object o = imageTypes.next();
+            if (!(o instanceof ImageTypeSpecifier)) {
+                throw new IllegalArgumentException
+                    ("Non-ImageTypeSpecifier retrieved from imageTypes!");
+            }
+            imageType = (ImageTypeSpecifier)o;
+        } else {
+            boolean foundIt = false;
+            while (imageTypes.hasNext()) {
+                ImageTypeSpecifier type =
+                    (ImageTypeSpecifier)imageTypes.next();
+                if (type.equals(imageType)) {
+                    foundIt = true;
+                    break;
+                }
+            }
+
+            if (!foundIt) {
+                throw new IIOException
+                    ("Destination type from ImageReadParam does not match!");
+            }
+        }
+
+        Rectangle srcRegion = new Rectangle(0,0,0,0);
+        Rectangle destRegion = new Rectangle(0,0,0,0);
+        computeRegions(param,
+                       width,
+                       height,
+                       null,
+                       srcRegion,
+                       destRegion);
+        
+        int destWidth = destRegion.x + destRegion.width;
+        int destHeight = destRegion.y + destRegion.height;
+        // Create a new image based on the type specifier
+        
+        if ((long)destWidth*destHeight > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException
+                ("width*height > Integer.MAX_VALUE!");
+        }
+        
+        return imageType.createBufferedImage(destWidth, destHeight);
+    }    
 }

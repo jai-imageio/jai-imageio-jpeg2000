@@ -73,8 +73,8 @@ To download the binary JARs, browse the
 Javadoc
 -------
 
-Standalone [Javadoc for jai-imageio-core](http://stain.github.io/jai-imageio-core/javadoc/) is
-provided separately.
+* [Javadoc for jai-imageio-jpeg2000](http://stain.github.io/jai-imageio-jpeg2000/javadoc/)
+* [Javadoc for jai-imageio-core](http://stain.github.io/jai-imageio-core/javadoc/)
 
 
 

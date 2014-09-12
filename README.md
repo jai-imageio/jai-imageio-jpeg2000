@@ -42,7 +42,7 @@ To use jai-imageio-core-jpeg2000 from a Maven project, add:
     <dependency>
         <groupId>net.java.dev.jai-imageio</groupId>
         <artifactId>jai-imageio-jpeg2000</artifactId>
-        <version>1.2-pre-dr-b04-2014-09-12</version>
+        <version>1.2-pre-dr-b04-2014-09-13</version>
     </dependency>
 
 and:
@@ -106,6 +106,8 @@ Changelog
 * 2014-09-12 -  Separated out [JPEG 2000](https://github.com/stain/jai-imageio-core/issues/4)
       support from [jai-imageio-core](http://github.com/stain/jai-imageio-core)
       for [licensing reasons](https://github.com/stain/jai-imageio-core/issues/4)
+* 2014-09-13 - Include jpeg2000 plugin that was remaining in jai-imageio-core. 
+      Improved javadoc.
 
 
 More info

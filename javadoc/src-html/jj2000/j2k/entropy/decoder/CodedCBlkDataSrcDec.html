@@ -1,0 +1,196 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: CodedCBlkDataSrcDec.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:06 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Class:                   CodedCBlkDataSrcDec<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:             Interface that defines a source of entropy coded<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *                          data that is transferred in a code-block by<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *                          code-block basis (decoder side).<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *<a name="line.13"></a>
+<span class="sourceLineNo">014</span> *<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * COPYRIGHT:<a name="line.15"></a>
+<span class="sourceLineNo">016</span> *<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * software module is an implementation of a part of the JPEG 2000<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * including other intellectual property rights, for this software module<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * or modifications thereof for use in hardware or software products<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * this software module in hardware or software products are advised that<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * their use may infringe existing patents. The original developers of<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * for use of this software module or modifications thereof. No license<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * software module for his/her own purpose, assign or donate this<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * software module to any third party and to inhibit third parties from<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * products. This copyright notice must be included in all copies or<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * derivative works of this software module.<a name="line.42"></a>
+<span class="sourceLineNo">043</span> *<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.44"></a>
+<span class="sourceLineNo">045</span> *  */<a name="line.45"></a>
+<span class="sourceLineNo">046</span>package jj2000.j2k.entropy.decoder;<a name="line.46"></a>
+<span class="sourceLineNo">047</span>import java.awt.Point;<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>import jj2000.j2k.wavelet.synthesis.*;<a name="line.49"></a>
+<span class="sourceLineNo">050</span>import jj2000.j2k.image.*;<a name="line.50"></a>
+<span class="sourceLineNo">051</span><a name="line.51"></a>
+<span class="sourceLineNo">052</span>/**<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * This interface defines a source of entropy coded data and methods to<a name="line.53"></a>
+<span class="sourceLineNo">054</span> * transfer it in a code-block by code-block basis. In each call to<a name="line.54"></a>
+<span class="sourceLineNo">055</span> * 'geCodeBlock()' a specified coded code-block is returned.<a name="line.55"></a>
+<span class="sourceLineNo">056</span> *<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * &lt;P&gt;This interface is the source of data for the entropy decoder. See the<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * 'EntropyDecoder' class.<a name="line.58"></a>
+<span class="sourceLineNo">059</span> *<a name="line.59"></a>
+<span class="sourceLineNo">060</span> * &lt;P&gt;For each coded-code-block the entropy-coded data is returned along with<a name="line.60"></a>
+<span class="sourceLineNo">061</span> * its truncation point information in a 'DecLyrdCBlk' object.<a name="line.61"></a>
+<span class="sourceLineNo">062</span> *<a name="line.62"></a>
+<span class="sourceLineNo">063</span> * @see EntropyDecoder<a name="line.63"></a>
+<span class="sourceLineNo">064</span> *<a name="line.64"></a>
+<span class="sourceLineNo">065</span> * @see DecLyrdCBlk<a name="line.65"></a>
+<span class="sourceLineNo">066</span> *<a name="line.66"></a>
+<span class="sourceLineNo">067</span> * @see jj2000.j2k.codestream.reader.BitstreamReaderAgent<a name="line.67"></a>
+<span class="sourceLineNo">068</span> * */<a name="line.68"></a>
+<span class="sourceLineNo">069</span>public interface CodedCBlkDataSrcDec extends InvWTData {<a name="line.69"></a>
+<span class="sourceLineNo">070</span><a name="line.70"></a>
+<span class="sourceLineNo">071</span>    /**<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     * Returns the specified coded code-block, for the specified component, in<a name="line.72"></a>
+<span class="sourceLineNo">073</span>     * the current tile. The first layer to return is indicated by 'fl'. The<a name="line.73"></a>
+<span class="sourceLineNo">074</span>     * number of layers that is returned depends on 'nl' and the amount of<a name="line.74"></a>
+<span class="sourceLineNo">075</span>     * data available.<a name="line.75"></a>
+<span class="sourceLineNo">076</span>     *<a name="line.76"></a>
+<span class="sourceLineNo">077</span>     * &lt;P&gt;The argument 'fl' is to be used by subsequent calls to this method<a name="line.77"></a>
+<span class="sourceLineNo">078</span>     * for the same code-block. In this way supplamental data can be retrieved<a name="line.78"></a>
+<span class="sourceLineNo">079</span>     * at a later time. The fact that data from more than one layer can be<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     * returned means that several packets from the same code-block, of the<a name="line.80"></a>
+<span class="sourceLineNo">081</span>     * same component, and the same tile, have been concatenated.<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     *<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * &lt;P&gt;The returned compressed code-block can have its progressive<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     * attribute set. If this attribute is set it means that more data can be<a name="line.84"></a>
+<span class="sourceLineNo">085</span>     * obtained by subsequent calls to this method (subject to transmission<a name="line.85"></a>
+<span class="sourceLineNo">086</span>     * delays, etc). If the progressive attribute is not set it means that the<a name="line.86"></a>
+<span class="sourceLineNo">087</span>     * returned data is all the data that can be obtained for the specified<a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * subblock.<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     *<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * &lt;P&gt;The compressed code-block is uniquely specified by the current tile,<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * the component (identified by 'c'), the subband (indentified by 'sb')<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     * and the code-bock vertical and horizontal indexes 'm' and 'n'.<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     *<a name="line.93"></a>
+<span class="sourceLineNo">094</span>     * &lt;P&gt;The 'ulx' and 'uly' members of the returned 'DecLyrdCBlk' object<a name="line.94"></a>
+<span class="sourceLineNo">095</span>     * contain the coordinates of the top-left corner of the block, with<a name="line.95"></a>
+<span class="sourceLineNo">096</span>     * respect to the tile, not the subband.<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     *<a name="line.97"></a>
+<span class="sourceLineNo">098</span>     * @param c The index of the component, from 0 to N-1.<a name="line.98"></a>
+<span class="sourceLineNo">099</span>     *<a name="line.99"></a>
+<span class="sourceLineNo">100</span>     * @param m The vertical index of the code-block to return, in the<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     * specified subband.<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     *<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * @param n The horizontal index of the code-block to return, in the<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     * specified subband.<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     *<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     * @param sb The subband in whic the requested code-block is.<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     *<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     * @param fl The first layer to return.<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     *<a name="line.109"></a>
+<span class="sourceLineNo">110</span>     * @param nl The number of layers to return, if negative all available<a name="line.110"></a>
+<span class="sourceLineNo">111</span>     * layers are returned, starting at 'fl'.<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     *<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * @param ccb If not null this object is used to return the compressed<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     * code-block. If null a new object is created and returned. If the data<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     * array in ccb is not null then it can be reused to return the compressed<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     * data.<a name="line.116"></a>
+<span class="sourceLineNo">117</span>     *<a name="line.117"></a>
+<span class="sourceLineNo">118</span>     * @return The compressed code-block, with a certain number of layers<a name="line.118"></a>
+<span class="sourceLineNo">119</span>     * determined by the available data and 'nl'.<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     * */<a name="line.120"></a>
+<span class="sourceLineNo">121</span>    public DecLyrdCBlk getCodeBlock(int c, int m, int n,<a name="line.121"></a>
+<span class="sourceLineNo">122</span>                                         SubbandSyn sb, int fl, int nl,<a name="line.122"></a>
+<span class="sourceLineNo">123</span>                                         DecLyrdCBlk ccb);<a name="line.123"></a>
+<span class="sourceLineNo">124</span>}<a name="line.124"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

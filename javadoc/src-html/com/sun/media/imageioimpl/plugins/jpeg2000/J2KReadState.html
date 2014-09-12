@@ -1,0 +1,1114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: J2KReadState.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> *<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * <a name="line.4"></a>
+<span class="sourceLineNo">005</span> * Copyright (c) 2005 Sun Microsystems, Inc. All  Rights Reserved.<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * <a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Redistribution and use in source and binary forms, with or without<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * modification, are permitted provided that the following conditions<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * are met: <a name="line.9"></a>
+<span class="sourceLineNo">010</span> * <a name="line.10"></a>
+<span class="sourceLineNo">011</span> * - Redistribution of source code must retain the above copyright <a name="line.11"></a>
+<span class="sourceLineNo">012</span> *   notice, this  list of conditions and the following disclaimer.<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * <a name="line.13"></a>
+<span class="sourceLineNo">014</span> * - Redistribution in binary form must reproduce the above copyright<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *   notice, this list of conditions and the following disclaimer in <a name="line.15"></a>
+<span class="sourceLineNo">016</span> *   the documentation and/or other materials provided with the<a name="line.16"></a>
+<span class="sourceLineNo">017</span> *   distribution.<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * <a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Neither the name of Sun Microsystems, Inc. or the names of <a name="line.19"></a>
+<span class="sourceLineNo">020</span> * contributors may be used to endorse or promote products derived <a name="line.20"></a>
+<span class="sourceLineNo">021</span> * from this software without specific prior written permission.<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * <a name="line.22"></a>
+<span class="sourceLineNo">023</span> * This software is provided "AS IS," without a warranty of any <a name="line.23"></a>
+<span class="sourceLineNo">024</span> * kind. ALL EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND <a name="line.24"></a>
+<span class="sourceLineNo">025</span> * WARRANTIES, INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY, <a name="line.25"></a>
+<span class="sourceLineNo">026</span> * FITNESS FOR A PARTICULAR PURPOSE OR NON-INFRINGEMENT, ARE HEREBY<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * EXCLUDED. SUN MIDROSYSTEMS, INC. ("SUN") AND ITS LICENSORS SHALL <a name="line.27"></a>
+<span class="sourceLineNo">028</span> * NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF <a name="line.28"></a>
+<span class="sourceLineNo">029</span> * USING, MODIFYING OR DISTRIBUTING THIS SOFTWARE OR ITS<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * DERIVATIVES. IN NO EVENT WILL SUN OR ITS LICENSORS BE LIABLE FOR <a name="line.30"></a>
+<span class="sourceLineNo">031</span> * ANY LOST REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT, SPECIAL,<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF THE USE OF OR<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * INABILITY TO USE THIS SOFTWARE, EVEN IF SUN HAS BEEN ADVISED OF THE<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * POSSIBILITY OF SUCH DAMAGES. <a name="line.35"></a>
+<span class="sourceLineNo">036</span> * <a name="line.36"></a>
+<span class="sourceLineNo">037</span> * You acknowledge that this software is not designed or intended for <a name="line.37"></a>
+<span class="sourceLineNo">038</span> * use in the design, construction, operation or maintenance of any <a name="line.38"></a>
+<span class="sourceLineNo">039</span> * nuclear facility. <a name="line.39"></a>
+<span class="sourceLineNo">040</span> *<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * $Revision: 1.8 $<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * $Date: 2006/10/03 23:40:14 $<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * $State: Exp $<a name="line.43"></a>
+<span class="sourceLineNo">044</span> */<a name="line.44"></a>
+<span class="sourceLineNo">045</span>package com.sun.media.imageioimpl.plugins.jpeg2000;<a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>import javax.imageio.IIOException;<a name="line.47"></a>
+<span class="sourceLineNo">048</span>import javax.imageio.ImageReader;<a name="line.48"></a>
+<span class="sourceLineNo">049</span>import javax.imageio.ImageReadParam;<a name="line.49"></a>
+<span class="sourceLineNo">050</span>import javax.imageio.ImageTypeSpecifier;<a name="line.50"></a>
+<span class="sourceLineNo">051</span>import javax.imageio.metadata.IIOMetadata;<a name="line.51"></a>
+<span class="sourceLineNo">052</span>import javax.imageio.spi.ImageReaderSpi;<a name="line.52"></a>
+<span class="sourceLineNo">053</span>import javax.imageio.stream.ImageInputStream;<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>import java.awt.Point;<a name="line.55"></a>
+<span class="sourceLineNo">056</span>import java.awt.Rectangle;<a name="line.56"></a>
+<span class="sourceLineNo">057</span>import java.awt.Transparency;<a name="line.57"></a>
+<span class="sourceLineNo">058</span>import java.awt.color.ColorSpace;<a name="line.58"></a>
+<span class="sourceLineNo">059</span>import java.awt.image.BufferedImage;<a name="line.59"></a>
+<span class="sourceLineNo">060</span>import java.awt.image.DataBuffer;<a name="line.60"></a>
+<span class="sourceLineNo">061</span>import java.awt.image.DataBufferByte;<a name="line.61"></a>
+<span class="sourceLineNo">062</span>import java.awt.image.ColorModel;<a name="line.62"></a>
+<span class="sourceLineNo">063</span>import java.awt.image.ComponentColorModel;<a name="line.63"></a>
+<span class="sourceLineNo">064</span>import java.awt.image.ComponentSampleModel;<a name="line.64"></a>
+<span class="sourceLineNo">065</span>import java.awt.image.DirectColorModel;<a name="line.65"></a>
+<span class="sourceLineNo">066</span>import java.awt.image.IndexColorModel;<a name="line.66"></a>
+<span class="sourceLineNo">067</span>import java.awt.image.MultiPixelPackedSampleModel;<a name="line.67"></a>
+<span class="sourceLineNo">068</span>import java.awt.image.PixelInterleavedSampleModel;<a name="line.68"></a>
+<span class="sourceLineNo">069</span>import java.awt.image.Raster;<a name="line.69"></a>
+<span class="sourceLineNo">070</span>import java.awt.image.RenderedImage;<a name="line.70"></a>
+<span class="sourceLineNo">071</span>import java.awt.image.SampleModel;<a name="line.71"></a>
+<span class="sourceLineNo">072</span>import java.awt.image.SinglePixelPackedSampleModel;<a name="line.72"></a>
+<span class="sourceLineNo">073</span>import java.awt.image.WritableRaster;<a name="line.73"></a>
+<span class="sourceLineNo">074</span><a name="line.74"></a>
+<span class="sourceLineNo">075</span>import java.io.*;<a name="line.75"></a>
+<span class="sourceLineNo">076</span>import java.util.ArrayList;<a name="line.76"></a>
+<span class="sourceLineNo">077</span>import java.util.List;<a name="line.77"></a>
+<span class="sourceLineNo">078</span>import java.util.Hashtable;<a name="line.78"></a>
+<span class="sourceLineNo">079</span>import java.util.Iterator;<a name="line.79"></a>
+<span class="sourceLineNo">080</span><a name="line.80"></a>
+<span class="sourceLineNo">081</span>import jj2000.j2k.quantization.dequantizer.*;<a name="line.81"></a>
+<span class="sourceLineNo">082</span>import jj2000.j2k.wavelet.synthesis.*;<a name="line.82"></a>
+<span class="sourceLineNo">083</span>import jj2000.j2k.image.invcomptransf.*;<a name="line.83"></a>
+<span class="sourceLineNo">084</span>import jj2000.j2k.fileformat.reader.*;<a name="line.84"></a>
+<span class="sourceLineNo">085</span>import jj2000.j2k.codestream.reader.*;<a name="line.85"></a>
+<span class="sourceLineNo">086</span>import jj2000.j2k.entropy.decoder.*;<a name="line.86"></a>
+<span class="sourceLineNo">087</span>import jj2000.j2k.codestream.*;<a name="line.87"></a>
+<span class="sourceLineNo">088</span>import jj2000.j2k.decoder.*;<a name="line.88"></a>
+<span class="sourceLineNo">089</span>import jj2000.j2k.image.*;<a name="line.89"></a>
+<span class="sourceLineNo">090</span>import jj2000.j2k.util.*;<a name="line.90"></a>
+<span class="sourceLineNo">091</span>import jj2000.j2k.roi.*;<a name="line.91"></a>
+<span class="sourceLineNo">092</span>import jj2000.j2k.io.*;<a name="line.92"></a>
+<span class="sourceLineNo">093</span>import jj2000.j2k.*;<a name="line.93"></a>
+<span class="sourceLineNo">094</span><a name="line.94"></a>
+<span class="sourceLineNo">095</span>import com.sun.media.imageioimpl.common.ImageUtil;<a name="line.95"></a>
+<span class="sourceLineNo">096</span><a name="line.96"></a>
+<span class="sourceLineNo">097</span>public class J2KReadState {<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    /** The input stream we read from */<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    private ImageInputStream iis = null;<a name="line.99"></a>
+<span class="sourceLineNo">100</span><a name="line.100"></a>
+<span class="sourceLineNo">101</span>    private FileFormatReader ff;<a name="line.101"></a>
+<span class="sourceLineNo">102</span>    private HeaderInfo hi;<a name="line.102"></a>
+<span class="sourceLineNo">103</span>    private HeaderDecoder hd;<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    private RandomAccessIO in;<a name="line.104"></a>
+<span class="sourceLineNo">105</span>    private BitstreamReaderAgent breader;<a name="line.105"></a>
+<span class="sourceLineNo">106</span>    private EntropyDecoder entdec;<a name="line.106"></a>
+<span class="sourceLineNo">107</span>    private ROIDeScaler roids;<a name="line.107"></a>
+<span class="sourceLineNo">108</span>    private Dequantizer deq;<a name="line.108"></a>
+<span class="sourceLineNo">109</span>    private InverseWT invWT;<a name="line.109"></a>
+<span class="sourceLineNo">110</span>    private InvCompTransf ictransf;<a name="line.110"></a>
+<span class="sourceLineNo">111</span>    private ImgDataConverter converter,converter2;<a name="line.111"></a>
+<span class="sourceLineNo">112</span>    private DecoderSpecs decSpec = null;<a name="line.112"></a>
+<span class="sourceLineNo">113</span>    private J2KImageReadParamJava j2krparam = null;<a name="line.113"></a>
+<span class="sourceLineNo">114</span>    private int[] destinationBands = null;<a name="line.114"></a>
+<span class="sourceLineNo">115</span>    private int[] sourceBands = null;<a name="line.115"></a>
+<span class="sourceLineNo">116</span><a name="line.116"></a>
+<span class="sourceLineNo">117</span>    private int[] levelShift = null;        // level shift for each component<a name="line.117"></a>
+<span class="sourceLineNo">118</span>    private int[] minValues = null;         // The min values<a name="line.118"></a>
+<span class="sourceLineNo">119</span>    private int[] maxValues = null;         // The max values<a name="line.119"></a>
+<span class="sourceLineNo">120</span>    private int[] fracBits = null;          // fractional bits for each component<a name="line.120"></a>
+<span class="sourceLineNo">121</span>    private DataBlkInt[] dataBlocks = null; // data-blocks to request data from src<a name="line.121"></a>
+<span class="sourceLineNo">122</span><a name="line.122"></a>
+<span class="sourceLineNo">123</span>    private int[] bandOffsets = null;<a name="line.123"></a>
+<span class="sourceLineNo">124</span>    private int maxDepth = 0;<a name="line.124"></a>
+<span class="sourceLineNo">125</span>    private boolean isSigned = false;<a name="line.125"></a>
+<span class="sourceLineNo">126</span><a name="line.126"></a>
+<span class="sourceLineNo">127</span>    private ColorModel colorModel = null;<a name="line.127"></a>
+<span class="sourceLineNo">128</span>    private SampleModel sampleModel = null;<a name="line.128"></a>
+<span class="sourceLineNo">129</span>    private int nComp = 0;<a name="line.129"></a>
+<span class="sourceLineNo">130</span>    private int tileWidth = 0;<a name="line.130"></a>
+<span class="sourceLineNo">131</span>    private int tileHeight = 0;<a name="line.131"></a>
+<span class="sourceLineNo">132</span><a name="line.132"></a>
+<span class="sourceLineNo">133</span>    /** Source to destination transform */<a name="line.133"></a>
+<span class="sourceLineNo">134</span>    private int scaleX, scaleY, xOffset, yOffset;<a name="line.134"></a>
+<span class="sourceLineNo">135</span>    private Rectangle destinationRegion = null;<a name="line.135"></a>
+<span class="sourceLineNo">136</span>    private Point sourceOrigin;<a name="line.136"></a>
+<span class="sourceLineNo">137</span><a name="line.137"></a>
+<span class="sourceLineNo">138</span>    /** Tile grid offsets of the source, also used for destination. */<a name="line.138"></a>
+<span class="sourceLineNo">139</span>    private int tileXOffset, tileYOffset;<a name="line.139"></a>
+<span class="sourceLineNo">140</span><a name="line.140"></a>
+<span class="sourceLineNo">141</span>    private int width;<a name="line.141"></a>
+<span class="sourceLineNo">142</span>    private int height;<a name="line.142"></a>
+<span class="sourceLineNo">143</span>    private int[] pixbuf = null;<a name="line.143"></a>
+<span class="sourceLineNo">144</span>    private byte[] bytebuf = null;<a name="line.144"></a>
+<span class="sourceLineNo">145</span>    private int[] channelMap = null;<a name="line.145"></a>
+<span class="sourceLineNo">146</span><a name="line.146"></a>
+<span class="sourceLineNo">147</span>    private boolean noTransform = true;<a name="line.147"></a>
+<span class="sourceLineNo">148</span><a name="line.148"></a>
+<span class="sourceLineNo">149</span>    /** The resolution level requested. */<a name="line.149"></a>
+<span class="sourceLineNo">150</span>    private int resolution;<a name="line.150"></a>
+<span class="sourceLineNo">151</span><a name="line.151"></a>
+<span class="sourceLineNo">152</span>    /** The subsampling step sizes. */<a name="line.152"></a>
+<span class="sourceLineNo">153</span>    private int stepX, stepY;<a name="line.153"></a>
+<span class="sourceLineNo">154</span><a name="line.154"></a>
+<span class="sourceLineNo">155</span>    /** Tile step sizes. */<a name="line.155"></a>
+<span class="sourceLineNo">156</span>    private int tileStepX, tileStepY;<a name="line.156"></a>
+<span class="sourceLineNo">157</span><a name="line.157"></a>
+<span class="sourceLineNo">158</span>    private J2KMetadata metadata;<a name="line.158"></a>
+<span class="sourceLineNo">159</span><a name="line.159"></a>
+<span class="sourceLineNo">160</span>    private BufferedImage destImage;<a name="line.160"></a>
+<span class="sourceLineNo">161</span><a name="line.161"></a>
+<span class="sourceLineNo">162</span>    /** Cache the &lt;code&gt;J2KImageReader&lt;/code&gt; which creates this object.  This<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     *  variable is used to monitor the abortion.<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     */<a name="line.164"></a>
+<span class="sourceLineNo">165</span>    private J2KImageReader reader;<a name="line.165"></a>
+<span class="sourceLineNo">166</span><a name="line.166"></a>
+<span class="sourceLineNo">167</span>    /** Constructs &lt;code&gt;J2KReadState&lt;/code&gt;.<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     *  @param iis The input stream.<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     *  @param param The reading parameters.<a name="line.169"></a>
+<span class="sourceLineNo">170</span>     *  @param metadata The &lt;code&gt;J2KMetadata&lt;/code&gt; to cache the metadata read<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     *                  from the input stream.<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     *  @param reader The &lt;code&gt;J2KImageReader&lt;/code&gt; which holds this state.<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     *                It is necessary for processing abortion.<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     *  @throw IllegalArgumentException If the provided &lt;code&gt;iis&lt;/code&gt;,<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     *          &lt;code&gt;param&lt;/code&gt; or &lt;code&gt;metadata&lt;/code&gt; is &lt;code&gt;null&lt;/code&gt;.<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     */<a name="line.176"></a>
+<span class="sourceLineNo">177</span>    public J2KReadState(ImageInputStream iis,<a name="line.177"></a>
+<span class="sourceLineNo">178</span>                        J2KImageReadParamJava param,<a name="line.178"></a>
+<span class="sourceLineNo">179</span>                        J2KMetadata metadata,<a name="line.179"></a>
+<span class="sourceLineNo">180</span>                        J2KImageReader reader) {<a name="line.180"></a>
+<span class="sourceLineNo">181</span>        if (iis == null || param == null || metadata == null)<a name="line.181"></a>
+<span class="sourceLineNo">182</span>            throw new IllegalArgumentException(I18N.getString("J2KReadState0"));<a name="line.182"></a>
+<span class="sourceLineNo">183</span><a name="line.183"></a>
+<span class="sourceLineNo">184</span>        this.iis = iis;<a name="line.184"></a>
+<span class="sourceLineNo">185</span>        this.j2krparam = param;<a name="line.185"></a>
+<span class="sourceLineNo">186</span>        this.metadata = metadata;<a name="line.186"></a>
+<span class="sourceLineNo">187</span>        this.reader = reader;<a name="line.187"></a>
+<span class="sourceLineNo">188</span><a name="line.188"></a>
+<span class="sourceLineNo">189</span>        initializeRead(0, param, metadata);<a name="line.189"></a>
+<span class="sourceLineNo">190</span>    }<a name="line.190"></a>
+<span class="sourceLineNo">191</span><a name="line.191"></a>
+<span class="sourceLineNo">192</span>    /** Constructs &lt;code&gt;J2KReadState&lt;/code&gt;.<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     *  @param iis The input stream.<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     *  @param param The reading parameters.<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     *  @param reader The &lt;code&gt;J2KImageReader&lt;/code&gt; which holds this state.<a name="line.195"></a>
+<span class="sourceLineNo">196</span>     *                It is necessary for processing abortion.<a name="line.196"></a>
+<span class="sourceLineNo">197</span>     *  @throw IllegalArgumentException If the provided &lt;code&gt;iis&lt;/code&gt;,<a name="line.197"></a>
+<span class="sourceLineNo">198</span>     *          or &lt;code&gt;param&lt;/code&gt; is &lt;code&gt;null&lt;/code&gt;.<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     */<a name="line.199"></a>
+<span class="sourceLineNo">200</span>    public J2KReadState(ImageInputStream iis,<a name="line.200"></a>
+<span class="sourceLineNo">201</span>                        J2KImageReadParamJava param,<a name="line.201"></a>
+<span class="sourceLineNo">202</span>                        J2KImageReader reader) {<a name="line.202"></a>
+<span class="sourceLineNo">203</span>        if (iis == null || param == null)<a name="line.203"></a>
+<span class="sourceLineNo">204</span>            throw new IllegalArgumentException(I18N.getString("J2KReadState0"));<a name="line.204"></a>
+<span class="sourceLineNo">205</span><a name="line.205"></a>
+<span class="sourceLineNo">206</span>        this.iis = iis;<a name="line.206"></a>
+<span class="sourceLineNo">207</span>        this.j2krparam = param;<a name="line.207"></a>
+<span class="sourceLineNo">208</span>        this.reader = reader;<a name="line.208"></a>
+<span class="sourceLineNo">209</span>        initializeRead(0, param, null);<a name="line.209"></a>
+<span class="sourceLineNo">210</span>    }<a name="line.210"></a>
+<span class="sourceLineNo">211</span><a name="line.211"></a>
+<span class="sourceLineNo">212</span>    public int getWidth() throws IOException {<a name="line.212"></a>
+<span class="sourceLineNo">213</span>        return width;<a name="line.213"></a>
+<span class="sourceLineNo">214</span>    }<a name="line.214"></a>
+<span class="sourceLineNo">215</span><a name="line.215"></a>
+<span class="sourceLineNo">216</span>    public int getHeight() throws IOException {<a name="line.216"></a>
+<span class="sourceLineNo">217</span>        return height;<a name="line.217"></a>
+<span class="sourceLineNo">218</span>    }<a name="line.218"></a>
+<span class="sourceLineNo">219</span><a name="line.219"></a>
+<span class="sourceLineNo">220</span>    public HeaderDecoder getHeader() {<a name="line.220"></a>
+<span class="sourceLineNo">221</span>        return hd;<a name="line.221"></a>
+<span class="sourceLineNo">222</span>    }<a name="line.222"></a>
+<span class="sourceLineNo">223</span><a name="line.223"></a>
+<span class="sourceLineNo">224</span>    public Raster getTile(int tileX, int tileY,<a name="line.224"></a>
+<span class="sourceLineNo">225</span>                          WritableRaster raster) throws IOException {<a name="line.225"></a>
+<span class="sourceLineNo">226</span>        Point nT = ictransf.getNumTiles(null);<a name="line.226"></a>
+<span class="sourceLineNo">227</span><a name="line.227"></a>
+<span class="sourceLineNo">228</span>        if (noTransform) {<a name="line.228"></a>
+<span class="sourceLineNo">229</span>            if (tileX &gt;= nT.x || tileY &gt;= nT.y)<a name="line.229"></a>
+<span class="sourceLineNo">230</span>                throw new IllegalArgumentException(I18N.getString("J2KImageReader0"));<a name="line.230"></a>
+<span class="sourceLineNo">231</span><a name="line.231"></a>
+<span class="sourceLineNo">232</span>            ictransf.setTile(tileX*tileStepX, tileY*tileStepY);<a name="line.232"></a>
+<span class="sourceLineNo">233</span><a name="line.233"></a>
+<span class="sourceLineNo">234</span>            // The offset of the active tiles is the same for all components,<a name="line.234"></a>
+<span class="sourceLineNo">235</span>            // since we don't support different component dimensions.<a name="line.235"></a>
+<span class="sourceLineNo">236</span>            int tOffx;<a name="line.236"></a>
+<span class="sourceLineNo">237</span>            int tOffy;<a name="line.237"></a>
+<span class="sourceLineNo">238</span>            int cTileWidth;<a name="line.238"></a>
+<span class="sourceLineNo">239</span>            int cTileHeight;<a name="line.239"></a>
+<span class="sourceLineNo">240</span>            if(raster != null &amp;&amp;<a name="line.240"></a>
+<span class="sourceLineNo">241</span>               (this.resolution &lt; hd.getDecoderSpecs().dls.getMin()) ||<a name="line.241"></a>
+<span class="sourceLineNo">242</span>               stepX != 1 || stepY != 1) {<a name="line.242"></a>
+<span class="sourceLineNo">243</span>                tOffx = raster.getMinX();<a name="line.243"></a>
+<span class="sourceLineNo">244</span>                tOffy = raster.getMinY();<a name="line.244"></a>
+<span class="sourceLineNo">245</span>                cTileWidth = Math.min(raster.getWidth(),<a name="line.245"></a>
+<span class="sourceLineNo">246</span>                                      ictransf.getTileWidth());<a name="line.246"></a>
+<span class="sourceLineNo">247</span>                cTileHeight = Math.min(raster.getHeight(),<a name="line.247"></a>
+<span class="sourceLineNo">248</span>                                       ictransf.getTileHeight());<a name="line.248"></a>
+<span class="sourceLineNo">249</span>            } else {<a name="line.249"></a>
+<span class="sourceLineNo">250</span>                tOffx = ictransf.getCompULX(0) -<a name="line.250"></a>
+<span class="sourceLineNo">251</span>                    (ictransf.getImgULX() + ictransf.getCompSubsX(0) - 1) /<a name="line.251"></a>
+<span class="sourceLineNo">252</span>                    ictransf.getCompSubsX(0) + destinationRegion.x;<a name="line.252"></a>
+<span class="sourceLineNo">253</span>                tOffy = ictransf.getCompULY(0)-<a name="line.253"></a>
+<span class="sourceLineNo">254</span>                    (ictransf.getImgULY() + ictransf.getCompSubsY(0) - 1) /<a name="line.254"></a>
+<span class="sourceLineNo">255</span>                    ictransf.getCompSubsY(0) + destinationRegion.y;<a name="line.255"></a>
+<span class="sourceLineNo">256</span>                cTileWidth = ictransf.getTileWidth();<a name="line.256"></a>
+<span class="sourceLineNo">257</span>                cTileHeight = ictransf.getTileHeight();<a name="line.257"></a>
+<span class="sourceLineNo">258</span>            }<a name="line.258"></a>
+<span class="sourceLineNo">259</span><a name="line.259"></a>
+<span class="sourceLineNo">260</span>            if (raster == null)<a name="line.260"></a>
+<span class="sourceLineNo">261</span>                raster = Raster.createWritableRaster(sampleModel,<a name="line.261"></a>
+<span class="sourceLineNo">262</span>                                                     new Point(tOffx, tOffy));<a name="line.262"></a>
+<span class="sourceLineNo">263</span><a name="line.263"></a>
+<span class="sourceLineNo">264</span>            int numBands = sampleModel.getNumBands();<a name="line.264"></a>
+<span class="sourceLineNo">265</span><a name="line.265"></a>
+<span class="sourceLineNo">266</span>            if (tOffx + cTileWidth &gt;=<a name="line.266"></a>
+<span class="sourceLineNo">267</span>                destinationRegion.width + destinationRegion.x)<a name="line.267"></a>
+<span class="sourceLineNo">268</span>                cTileWidth =<a name="line.268"></a>
+<span class="sourceLineNo">269</span>                    destinationRegion.width + destinationRegion.x - tOffx;<a name="line.269"></a>
+<span class="sourceLineNo">270</span><a name="line.270"></a>
+<span class="sourceLineNo">271</span>            if (tOffy + cTileHeight &gt;=<a name="line.271"></a>
+<span class="sourceLineNo">272</span>                destinationRegion.height + destinationRegion.y)<a name="line.272"></a>
+<span class="sourceLineNo">273</span>                cTileHeight =<a name="line.273"></a>
+<span class="sourceLineNo">274</span>                    destinationRegion.height + destinationRegion.y - tOffy;<a name="line.274"></a>
+<span class="sourceLineNo">275</span><a name="line.275"></a>
+<span class="sourceLineNo">276</span>            //create the line buffer for pixel data if it is not large enough<a name="line.276"></a>
+<span class="sourceLineNo">277</span>            // or null<a name="line.277"></a>
+<span class="sourceLineNo">278</span>            if (pixbuf == null || pixbuf.length &lt; cTileWidth * numBands)<a name="line.278"></a>
+<span class="sourceLineNo">279</span>                pixbuf = new int[cTileWidth * numBands];<a name="line.279"></a>
+<span class="sourceLineNo">280</span>            boolean prog = false;<a name="line.280"></a>
+<span class="sourceLineNo">281</span><a name="line.281"></a>
+<span class="sourceLineNo">282</span>            // Deliver in lines to reduce memory usage<a name="line.282"></a>
+<span class="sourceLineNo">283</span>            for (int l=0; l &lt; cTileHeight;l++) {<a name="line.283"></a>
+<span class="sourceLineNo">284</span>                if (reader.getAbortRequest())<a name="line.284"></a>
+<span class="sourceLineNo">285</span>                    break;<a name="line.285"></a>
+<span class="sourceLineNo">286</span><a name="line.286"></a>
+<span class="sourceLineNo">287</span>                // Request line data<a name="line.287"></a>
+<span class="sourceLineNo">288</span>                for (int i = 0; i &lt; numBands; i++) {<a name="line.288"></a>
+<span class="sourceLineNo">289</span>                    if (reader.getAbortRequest())<a name="line.289"></a>
+<span class="sourceLineNo">290</span>                        break;<a name="line.290"></a>
+<span class="sourceLineNo">291</span>                    DataBlkInt db = dataBlocks[i];<a name="line.291"></a>
+<span class="sourceLineNo">292</span>                    db.ulx = 0;<a name="line.292"></a>
+<span class="sourceLineNo">293</span>                    db.uly = l;<a name="line.293"></a>
+<span class="sourceLineNo">294</span>                    db.w = cTileWidth;<a name="line.294"></a>
+<span class="sourceLineNo">295</span>                    db.h = 1;<a name="line.295"></a>
+<span class="sourceLineNo">296</span>                    ictransf.getInternCompData(db, channelMap[sourceBands[i]]);<a name="line.296"></a>
+<span class="sourceLineNo">297</span>                    prog = prog || db.progressive;<a name="line.297"></a>
+<span class="sourceLineNo">298</span><a name="line.298"></a>
+<span class="sourceLineNo">299</span>                    int[] data = db.data;<a name="line.299"></a>
+<span class="sourceLineNo">300</span>                    int k1 = db.offset + cTileWidth - 1;<a name="line.300"></a>
+<span class="sourceLineNo">301</span><a name="line.301"></a>
+<span class="sourceLineNo">302</span>                    int fracBit = fracBits[i];<a name="line.302"></a>
+<span class="sourceLineNo">303</span>                    int lS = levelShift[i];<a name="line.303"></a>
+<span class="sourceLineNo">304</span>                    int min = minValues[i];<a name="line.304"></a>
+<span class="sourceLineNo">305</span>                    int max = maxValues[i];<a name="line.305"></a>
+<span class="sourceLineNo">306</span><a name="line.306"></a>
+<span class="sourceLineNo">307</span>                    if (ImageUtil.isBinary(sampleModel)) {<a name="line.307"></a>
+<span class="sourceLineNo">308</span>                        // Force min max to 0 and 1.<a name="line.308"></a>
+<span class="sourceLineNo">309</span>                        min = 0;<a name="line.309"></a>
+<span class="sourceLineNo">310</span>                        max = 1;<a name="line.310"></a>
+<span class="sourceLineNo">311</span>                        if (bytebuf == null || bytebuf.length &lt; cTileWidth * numBands)<a name="line.311"></a>
+<span class="sourceLineNo">312</span>                            bytebuf = new byte[cTileWidth * numBands];<a name="line.312"></a>
+<span class="sourceLineNo">313</span>                        for (int j = cTileWidth - 1;<a name="line.313"></a>
+<span class="sourceLineNo">314</span>                             j &gt;= 0; j--) {<a name="line.314"></a>
+<span class="sourceLineNo">315</span>                            int tmp = (data[k1--] &gt;&gt; fracBit) + lS;<a name="line.315"></a>
+<span class="sourceLineNo">316</span>                            bytebuf[j] =<a name="line.316"></a>
+<span class="sourceLineNo">317</span>                                (byte)((tmp &lt; min) ? min : <a name="line.317"></a>
+<span class="sourceLineNo">318</span>                                       ((tmp &gt; max) ? max : tmp));<a name="line.318"></a>
+<span class="sourceLineNo">319</span>                        }<a name="line.319"></a>
+<span class="sourceLineNo">320</span><a name="line.320"></a>
+<span class="sourceLineNo">321</span>                        ImageUtil.setUnpackedBinaryData(bytebuf,<a name="line.321"></a>
+<span class="sourceLineNo">322</span>                                                        raster,<a name="line.322"></a>
+<span class="sourceLineNo">323</span>                                                        new Rectangle(tOffx,<a name="line.323"></a>
+<span class="sourceLineNo">324</span>                                                                      tOffy + l,<a name="line.324"></a>
+<span class="sourceLineNo">325</span>                                                                      cTileWidth,<a name="line.325"></a>
+<span class="sourceLineNo">326</span>                                                                      1));<a name="line.326"></a>
+<span class="sourceLineNo">327</span>                    } else {<a name="line.327"></a>
+<span class="sourceLineNo">328</span><a name="line.328"></a>
+<span class="sourceLineNo">329</span>                        for (int j = cTileWidth - 1;<a name="line.329"></a>
+<span class="sourceLineNo">330</span>                             j &gt;= 0; j--) {<a name="line.330"></a>
+<span class="sourceLineNo">331</span>                            int tmp = (data[k1--] &gt;&gt; fracBit) + lS;<a name="line.331"></a>
+<span class="sourceLineNo">332</span>                            pixbuf[j] = (tmp &lt; min) ? min : <a name="line.332"></a>
+<span class="sourceLineNo">333</span>                                ((tmp &gt; max) ? max : tmp);<a name="line.333"></a>
+<span class="sourceLineNo">334</span>                        }<a name="line.334"></a>
+<span class="sourceLineNo">335</span><a name="line.335"></a>
+<span class="sourceLineNo">336</span>                        raster.setSamples(tOffx,<a name="line.336"></a>
+<span class="sourceLineNo">337</span>                                          tOffy + l,<a name="line.337"></a>
+<span class="sourceLineNo">338</span>                                          cTileWidth,<a name="line.338"></a>
+<span class="sourceLineNo">339</span>                                          1,<a name="line.339"></a>
+<span class="sourceLineNo">340</span>                                          destinationBands[i],<a name="line.340"></a>
+<span class="sourceLineNo">341</span>                                          pixbuf);<a name="line.341"></a>
+<span class="sourceLineNo">342</span>                    }<a name="line.342"></a>
+<span class="sourceLineNo">343</span>                }<a name="line.343"></a>
+<span class="sourceLineNo">344</span>            }<a name="line.344"></a>
+<span class="sourceLineNo">345</span>        } else {<a name="line.345"></a>
+<span class="sourceLineNo">346</span>            readSubsampledRaster(raster);<a name="line.346"></a>
+<span class="sourceLineNo">347</span>        }<a name="line.347"></a>
+<span class="sourceLineNo">348</span><a name="line.348"></a>
+<span class="sourceLineNo">349</span>        return raster;<a name="line.349"></a>
+<span class="sourceLineNo">350</span>    }<a name="line.350"></a>
+<span class="sourceLineNo">351</span><a name="line.351"></a>
+<span class="sourceLineNo">352</span>    public Rectangle getDestinationRegion() {<a name="line.352"></a>
+<span class="sourceLineNo">353</span>        return destinationRegion;<a name="line.353"></a>
+<span class="sourceLineNo">354</span>    }<a name="line.354"></a>
+<span class="sourceLineNo">355</span><a name="line.355"></a>
+<span class="sourceLineNo">356</span>    public BufferedImage readBufferedImage() throws IOException {<a name="line.356"></a>
+<span class="sourceLineNo">357</span>        colorModel = getColorModel();<a name="line.357"></a>
+<span class="sourceLineNo">358</span>        sampleModel = getSampleModel();<a name="line.358"></a>
+<span class="sourceLineNo">359</span>        WritableRaster raster = null;<a name="line.359"></a>
+<span class="sourceLineNo">360</span>        BufferedImage image = j2krparam.getDestination();<a name="line.360"></a>
+<span class="sourceLineNo">361</span><a name="line.361"></a>
+<span class="sourceLineNo">362</span>        int x = destinationRegion.x;<a name="line.362"></a>
+<span class="sourceLineNo">363</span>        int y = destinationRegion.y;<a name="line.363"></a>
+<span class="sourceLineNo">364</span>        destinationRegion.setLocation(j2krparam.getDestinationOffset());<a name="line.364"></a>
+<span class="sourceLineNo">365</span>        if (image == null) {<a name="line.365"></a>
+<span class="sourceLineNo">366</span>            // If the destination type is specified, use the color model of it.<a name="line.366"></a>
+<span class="sourceLineNo">367</span>            ImageTypeSpecifier type = j2krparam.getDestinationType();<a name="line.367"></a>
+<span class="sourceLineNo">368</span>            if (type != null)<a name="line.368"></a>
+<span class="sourceLineNo">369</span>                colorModel = type.getColorModel();<a name="line.369"></a>
+<span class="sourceLineNo">370</span><a name="line.370"></a>
+<span class="sourceLineNo">371</span>            raster = Raster.createWritableRaster(<a name="line.371"></a>
+<span class="sourceLineNo">372</span>                sampleModel.createCompatibleSampleModel(destinationRegion.x +<a name="line.372"></a>
+<span class="sourceLineNo">373</span>                                                        destinationRegion.width,<a name="line.373"></a>
+<span class="sourceLineNo">374</span>                                                        destinationRegion.y +<a name="line.374"></a>
+<span class="sourceLineNo">375</span>                                                        destinationRegion.height),<a name="line.375"></a>
+<span class="sourceLineNo">376</span>                new Point(0, 0));<a name="line.376"></a>
+<span class="sourceLineNo">377</span>            image = new BufferedImage(colorModel, raster,<a name="line.377"></a>
+<span class="sourceLineNo">378</span>                                      colorModel.isAlphaPremultiplied(),<a name="line.378"></a>
+<span class="sourceLineNo">379</span>                                      new Hashtable());<a name="line.379"></a>
+<span class="sourceLineNo">380</span>        } else<a name="line.380"></a>
+<span class="sourceLineNo">381</span>            raster = image.getWritableTile(0, 0);<a name="line.381"></a>
+<span class="sourceLineNo">382</span><a name="line.382"></a>
+<span class="sourceLineNo">383</span>        destImage = image;<a name="line.383"></a>
+<span class="sourceLineNo">384</span>        readSubsampledRaster(raster);<a name="line.384"></a>
+<span class="sourceLineNo">385</span>        destinationRegion.setLocation(x, y);<a name="line.385"></a>
+<span class="sourceLineNo">386</span>        destImage = null;<a name="line.386"></a>
+<span class="sourceLineNo">387</span>        return image;<a name="line.387"></a>
+<span class="sourceLineNo">388</span>    }<a name="line.388"></a>
+<span class="sourceLineNo">389</span><a name="line.389"></a>
+<span class="sourceLineNo">390</span>    public Raster readAsRaster() throws IOException {<a name="line.390"></a>
+<span class="sourceLineNo">391</span>        BufferedImage image = j2krparam.getDestination();<a name="line.391"></a>
+<span class="sourceLineNo">392</span>        WritableRaster raster = null;<a name="line.392"></a>
+<span class="sourceLineNo">393</span><a name="line.393"></a>
+<span class="sourceLineNo">394</span>        if (image == null) {<a name="line.394"></a>
+<span class="sourceLineNo">395</span>            raster = Raster.createWritableRaster(<a name="line.395"></a>
+<span class="sourceLineNo">396</span>                sampleModel.createCompatibleSampleModel(destinationRegion.x +<a name="line.396"></a>
+<span class="sourceLineNo">397</span>                                                        destinationRegion.width,<a name="line.397"></a>
+<span class="sourceLineNo">398</span>                                                        destinationRegion.y +<a name="line.398"></a>
+<span class="sourceLineNo">399</span>                                                        destinationRegion.height),<a name="line.399"></a>
+<span class="sourceLineNo">400</span>                new Point(0, 0));<a name="line.400"></a>
+<span class="sourceLineNo">401</span>        } else<a name="line.401"></a>
+<span class="sourceLineNo">402</span>            raster = image.getWritableTile(0, 0);<a name="line.402"></a>
+<span class="sourceLineNo">403</span><a name="line.403"></a>
+<span class="sourceLineNo">404</span>        readSubsampledRaster(raster);<a name="line.404"></a>
+<span class="sourceLineNo">405</span>        return raster;<a name="line.405"></a>
+<span class="sourceLineNo">406</span>    }<a name="line.406"></a>
+<span class="sourceLineNo">407</span><a name="line.407"></a>
+<span class="sourceLineNo">408</span>    private void initializeRead(int imageIndex, J2KImageReadParamJava param,<a name="line.408"></a>
+<span class="sourceLineNo">409</span>                                J2KMetadata metadata) {<a name="line.409"></a>
+<span class="sourceLineNo">410</span>        try {<a name="line.410"></a>
+<span class="sourceLineNo">411</span>            iis.mark();<a name="line.411"></a>
+<span class="sourceLineNo">412</span>            in = new IISRandomAccessIO(iis);<a name="line.412"></a>
+<span class="sourceLineNo">413</span><a name="line.413"></a>
+<span class="sourceLineNo">414</span>            // **** File Format ****<a name="line.414"></a>
+<span class="sourceLineNo">415</span>            // If the codestream is wrapped in the jp2 fileformat, Read the<a name="line.415"></a>
+<span class="sourceLineNo">416</span>            // file format wrapper<a name="line.416"></a>
+<span class="sourceLineNo">417</span>            ff = new FileFormatReader(in, metadata);<a name="line.417"></a>
+<span class="sourceLineNo">418</span>            ff.readFileFormat();<a name="line.418"></a>
+<span class="sourceLineNo">419</span>            in.seek(ff.getFirstCodeStreamPos());<a name="line.419"></a>
+<span class="sourceLineNo">420</span><a name="line.420"></a>
+<span class="sourceLineNo">421</span>            hi = new HeaderInfo();<a name="line.421"></a>
+<span class="sourceLineNo">422</span>            try{<a name="line.422"></a>
+<span class="sourceLineNo">423</span>                hd = new HeaderDecoder(in, j2krparam, hi);<a name="line.423"></a>
+<span class="sourceLineNo">424</span>            } catch(EOFException e){<a name="line.424"></a>
+<span class="sourceLineNo">425</span>                throw new RuntimeException(I18N.getString("J2KReadState2"));<a name="line.425"></a>
+<span class="sourceLineNo">426</span>            } catch (IOException ioe) {<a name="line.426"></a>
+<span class="sourceLineNo">427</span>                throw new RuntimeException(ioe);<a name="line.427"></a>
+<span class="sourceLineNo">428</span>            }<a name="line.428"></a>
+<span class="sourceLineNo">429</span><a name="line.429"></a>
+<span class="sourceLineNo">430</span>            this.width = hd.getImgWidth();<a name="line.430"></a>
+<span class="sourceLineNo">431</span>            this.height = hd.getImgHeight();<a name="line.431"></a>
+<span class="sourceLineNo">432</span><a name="line.432"></a>
+<span class="sourceLineNo">433</span>            Rectangle sourceRegion = param.getSourceRegion();<a name="line.433"></a>
+<span class="sourceLineNo">434</span>            sourceOrigin = new Point();<a name="line.434"></a>
+<span class="sourceLineNo">435</span>            sourceRegion =<a name="line.435"></a>
+<span class="sourceLineNo">436</span>                new Rectangle(hd.getImgULX(), hd.getImgULY(),<a name="line.436"></a>
+<span class="sourceLineNo">437</span>                              this.width, this.height);<a name="line.437"></a>
+<span class="sourceLineNo">438</span><a name="line.438"></a>
+<span class="sourceLineNo">439</span>            // if the subsample rate for components are not consistent<a name="line.439"></a>
+<span class="sourceLineNo">440</span>            boolean compConsistent = true;<a name="line.440"></a>
+<span class="sourceLineNo">441</span>            stepX = hd.getCompSubsX(0);<a name="line.441"></a>
+<span class="sourceLineNo">442</span>            stepY = hd.getCompSubsY(0);<a name="line.442"></a>
+<span class="sourceLineNo">443</span>            for (int i = 1; i &lt; nComp; i++) {<a name="line.443"></a>
+<span class="sourceLineNo">444</span>                if (stepX != hd.getCompSubsX(i) || stepY != hd.getCompSubsY(i))<a name="line.444"></a>
+<span class="sourceLineNo">445</span>                    throw new RuntimeException(I18N.getString("J2KReadState12"));<a name="line.445"></a>
+<span class="sourceLineNo">446</span>            }<a name="line.446"></a>
+<span class="sourceLineNo">447</span><a name="line.447"></a>
+<span class="sourceLineNo">448</span>            // Get minimum number of resolution levels available across<a name="line.448"></a>
+<span class="sourceLineNo">449</span>            // all tile-components.<a name="line.449"></a>
+<span class="sourceLineNo">450</span>            int minResLevels = hd.getDecoderSpecs().dls.getMin();<a name="line.450"></a>
+<span class="sourceLineNo">451</span><a name="line.451"></a>
+<span class="sourceLineNo">452</span>            // Set current resolution level.<a name="line.452"></a>
+<span class="sourceLineNo">453</span>            this.resolution = param != null ?<a name="line.453"></a>
+<span class="sourceLineNo">454</span>                param.getResolution() : minResLevels;<a name="line.454"></a>
+<span class="sourceLineNo">455</span>            if(resolution &lt; 0 || resolution &gt; minResLevels) {<a name="line.455"></a>
+<span class="sourceLineNo">456</span>                resolution = minResLevels;<a name="line.456"></a>
+<span class="sourceLineNo">457</span>            }<a name="line.457"></a>
+<span class="sourceLineNo">458</span><a name="line.458"></a>
+<span class="sourceLineNo">459</span>            // Convert source region to lower resolution level.<a name="line.459"></a>
+<span class="sourceLineNo">460</span>            if(resolution != minResLevels || stepX != 1 || stepY != 1) {<a name="line.460"></a>
+<span class="sourceLineNo">461</span>                sourceRegion =<a name="line.461"></a>
+<span class="sourceLineNo">462</span>                    J2KImageReader.getReducedRect(sourceRegion, minResLevels,<a name="line.462"></a>
+<span class="sourceLineNo">463</span>                                                  resolution, stepX, stepY);<a name="line.463"></a>
+<span class="sourceLineNo">464</span>            }<a name="line.464"></a>
+<span class="sourceLineNo">465</span><a name="line.465"></a>
+<span class="sourceLineNo">466</span>            destinationRegion = (Rectangle)sourceRegion.clone();<a name="line.466"></a>
+<span class="sourceLineNo">467</span><a name="line.467"></a>
+<span class="sourceLineNo">468</span>            J2KImageReader.computeRegionsWrapper(param,<a name="line.468"></a>
+<span class="sourceLineNo">469</span>                                                 false,<a name="line.469"></a>
+<span class="sourceLineNo">470</span>                                                 this.width,<a name="line.470"></a>
+<span class="sourceLineNo">471</span>                                                 this.height,<a name="line.471"></a>
+<span class="sourceLineNo">472</span>                                                 param.getDestination(),<a name="line.472"></a>
+<span class="sourceLineNo">473</span>                                                 sourceRegion,<a name="line.473"></a>
+<span class="sourceLineNo">474</span>                                                 destinationRegion);<a name="line.474"></a>
+<span class="sourceLineNo">475</span><a name="line.475"></a>
+<span class="sourceLineNo">476</span>            sourceOrigin = new Point(sourceRegion.x, sourceRegion.y);<a name="line.476"></a>
+<span class="sourceLineNo">477</span>            scaleX = param.getSourceXSubsampling();<a name="line.477"></a>
+<span class="sourceLineNo">478</span>            scaleY = param.getSourceYSubsampling();<a name="line.478"></a>
+<span class="sourceLineNo">479</span>            xOffset = param.getSubsamplingXOffset();<a name="line.479"></a>
+<span class="sourceLineNo">480</span>            yOffset = param.getSubsamplingYOffset();<a name="line.480"></a>
+<span class="sourceLineNo">481</span><a name="line.481"></a>
+<span class="sourceLineNo">482</span>            this.width = destinationRegion.width;<a name="line.482"></a>
+<span class="sourceLineNo">483</span>            this.height = destinationRegion.height;<a name="line.483"></a>
+<span class="sourceLineNo">484</span><a name="line.484"></a>
+<span class="sourceLineNo">485</span>            Point tileOffset = hd.getTilingOrigin(null);<a name="line.485"></a>
+<span class="sourceLineNo">486</span><a name="line.486"></a>
+<span class="sourceLineNo">487</span>            this.tileWidth = hd.getNomTileWidth();<a name="line.487"></a>
+<span class="sourceLineNo">488</span>            this.tileHeight = hd.getNomTileHeight();<a name="line.488"></a>
+<span class="sourceLineNo">489</span><a name="line.489"></a>
+<span class="sourceLineNo">490</span>            // Convert tile 0 to lower resolution level.<a name="line.490"></a>
+<span class="sourceLineNo">491</span>            if(resolution != minResLevels || stepX != 1 || stepY != 1) {<a name="line.491"></a>
+<span class="sourceLineNo">492</span>                Rectangle tileRect = new Rectangle(tileOffset);<a name="line.492"></a>
+<span class="sourceLineNo">493</span>                tileRect.width = tileWidth;<a name="line.493"></a>
+<span class="sourceLineNo">494</span>                tileRect.height = tileHeight;<a name="line.494"></a>
+<span class="sourceLineNo">495</span>                tileRect =<a name="line.495"></a>
+<span class="sourceLineNo">496</span>                    J2KImageReader.getReducedRect(tileRect, minResLevels,<a name="line.496"></a>
+<span class="sourceLineNo">497</span>                                                  resolution, stepX, stepY);<a name="line.497"></a>
+<span class="sourceLineNo">498</span>                tileOffset = tileRect.getLocation();<a name="line.498"></a>
+<span class="sourceLineNo">499</span>                tileWidth = tileRect.width;<a name="line.499"></a>
+<span class="sourceLineNo">500</span>                tileHeight = tileRect.height;<a name="line.500"></a>
+<span class="sourceLineNo">501</span>            }<a name="line.501"></a>
+<span class="sourceLineNo">502</span><a name="line.502"></a>
+<span class="sourceLineNo">503</span>            tileXOffset = tileOffset.x;<a name="line.503"></a>
+<span class="sourceLineNo">504</span>            tileYOffset = tileOffset.y;<a name="line.504"></a>
+<span class="sourceLineNo">505</span><a name="line.505"></a>
+<span class="sourceLineNo">506</span><a name="line.506"></a>
+<span class="sourceLineNo">507</span>            // Set the tile step sizes. These values are used because it<a name="line.507"></a>
+<span class="sourceLineNo">508</span>            // is possible that tiles will be empty. In particular at lower<a name="line.508"></a>
+<span class="sourceLineNo">509</span>            // resolution levels when subsampling is used this may be the<a name="line.509"></a>
+<span class="sourceLineNo">510</span>            // case. This method of calculation will work at least for<a name="line.510"></a>
+<span class="sourceLineNo">511</span>            // Profile-0 images.<a name="line.511"></a>
+<span class="sourceLineNo">512</span>            if(tileWidth*(1 &lt;&lt; (minResLevels - resolution))*stepX &gt;<a name="line.512"></a>
+<span class="sourceLineNo">513</span>               hd.getNomTileWidth()) {<a name="line.513"></a>
+<span class="sourceLineNo">514</span>                tileStepX =<a name="line.514"></a>
+<span class="sourceLineNo">515</span>                    (tileWidth*(1 &lt;&lt; (minResLevels - resolution))*stepX +<a name="line.515"></a>
+<span class="sourceLineNo">516</span>                     hd.getNomTileWidth() - 1)/hd.getNomTileWidth();<a name="line.516"></a>
+<span class="sourceLineNo">517</span>            } else {<a name="line.517"></a>
+<span class="sourceLineNo">518</span>                tileStepX = 1;<a name="line.518"></a>
+<span class="sourceLineNo">519</span>            }<a name="line.519"></a>
+<span class="sourceLineNo">520</span><a name="line.520"></a>
+<span class="sourceLineNo">521</span>            if(tileHeight*(1 &lt;&lt; (minResLevels - resolution))*stepY &gt;<a name="line.521"></a>
+<span class="sourceLineNo">522</span>               hd.getNomTileHeight()) {<a name="line.522"></a>
+<span class="sourceLineNo">523</span>                tileStepY =<a name="line.523"></a>
+<span class="sourceLineNo">524</span>                    (tileHeight*(1 &lt;&lt; (minResLevels - resolution))*stepY +<a name="line.524"></a>
+<span class="sourceLineNo">525</span>                     hd.getNomTileHeight() - 1)/hd.getNomTileHeight();<a name="line.525"></a>
+<span class="sourceLineNo">526</span>            } else {<a name="line.526"></a>
+<span class="sourceLineNo">527</span>                tileStepY = 1;<a name="line.527"></a>
+<span class="sourceLineNo">528</span>            }<a name="line.528"></a>
+<span class="sourceLineNo">529</span><a name="line.529"></a>
+<span class="sourceLineNo">530</span>            if (!destinationRegion.equals(sourceRegion))<a name="line.530"></a>
+<span class="sourceLineNo">531</span>                noTransform = false;<a name="line.531"></a>
+<span class="sourceLineNo">532</span><a name="line.532"></a>
+<span class="sourceLineNo">533</span>            // **** Header decoder ****<a name="line.533"></a>
+<span class="sourceLineNo">534</span>            // Instantiate header decoder and read main header<a name="line.534"></a>
+<span class="sourceLineNo">535</span>            decSpec = hd.getDecoderSpecs();<a name="line.535"></a>
+<span class="sourceLineNo">536</span><a name="line.536"></a>
+<span class="sourceLineNo">537</span>            // **** Instantiate decoding chain ****<a name="line.537"></a>
+<span class="sourceLineNo">538</span>            // Get demixed bitdepths<a name="line.538"></a>
+<span class="sourceLineNo">539</span>            nComp = hd.getNumComps();<a name="line.539"></a>
+<span class="sourceLineNo">540</span><a name="line.540"></a>
+<span class="sourceLineNo">541</span>            int[] depth = new int[nComp];<a name="line.541"></a>
+<span class="sourceLineNo">542</span>            for (int i=0; i&lt;nComp;i++)<a name="line.542"></a>
+<span class="sourceLineNo">543</span>                depth[i] = hd.getOriginalBitDepth(i);<a name="line.543"></a>
+<span class="sourceLineNo">544</span><a name="line.544"></a>
+<span class="sourceLineNo">545</span>            //Get channel mapping<a name="line.545"></a>
+<span class="sourceLineNo">546</span>            ChannelDefinitionBox cdb = null;<a name="line.546"></a>
+<span class="sourceLineNo">547</span>            if (metadata != null)<a name="line.547"></a>
+<span class="sourceLineNo">548</span>                cdb = (ChannelDefinitionBox)metadata.getElement("JPEG2000ChannelDefinitionBox");<a name="line.548"></a>
+<span class="sourceLineNo">549</span><a name="line.549"></a>
+<span class="sourceLineNo">550</span>            channelMap = new int[nComp];<a name="line.550"></a>
+<span class="sourceLineNo">551</span>            if (cdb != null &amp;&amp;<a name="line.551"></a>
+<span class="sourceLineNo">552</span>                metadata.getElement("JPEG2000PaletteBox") == null) {<a name="line.552"></a>
+<span class="sourceLineNo">553</span>                short[] assoc = cdb.getAssociation();<a name="line.553"></a>
+<span class="sourceLineNo">554</span>                short[] types = cdb.getTypes();<a name="line.554"></a>
+<span class="sourceLineNo">555</span>                short[] channels = cdb.getChannel();<a name="line.555"></a>
+<span class="sourceLineNo">556</span><a name="line.556"></a>
+<span class="sourceLineNo">557</span>                for (int i = 0; i &lt; types.length; i++)<a name="line.557"></a>
+<span class="sourceLineNo">558</span>                    if (types[i] == 0)<a name="line.558"></a>
+<span class="sourceLineNo">559</span>                        channelMap[channels[i]] = assoc[i] - 1;<a name="line.559"></a>
+<span class="sourceLineNo">560</span>                    else if (types[i] == 1 || types[i] == 2)<a name="line.560"></a>
+<span class="sourceLineNo">561</span>                        channelMap[channels[i]] = channels[i];<a name="line.561"></a>
+<span class="sourceLineNo">562</span>            } else {<a name="line.562"></a>
+<span class="sourceLineNo">563</span>                for (int i = 0; i &lt; nComp; i++)<a name="line.563"></a>
+<span class="sourceLineNo">564</span>                    channelMap[i] = i;<a name="line.564"></a>
+<span class="sourceLineNo">565</span>            }<a name="line.565"></a>
+<span class="sourceLineNo">566</span><a name="line.566"></a>
+<span class="sourceLineNo">567</span>            // **** Bitstream reader ****<a name="line.567"></a>
+<span class="sourceLineNo">568</span>            try {<a name="line.568"></a>
+<span class="sourceLineNo">569</span>                boolean logJJ2000Messages =<a name="line.569"></a>
+<span class="sourceLineNo">570</span>                    Boolean.getBoolean("jj2000.j2k.decoder.log");<a name="line.570"></a>
+<span class="sourceLineNo">571</span>                breader =<a name="line.571"></a>
+<span class="sourceLineNo">572</span>                    BitstreamReaderAgent.createInstance(in, hd,<a name="line.572"></a>
+<span class="sourceLineNo">573</span>                                                        j2krparam, decSpec,<a name="line.573"></a>
+<span class="sourceLineNo">574</span>                                                        logJJ2000Messages, hi);<a name="line.574"></a>
+<span class="sourceLineNo">575</span>            } catch (IOException e) {<a name="line.575"></a>
+<span class="sourceLineNo">576</span>                throw new RuntimeException(I18N.getString("J2KReadState3") + " " +<a name="line.576"></a>
+<span class="sourceLineNo">577</span>                          ((e.getMessage() != null) ?<a name="line.577"></a>
+<span class="sourceLineNo">578</span>                            (":\n"+e.getMessage()) : ""));<a name="line.578"></a>
+<span class="sourceLineNo">579</span>            } catch (IllegalArgumentException e) {<a name="line.579"></a>
+<span class="sourceLineNo">580</span>                throw new RuntimeException(I18N.getString("J2KReadState4") + " " +<a name="line.580"></a>
+<span class="sourceLineNo">581</span>                               ((e.getMessage() != null) ?<a name="line.581"></a>
+<span class="sourceLineNo">582</span>                               (":\n"+e.getMessage()) : ""));<a name="line.582"></a>
+<span class="sourceLineNo">583</span>            }<a name="line.583"></a>
+<span class="sourceLineNo">584</span><a name="line.584"></a>
+<span class="sourceLineNo">585</span>            // **** Entropy decoder ****<a name="line.585"></a>
+<span class="sourceLineNo">586</span>            try {<a name="line.586"></a>
+<span class="sourceLineNo">587</span>                entdec = hd.createEntropyDecoder(breader, j2krparam);<a name="line.587"></a>
+<span class="sourceLineNo">588</span>            } catch (IllegalArgumentException e) {<a name="line.588"></a>
+<span class="sourceLineNo">589</span>                throw new RuntimeException(I18N.getString("J2KReadState5") + " " +<a name="line.589"></a>
+<span class="sourceLineNo">590</span>                              ((e.getMessage() != null) ?<a name="line.590"></a>
+<span class="sourceLineNo">591</span>                               (":\n"+e.getMessage()) : ""));<a name="line.591"></a>
+<span class="sourceLineNo">592</span>            }<a name="line.592"></a>
+<span class="sourceLineNo">593</span><a name="line.593"></a>
+<span class="sourceLineNo">594</span>            // **** ROI de-scaler ****<a name="line.594"></a>
+<span class="sourceLineNo">595</span>            try {<a name="line.595"></a>
+<span class="sourceLineNo">596</span>                roids = hd.createROIDeScaler(entdec, j2krparam, decSpec);<a name="line.596"></a>
+<span class="sourceLineNo">597</span>            } catch (IllegalArgumentException e) {<a name="line.597"></a>
+<span class="sourceLineNo">598</span>                throw new RuntimeException(I18N.getString("J2KReadState6") + " " +<a name="line.598"></a>
+<span class="sourceLineNo">599</span>                              ((e.getMessage() != null) ?<a name="line.599"></a>
+<span class="sourceLineNo">600</span>                               (":\n"+e.getMessage()) : ""));<a name="line.600"></a>
+<span class="sourceLineNo">601</span>            }<a name="line.601"></a>
+<span class="sourceLineNo">602</span><a name="line.602"></a>
+<span class="sourceLineNo">603</span><a name="line.603"></a>
+<span class="sourceLineNo">604</span>            // **** Dequantizer ****<a name="line.604"></a>
+<span class="sourceLineNo">605</span>            try {<a name="line.605"></a>
+<span class="sourceLineNo">606</span>                deq = hd.createDequantizer(roids, depth, decSpec);<a name="line.606"></a>
+<span class="sourceLineNo">607</span>            } catch (IllegalArgumentException e) {<a name="line.607"></a>
+<span class="sourceLineNo">608</span>                throw new RuntimeException(I18N.getString("J2KReadState7") + " " +<a name="line.608"></a>
+<span class="sourceLineNo">609</span>                              ((e.getMessage() != null) ?<a name="line.609"></a>
+<span class="sourceLineNo">610</span>                               (":\n"+e.getMessage()) : ""));<a name="line.610"></a>
+<span class="sourceLineNo">611</span>            }<a name="line.611"></a>
+<span class="sourceLineNo">612</span><a name="line.612"></a>
+<span class="sourceLineNo">613</span>            // **** Inverse wavelet transform ***<a name="line.613"></a>
+<span class="sourceLineNo">614</span>            try {<a name="line.614"></a>
+<span class="sourceLineNo">615</span>                // full page inverse wavelet transform<a name="line.615"></a>
+<span class="sourceLineNo">616</span>                invWT = InverseWT.createInstance(deq,decSpec);<a name="line.616"></a>
+<span class="sourceLineNo">617</span>            } catch (IllegalArgumentException e) {<a name="line.617"></a>
+<span class="sourceLineNo">618</span>                throw new RuntimeException(I18N.getString("J2KReadState8") + " " +<a name="line.618"></a>
+<span class="sourceLineNo">619</span>                              ((e.getMessage() != null) ?<a name="line.619"></a>
+<span class="sourceLineNo">620</span>                               (":\n"+e.getMessage()) : ""));<a name="line.620"></a>
+<span class="sourceLineNo">621</span>            }<a name="line.621"></a>
+<span class="sourceLineNo">622</span><a name="line.622"></a>
+<span class="sourceLineNo">623</span>            int res = breader.getImgRes();<a name="line.623"></a>
+<span class="sourceLineNo">624</span>            int mrl = decSpec.dls.getMin();<a name="line.624"></a>
+<span class="sourceLineNo">625</span>            invWT.setImgResLevel(res);<a name="line.625"></a>
+<span class="sourceLineNo">626</span><a name="line.626"></a>
+<span class="sourceLineNo">627</span>            // **** Data converter **** (after inverse transform module)<a name="line.627"></a>
+<span class="sourceLineNo">628</span>            converter = new ImgDataConverter(invWT,0);<a name="line.628"></a>
+<span class="sourceLineNo">629</span><a name="line.629"></a>
+<span class="sourceLineNo">630</span>            // **** Inverse component transformation ****<a name="line.630"></a>
+<span class="sourceLineNo">631</span>            ictransf = new InvCompTransf(converter, decSpec, depth);<a name="line.631"></a>
+<span class="sourceLineNo">632</span><a name="line.632"></a>
+<span class="sourceLineNo">633</span>            // If the destination band is set used it<a name="line.633"></a>
+<span class="sourceLineNo">634</span>            sourceBands = j2krparam.getSourceBands();<a name="line.634"></a>
+<span class="sourceLineNo">635</span><a name="line.635"></a>
+<span class="sourceLineNo">636</span>            if (sourceBands == null) {<a name="line.636"></a>
+<span class="sourceLineNo">637</span>                sourceBands = new int[nComp];<a name="line.637"></a>
+<span class="sourceLineNo">638</span>                for (int i = 0; i &lt; nComp; i++)<a name="line.638"></a>
+<span class="sourceLineNo">639</span>                    sourceBands[i] = i;<a name="line.639"></a>
+<span class="sourceLineNo">640</span>            }<a name="line.640"></a>
+<span class="sourceLineNo">641</span><a name="line.641"></a>
+<span class="sourceLineNo">642</span>            nComp = sourceBands.length;<a name="line.642"></a>
+<span class="sourceLineNo">643</span><a name="line.643"></a>
+<span class="sourceLineNo">644</span>            destinationBands = j2krparam.getDestinationBands();<a name="line.644"></a>
+<span class="sourceLineNo">645</span>            if (destinationBands == null) {<a name="line.645"></a>
+<span class="sourceLineNo">646</span>                destinationBands = new int[nComp];<a name="line.646"></a>
+<span class="sourceLineNo">647</span>                for (int i = 0; i &lt; nComp; i++)<a name="line.647"></a>
+<span class="sourceLineNo">648</span>                    destinationBands[i] = i;<a name="line.648"></a>
+<span class="sourceLineNo">649</span>            }<a name="line.649"></a>
+<span class="sourceLineNo">650</span><a name="line.650"></a>
+<span class="sourceLineNo">651</span>            J2KImageReader.checkReadParamBandSettingsWrapper(param,<a name="line.651"></a>
+<span class="sourceLineNo">652</span>                                                             hd.getNumComps(),<a name="line.652"></a>
+<span class="sourceLineNo">653</span>                                                             destinationBands.length);<a name="line.653"></a>
+<span class="sourceLineNo">654</span><a name="line.654"></a>
+<span class="sourceLineNo">655</span>            levelShift = new int[nComp];<a name="line.655"></a>
+<span class="sourceLineNo">656</span>            minValues = new int[nComp];<a name="line.656"></a>
+<span class="sourceLineNo">657</span>            maxValues = new int[nComp];<a name="line.657"></a>
+<span class="sourceLineNo">658</span>            fracBits = new int[nComp];<a name="line.658"></a>
+<span class="sourceLineNo">659</span>            dataBlocks = new DataBlkInt[nComp];<a name="line.659"></a>
+<span class="sourceLineNo">660</span><a name="line.660"></a>
+<span class="sourceLineNo">661</span>            depth = new int[nComp];<a name="line.661"></a>
+<span class="sourceLineNo">662</span>            bandOffsets = new int[nComp];<a name="line.662"></a>
+<span class="sourceLineNo">663</span>            maxDepth = 0;<a name="line.663"></a>
+<span class="sourceLineNo">664</span>            isSigned = false;<a name="line.664"></a>
+<span class="sourceLineNo">665</span>            for (int i=0; i&lt;nComp;i++) {<a name="line.665"></a>
+<span class="sourceLineNo">666</span>                depth[i] = hd.getOriginalBitDepth(sourceBands[i]);<a name="line.666"></a>
+<span class="sourceLineNo">667</span>                if (depth[i] &gt; maxDepth)<a name="line.667"></a>
+<span class="sourceLineNo">668</span>                    maxDepth = depth[i];<a name="line.668"></a>
+<span class="sourceLineNo">669</span>                dataBlocks[i] = new DataBlkInt();<a name="line.669"></a>
+<span class="sourceLineNo">670</span><a name="line.670"></a>
+<span class="sourceLineNo">671</span>                //XXX: may need to change if ChannelDefinition is used to<a name="line.671"></a>
+<span class="sourceLineNo">672</span>                // define the color channels, such as BGR order<a name="line.672"></a>
+<span class="sourceLineNo">673</span>                bandOffsets[i] = i;<a name="line.673"></a>
+<span class="sourceLineNo">674</span>                if (hd.isOriginalSigned(sourceBands[i]))<a name="line.674"></a>
+<span class="sourceLineNo">675</span>                    isSigned = true;<a name="line.675"></a>
+<span class="sourceLineNo">676</span>                else {<a name="line.676"></a>
+<span class="sourceLineNo">677</span>                    levelShift[i] =<a name="line.677"></a>
+<span class="sourceLineNo">678</span>                        1&lt;&lt;(ictransf.getNomRangeBits(sourceBands[i])-1);<a name="line.678"></a>
+<span class="sourceLineNo">679</span>                }<a name="line.679"></a>
+<span class="sourceLineNo">680</span><a name="line.680"></a>
+<span class="sourceLineNo">681</span>                // Get the number of bits in the image, and decide what the max<a name="line.681"></a>
+<span class="sourceLineNo">682</span>                // value should be, depending on whether it is signed or not<a name="line.682"></a>
+<span class="sourceLineNo">683</span>                int nomRangeBits = ictransf.getNomRangeBits(sourceBands[i]);<a name="line.683"></a>
+<span class="sourceLineNo">684</span>                maxValues[i] = (1 &lt;&lt; (isSigned == true ? (nomRangeBits-1) :<a name="line.684"></a>
+<span class="sourceLineNo">685</span>                                                          nomRangeBits)) - 1;<a name="line.685"></a>
+<span class="sourceLineNo">686</span>                minValues[i] = isSigned ? -(maxValues[i]+1) : 0;<a name="line.686"></a>
+<span class="sourceLineNo">687</span><a name="line.687"></a>
+<span class="sourceLineNo">688</span>                fracBits[i] = ictransf.getFixedPoint(sourceBands[i]);<a name="line.688"></a>
+<span class="sourceLineNo">689</span>            }<a name="line.689"></a>
+<span class="sourceLineNo">690</span><a name="line.690"></a>
+<span class="sourceLineNo">691</span>            iis.reset();<a name="line.691"></a>
+<span class="sourceLineNo">692</span>        } catch (IllegalArgumentException e){<a name="line.692"></a>
+<span class="sourceLineNo">693</span>            throw new RuntimeException(e.getMessage(), e);<a name="line.693"></a>
+<span class="sourceLineNo">694</span>        } catch (Error e) {<a name="line.694"></a>
+<span class="sourceLineNo">695</span>            if(e.getMessage()!=null)<a name="line.695"></a>
+<span class="sourceLineNo">696</span>                throw new RuntimeException(e.getMessage(), e);<a name="line.696"></a>
+<span class="sourceLineNo">697</span>            else {<a name="line.697"></a>
+<span class="sourceLineNo">698</span>                throw new RuntimeException(I18N.getString("J2KReadState9"), e);<a name="line.698"></a>
+<span class="sourceLineNo">699</span>            }<a name="line.699"></a>
+<span class="sourceLineNo">700</span>        } catch (RuntimeException e) {<a name="line.700"></a>
+<span class="sourceLineNo">701</span>            if(e.getMessage()!=null)<a name="line.701"></a>
+<span class="sourceLineNo">702</span>                throw new RuntimeException(I18N.getString("J2KReadState10") + " " +<a name="line.702"></a>
+<span class="sourceLineNo">703</span>                      e.getMessage(), e);<a name="line.703"></a>
+<span class="sourceLineNo">704</span>            else {<a name="line.704"></a>
+<span class="sourceLineNo">705</span>                throw new RuntimeException(I18N.getString("J2KReadState10"), e);<a name="line.705"></a>
+<span class="sourceLineNo">706</span>            }<a name="line.706"></a>
+<span class="sourceLineNo">707</span>        } catch (Throwable e) {<a name="line.707"></a>
+<span class="sourceLineNo">708</span>            throw new RuntimeException(I18N.getString("J2KReadState10"), e);<a name="line.708"></a>
+<span class="sourceLineNo">709</span>        }<a name="line.709"></a>
+<span class="sourceLineNo">710</span>    }<a name="line.710"></a>
+<span class="sourceLineNo">711</span><a name="line.711"></a>
+<span class="sourceLineNo">712</span>    private Raster readSubsampledRaster(WritableRaster raster) throws IOException {<a name="line.712"></a>
+<span class="sourceLineNo">713</span>        if (raster == null)<a name="line.713"></a>
+<span class="sourceLineNo">714</span>            raster = Raster.createWritableRaster(<a name="line.714"></a>
+<span class="sourceLineNo">715</span>                sampleModel.createCompatibleSampleModel(destinationRegion.x +<a name="line.715"></a>
+<span class="sourceLineNo">716</span>                                                        destinationRegion.width,<a name="line.716"></a>
+<span class="sourceLineNo">717</span>                                                        destinationRegion.y +<a name="line.717"></a>
+<span class="sourceLineNo">718</span>                                                        destinationRegion.height),<a name="line.718"></a>
+<span class="sourceLineNo">719</span>                new Point(destinationRegion.x, destinationRegion.y));<a name="line.719"></a>
+<span class="sourceLineNo">720</span><a name="line.720"></a>
+<span class="sourceLineNo">721</span>        int pixbuf[] = null;                  // line buffer for pixel data<a name="line.721"></a>
+<span class="sourceLineNo">722</span>        boolean prog = false;                  // Flag for progressive data<a name="line.722"></a>
+<span class="sourceLineNo">723</span>        Point nT = ictransf.getNumTiles(null);<a name="line.723"></a>
+<span class="sourceLineNo">724</span>        int numBands = sourceBands.length;<a name="line.724"></a>
+<span class="sourceLineNo">725</span><a name="line.725"></a>
+<span class="sourceLineNo">726</span>        Rectangle destRect = raster.getBounds().intersection(destinationRegion);<a name="line.726"></a>
+<span class="sourceLineNo">727</span><a name="line.727"></a>
+<span class="sourceLineNo">728</span>        int offx = destinationRegion.x;<a name="line.728"></a>
+<span class="sourceLineNo">729</span>        int offy = destinationRegion.y;<a name="line.729"></a>
+<span class="sourceLineNo">730</span><a name="line.730"></a>
+<span class="sourceLineNo">731</span>        int sourceSX = (destRect.x - offx) * scaleX + sourceOrigin.x;<a name="line.731"></a>
+<span class="sourceLineNo">732</span>        int sourceSY = (destRect.y - offy) * scaleY + sourceOrigin.y;<a name="line.732"></a>
+<span class="sourceLineNo">733</span>        int sourceEX = (destRect.width - 1)* scaleX + sourceSX;<a name="line.733"></a>
+<span class="sourceLineNo">734</span>        int sourceEY = (destRect.height - 1) * scaleY + sourceSY;<a name="line.734"></a>
+<span class="sourceLineNo">735</span><a name="line.735"></a>
+<span class="sourceLineNo">736</span>        int startXTile = (sourceSX - tileXOffset) / tileWidth;<a name="line.736"></a>
+<span class="sourceLineNo">737</span>        int startYTile = (sourceSY - tileYOffset) / tileHeight;<a name="line.737"></a>
+<span class="sourceLineNo">738</span>        int endXTile = (sourceEX - tileXOffset) / tileWidth;<a name="line.738"></a>
+<span class="sourceLineNo">739</span>        int endYTile = (sourceEY - tileYOffset) / tileHeight;<a name="line.739"></a>
+<span class="sourceLineNo">740</span><a name="line.740"></a>
+<span class="sourceLineNo">741</span>        startXTile = clip(startXTile, 0, nT.x - 1);<a name="line.741"></a>
+<span class="sourceLineNo">742</span>        startYTile = clip(startYTile, 0, nT.y - 1);<a name="line.742"></a>
+<span class="sourceLineNo">743</span>        endXTile = clip(endXTile, 0, nT.x - 1);<a name="line.743"></a>
+<span class="sourceLineNo">744</span>        endYTile = clip(endYTile, 0, nT.y - 1);<a name="line.744"></a>
+<span class="sourceLineNo">745</span><a name="line.745"></a>
+<span class="sourceLineNo">746</span>        int totalXTiles = endXTile - startXTile + 1;<a name="line.746"></a>
+<span class="sourceLineNo">747</span>        int totalYTiles = endYTile - startYTile + 1;<a name="line.747"></a>
+<span class="sourceLineNo">748</span>        int totalTiles = totalXTiles * totalYTiles;<a name="line.748"></a>
+<span class="sourceLineNo">749</span><a name="line.749"></a>
+<span class="sourceLineNo">750</span>        // Start the data delivery to the cached consumers tile by tile<a name="line.750"></a>
+<span class="sourceLineNo">751</span>        for(int y=startYTile; y &lt;= endYTile; y++){<a name="line.751"></a>
+<span class="sourceLineNo">752</span>            if (reader.getAbortRequest())<a name="line.752"></a>
+<span class="sourceLineNo">753</span>                break;<a name="line.753"></a>
+<span class="sourceLineNo">754</span><a name="line.754"></a>
+<span class="sourceLineNo">755</span>            // Loop on horizontal tiles<a name="line.755"></a>
+<span class="sourceLineNo">756</span>            for(int x=startXTile; x &lt;= endXTile; x++){<a name="line.756"></a>
+<span class="sourceLineNo">757</span>                if (reader.getAbortRequest())<a name="line.757"></a>
+<span class="sourceLineNo">758</span>                    break;<a name="line.758"></a>
+<span class="sourceLineNo">759</span><a name="line.759"></a>
+<span class="sourceLineNo">760</span>                float initialFraction =<a name="line.760"></a>
+<span class="sourceLineNo">761</span>                    (x - startXTile + (y - startYTile)*totalXTiles)/totalTiles;<a name="line.761"></a>
+<span class="sourceLineNo">762</span><a name="line.762"></a>
+<span class="sourceLineNo">763</span>                ictransf.setTile(x*tileStepX,y*tileStepY);<a name="line.763"></a>
+<span class="sourceLineNo">764</span><a name="line.764"></a>
+<span class="sourceLineNo">765</span>                int sx = hd.getCompSubsX(0);<a name="line.765"></a>
+<span class="sourceLineNo">766</span>                int cTileWidth = (ictransf.getTileWidth() + sx - 1)/sx;<a name="line.766"></a>
+<span class="sourceLineNo">767</span>                int sy = hd.getCompSubsY(0);<a name="line.767"></a>
+<span class="sourceLineNo">768</span>                int cTileHeight = (ictransf.getTileHeight() + sy - 1)/sy;<a name="line.768"></a>
+<span class="sourceLineNo">769</span><a name="line.769"></a>
+<span class="sourceLineNo">770</span>                // Offsets within the tile.<a name="line.770"></a>
+<span class="sourceLineNo">771</span>                int tx = 0;<a name="line.771"></a>
+<span class="sourceLineNo">772</span>                int ty = 0;<a name="line.772"></a>
+<span class="sourceLineNo">773</span><a name="line.773"></a>
+<span class="sourceLineNo">774</span>                // The region for this tile<a name="line.774"></a>
+<span class="sourceLineNo">775</span>                int startX = tileXOffset + x * tileWidth;<a name="line.775"></a>
+<span class="sourceLineNo">776</span>                int startY = tileYOffset + y * tileHeight;<a name="line.776"></a>
+<span class="sourceLineNo">777</span><a name="line.777"></a>
+<span class="sourceLineNo">778</span>                // sourceSX is guaranteed to be &gt;= startX<a name="line.778"></a>
+<span class="sourceLineNo">779</span>                if (sourceSX &gt; startX) {<a name="line.779"></a>
+<span class="sourceLineNo">780</span>                    if(startX &gt;= hd.getImgULX()) {<a name="line.780"></a>
+<span class="sourceLineNo">781</span>                        tx = sourceSX - startX; // Intra-tile offset.<a name="line.781"></a>
+<span class="sourceLineNo">782</span>                        cTileWidth -= tx;       // Reduce effective width.<a name="line.782"></a>
+<span class="sourceLineNo">783</span>                    }<a name="line.783"></a>
+<span class="sourceLineNo">784</span>                    startX = sourceSX;      // Absolute position.<a name="line.784"></a>
+<span class="sourceLineNo">785</span>                }<a name="line.785"></a>
+<span class="sourceLineNo">786</span><a name="line.786"></a>
+<span class="sourceLineNo">787</span>                // sourceSY is guaranteed to be &gt;= startY<a name="line.787"></a>
+<span class="sourceLineNo">788</span>                if (sourceSY &gt; startY) {<a name="line.788"></a>
+<span class="sourceLineNo">789</span>                    if(startY &gt;= hd.getImgULY()) {<a name="line.789"></a>
+<span class="sourceLineNo">790</span>                        ty = sourceSY - startY; // Intra-tile offset.<a name="line.790"></a>
+<span class="sourceLineNo">791</span>                        cTileHeight -= ty;      // Reduce effective width.<a name="line.791"></a>
+<span class="sourceLineNo">792</span>                    }<a name="line.792"></a>
+<span class="sourceLineNo">793</span>                    startY = sourceSY;      // Absolute position.<a name="line.793"></a>
+<span class="sourceLineNo">794</span>                }<a name="line.794"></a>
+<span class="sourceLineNo">795</span><a name="line.795"></a>
+<span class="sourceLineNo">796</span>                // Decrement dimensions if end position is within tile.<a name="line.796"></a>
+<span class="sourceLineNo">797</span>                if (sourceEX &lt; startX + cTileWidth - 1) {<a name="line.797"></a>
+<span class="sourceLineNo">798</span>                    cTileWidth += sourceEX - startX - cTileWidth + 1;<a name="line.798"></a>
+<span class="sourceLineNo">799</span>                }<a name="line.799"></a>
+<span class="sourceLineNo">800</span>                if (sourceEY &lt; startY + cTileHeight - 1) {<a name="line.800"></a>
+<span class="sourceLineNo">801</span>                    cTileHeight += sourceEY - startY - cTileHeight + 1;<a name="line.801"></a>
+<span class="sourceLineNo">802</span>                }<a name="line.802"></a>
+<span class="sourceLineNo">803</span><a name="line.803"></a>
+<span class="sourceLineNo">804</span>                // The start X in the destination<a name="line.804"></a>
+<span class="sourceLineNo">805</span>                int x1 = (startX + scaleX - 1 - sourceOrigin.x) / scaleX;<a name="line.805"></a>
+<span class="sourceLineNo">806</span>                int x2 = (startX + scaleX -1 + cTileWidth - sourceOrigin.x) /<a name="line.806"></a>
+<span class="sourceLineNo">807</span>                         scaleX;<a name="line.807"></a>
+<span class="sourceLineNo">808</span>                int lineLength = x2 - x1;<a name="line.808"></a>
+<span class="sourceLineNo">809</span>                if (pixbuf == null || pixbuf.length &lt; lineLength)<a name="line.809"></a>
+<span class="sourceLineNo">810</span>                    pixbuf = new int[lineLength]; // line buffer for pixel data<a name="line.810"></a>
+<span class="sourceLineNo">811</span>                x2 = (x2 - 1) * scaleX + sourceOrigin.x - startX;<a name="line.811"></a>
+<span class="sourceLineNo">812</span><a name="line.812"></a>
+<span class="sourceLineNo">813</span>                int y1 = (startY + scaleY -1 - sourceOrigin.y) /scaleY;<a name="line.813"></a>
+<span class="sourceLineNo">814</span><a name="line.814"></a>
+<span class="sourceLineNo">815</span>                x1 += offx;<a name="line.815"></a>
+<span class="sourceLineNo">816</span>                y1 += offy;<a name="line.816"></a>
+<span class="sourceLineNo">817</span><a name="line.817"></a>
+<span class="sourceLineNo">818</span>                // Deliver in lines to reduce memory usage<a name="line.818"></a>
+<span class="sourceLineNo">819</span>                for (int l = ty, m = y1;<a name="line.819"></a>
+<span class="sourceLineNo">820</span>                     l &lt; ty + cTileHeight;<a name="line.820"></a>
+<span class="sourceLineNo">821</span>                     l += scaleY, m++) {<a name="line.821"></a>
+<span class="sourceLineNo">822</span>                    if (reader.getAbortRequest())<a name="line.822"></a>
+<span class="sourceLineNo">823</span>                        break;<a name="line.823"></a>
+<span class="sourceLineNo">824</span>                    // Request line data<a name="line.824"></a>
+<span class="sourceLineNo">825</span>                    for (int i = 0; i &lt; numBands; i++) {<a name="line.825"></a>
+<span class="sourceLineNo">826</span>                        DataBlkInt db = dataBlocks[i];<a name="line.826"></a>
+<span class="sourceLineNo">827</span>                        db.ulx = tx;<a name="line.827"></a>
+<span class="sourceLineNo">828</span>                        db.uly = l;<a name="line.828"></a>
+<span class="sourceLineNo">829</span>                        db.w = cTileWidth;<a name="line.829"></a>
+<span class="sourceLineNo">830</span>                        db.h = 1;<a name="line.830"></a>
+<span class="sourceLineNo">831</span>                        ictransf.getInternCompData(db, channelMap[sourceBands[i]]);<a name="line.831"></a>
+<span class="sourceLineNo">832</span>                        prog = prog || db.progressive;<a name="line.832"></a>
+<span class="sourceLineNo">833</span><a name="line.833"></a>
+<span class="sourceLineNo">834</span>                        int[] data = db.data;<a name="line.834"></a>
+<span class="sourceLineNo">835</span>                        int k1 = db.offset + x2;<a name="line.835"></a>
+<span class="sourceLineNo">836</span><a name="line.836"></a>
+<span class="sourceLineNo">837</span>                        int fracBit = fracBits[i];<a name="line.837"></a>
+<span class="sourceLineNo">838</span>                        int lS = levelShift[i];<a name="line.838"></a>
+<span class="sourceLineNo">839</span>                        int min = minValues[i];<a name="line.839"></a>
+<span class="sourceLineNo">840</span>                        int max = maxValues[i];<a name="line.840"></a>
+<span class="sourceLineNo">841</span><a name="line.841"></a>
+<span class="sourceLineNo">842</span>                        if (ImageUtil.isBinary(sampleModel)) {<a name="line.842"></a>
+<span class="sourceLineNo">843</span>                            // Force min max to 0 and 1.<a name="line.843"></a>
+<span class="sourceLineNo">844</span>                            min = 0;<a name="line.844"></a>
+<span class="sourceLineNo">845</span>                            max = 1;<a name="line.845"></a>
+<span class="sourceLineNo">846</span>                            if (bytebuf == null || bytebuf.length &lt; cTileWidth * numBands)<a name="line.846"></a>
+<span class="sourceLineNo">847</span>                                bytebuf = new byte[cTileWidth * numBands];<a name="line.847"></a>
+<span class="sourceLineNo">848</span>                            for (int j = lineLength - 1; j &gt;= 0; j--, k1-=scaleX) {<a name="line.848"></a>
+<span class="sourceLineNo">849</span>                                int tmp = (data[k1] &gt;&gt; fracBit) + lS;<a name="line.849"></a>
+<span class="sourceLineNo">850</span>                                bytebuf[j] =<a name="line.850"></a>
+<span class="sourceLineNo">851</span>                                    (byte)((tmp &lt; min) ? min : <a name="line.851"></a>
+<span class="sourceLineNo">852</span>                                           ((tmp &gt; max) ? max : tmp));<a name="line.852"></a>
+<span class="sourceLineNo">853</span>                            }<a name="line.853"></a>
+<span class="sourceLineNo">854</span><a name="line.854"></a>
+<span class="sourceLineNo">855</span>                            ImageUtil.setUnpackedBinaryData(bytebuf,<a name="line.855"></a>
+<span class="sourceLineNo">856</span>                                                            raster,<a name="line.856"></a>
+<span class="sourceLineNo">857</span>                                                            new Rectangle(x1,<a name="line.857"></a>
+<span class="sourceLineNo">858</span>                                                                          m,<a name="line.858"></a>
+<span class="sourceLineNo">859</span>                                                                          lineLength,<a name="line.859"></a>
+<span class="sourceLineNo">860</span>                                                                          1));<a name="line.860"></a>
+<span class="sourceLineNo">861</span>                        } else {<a name="line.861"></a>
+<span class="sourceLineNo">862</span>                            for (int j = lineLength - 1; j &gt;= 0; j--, k1-=scaleX) {<a name="line.862"></a>
+<span class="sourceLineNo">863</span>                                int tmp = (data[k1] &gt;&gt; fracBit) + lS;<a name="line.863"></a>
+<span class="sourceLineNo">864</span>                                pixbuf[j] = (tmp &lt; min) ? min : <a name="line.864"></a>
+<span class="sourceLineNo">865</span>                                    ((tmp &gt; max) ? max : tmp);<a name="line.865"></a>
+<span class="sourceLineNo">866</span>                            }<a name="line.866"></a>
+<span class="sourceLineNo">867</span><a name="line.867"></a>
+<span class="sourceLineNo">868</span>                            // Send the line data to the BufferedImage<a name="line.868"></a>
+<span class="sourceLineNo">869</span>                            raster.setSamples(x1,<a name="line.869"></a>
+<span class="sourceLineNo">870</span>                                              m,<a name="line.870"></a>
+<span class="sourceLineNo">871</span>                                              lineLength,<a name="line.871"></a>
+<span class="sourceLineNo">872</span>                                              1,<a name="line.872"></a>
+<span class="sourceLineNo">873</span>                                              destinationBands[i],<a name="line.873"></a>
+<span class="sourceLineNo">874</span>                                              pixbuf);<a name="line.874"></a>
+<span class="sourceLineNo">875</span>                        }<a name="line.875"></a>
+<span class="sourceLineNo">876</span>                    }<a name="line.876"></a>
+<span class="sourceLineNo">877</span><a name="line.877"></a>
+<span class="sourceLineNo">878</span>                    if (destImage != null)<a name="line.878"></a>
+<span class="sourceLineNo">879</span>                        reader.processImageUpdateWrapper(destImage, x1, m,<a name="line.879"></a>
+<span class="sourceLineNo">880</span>                                                         cTileWidth, 1, 1, 1,<a name="line.880"></a>
+<span class="sourceLineNo">881</span>                                                         destinationBands);<a name="line.881"></a>
+<span class="sourceLineNo">882</span><a name="line.882"></a>
+<span class="sourceLineNo">883</span>                    float fraction = initialFraction +<a name="line.883"></a>
+<span class="sourceLineNo">884</span>                        (l - ty + 1.0F)/cTileHeight/totalTiles;<a name="line.884"></a>
+<span class="sourceLineNo">885</span>                    reader.processImageProgressWrapper(100.0f*fraction);<a name="line.885"></a>
+<span class="sourceLineNo">886</span>                }<a name="line.886"></a>
+<span class="sourceLineNo">887</span>            } // End loop on horizontal tiles<a name="line.887"></a>
+<span class="sourceLineNo">888</span>        } // End loop on vertical tiles<a name="line.888"></a>
+<span class="sourceLineNo">889</span><a name="line.889"></a>
+<span class="sourceLineNo">890</span>        return raster;<a name="line.890"></a>
+<span class="sourceLineNo">891</span>    }<a name="line.891"></a>
+<span class="sourceLineNo">892</span><a name="line.892"></a>
+<span class="sourceLineNo">893</span>    public ImageTypeSpecifier getImageType()<a name="line.893"></a>
+<span class="sourceLineNo">894</span>        throws IOException {<a name="line.894"></a>
+<span class="sourceLineNo">895</span><a name="line.895"></a>
+<span class="sourceLineNo">896</span>        getSampleModel();<a name="line.896"></a>
+<span class="sourceLineNo">897</span>        getColorModel();<a name="line.897"></a>
+<span class="sourceLineNo">898</span><a name="line.898"></a>
+<span class="sourceLineNo">899</span>        return new ImageTypeSpecifier(colorModel, sampleModel);<a name="line.899"></a>
+<span class="sourceLineNo">900</span>    }<a name="line.900"></a>
+<span class="sourceLineNo">901</span><a name="line.901"></a>
+<span class="sourceLineNo">902</span>    public SampleModel getSampleModel() {<a name="line.902"></a>
+<span class="sourceLineNo">903</span>        if (sampleModel != null)<a name="line.903"></a>
+<span class="sourceLineNo">904</span>            return sampleModel;<a name="line.904"></a>
+<span class="sourceLineNo">905</span><a name="line.905"></a>
+<span class="sourceLineNo">906</span>        if (nComp == 1 &amp;&amp; (maxDepth == 1 || maxDepth == 2 || maxDepth == 4))<a name="line.906"></a>
+<span class="sourceLineNo">907</span>            sampleModel =<a name="line.907"></a>
+<span class="sourceLineNo">908</span>                new MultiPixelPackedSampleModel(DataBuffer.TYPE_BYTE,<a name="line.908"></a>
+<span class="sourceLineNo">909</span>                                                tileWidth,<a name="line.909"></a>
+<span class="sourceLineNo">910</span>                                                tileHeight,<a name="line.910"></a>
+<span class="sourceLineNo">911</span>                                                maxDepth);<a name="line.911"></a>
+<span class="sourceLineNo">912</span>        else if (maxDepth &lt;= 8)<a name="line.912"></a>
+<span class="sourceLineNo">913</span>            sampleModel =<a name="line.913"></a>
+<span class="sourceLineNo">914</span>                new PixelInterleavedSampleModel(DataBuffer.TYPE_BYTE,<a name="line.914"></a>
+<span class="sourceLineNo">915</span>                                                tileWidth,<a name="line.915"></a>
+<span class="sourceLineNo">916</span>                                                tileHeight,<a name="line.916"></a>
+<span class="sourceLineNo">917</span>                                                nComp,<a name="line.917"></a>
+<span class="sourceLineNo">918</span>                                                tileWidth * nComp,<a name="line.918"></a>
+<span class="sourceLineNo">919</span>                                                bandOffsets);<a name="line.919"></a>
+<span class="sourceLineNo">920</span>        else if (maxDepth &lt;=16)<a name="line.920"></a>
+<span class="sourceLineNo">921</span>            sampleModel =<a name="line.921"></a>
+<span class="sourceLineNo">922</span>                new PixelInterleavedSampleModel(isSigned ?<a name="line.922"></a>
+<span class="sourceLineNo">923</span>                                                DataBuffer.TYPE_SHORT :<a name="line.923"></a>
+<span class="sourceLineNo">924</span>                                                DataBuffer.TYPE_USHORT,<a name="line.924"></a>
+<span class="sourceLineNo">925</span>                                                tileWidth, tileHeight,<a name="line.925"></a>
+<span class="sourceLineNo">926</span>                                                nComp,<a name="line.926"></a>
+<span class="sourceLineNo">927</span>                                                tileWidth * nComp,<a name="line.927"></a>
+<span class="sourceLineNo">928</span>                                                bandOffsets);<a name="line.928"></a>
+<span class="sourceLineNo">929</span>        else if (maxDepth &lt;= 32)<a name="line.929"></a>
+<span class="sourceLineNo">930</span>            sampleModel =<a name="line.930"></a>
+<span class="sourceLineNo">931</span>                new PixelInterleavedSampleModel(DataBuffer.TYPE_INT,<a name="line.931"></a>
+<span class="sourceLineNo">932</span>                                                tileWidth,<a name="line.932"></a>
+<span class="sourceLineNo">933</span>                                                tileHeight,<a name="line.933"></a>
+<span class="sourceLineNo">934</span>                                                nComp,<a name="line.934"></a>
+<span class="sourceLineNo">935</span>                                                tileWidth * nComp,<a name="line.935"></a>
+<span class="sourceLineNo">936</span>                                                bandOffsets);<a name="line.936"></a>
+<span class="sourceLineNo">937</span>        else<a name="line.937"></a>
+<span class="sourceLineNo">938</span>            throw new IllegalArgumentException(I18N.getString("J2KReadState11") + " " +<a name="line.938"></a>
+<span class="sourceLineNo">939</span>                                                + maxDepth);<a name="line.939"></a>
+<span class="sourceLineNo">940</span>        return sampleModel;<a name="line.940"></a>
+<span class="sourceLineNo">941</span>    }<a name="line.941"></a>
+<span class="sourceLineNo">942</span><a name="line.942"></a>
+<span class="sourceLineNo">943</span>    public ColorModel getColorModel() {<a name="line.943"></a>
+<span class="sourceLineNo">944</span><a name="line.944"></a>
+<span class="sourceLineNo">945</span>        if (colorModel != null)<a name="line.945"></a>
+<span class="sourceLineNo">946</span>            return colorModel;<a name="line.946"></a>
+<span class="sourceLineNo">947</span><a name="line.947"></a>
+<span class="sourceLineNo">948</span>        // Attempt to get the ColorModel from the JP2 boxes.<a name="line.948"></a>
+<span class="sourceLineNo">949</span>        colorModel = ff.getColorModel();<a name="line.949"></a>
+<span class="sourceLineNo">950</span>        if (colorModel != null)<a name="line.950"></a>
+<span class="sourceLineNo">951</span>            return colorModel;<a name="line.951"></a>
+<span class="sourceLineNo">952</span><a name="line.952"></a>
+<span class="sourceLineNo">953</span>        if(hi.siz.csiz &lt;= 4) {<a name="line.953"></a>
+<span class="sourceLineNo">954</span>            // XXX: Code essentially duplicated from FileFormatReader.getColorModel().<a name="line.954"></a>
+<span class="sourceLineNo">955</span>            // Create the ColorModel from the SIZ marker segment parameters.<a name="line.955"></a>
+<span class="sourceLineNo">956</span>            ColorSpace cs;<a name="line.956"></a>
+<span class="sourceLineNo">957</span>            if(hi.siz.csiz &gt; 2) {<a name="line.957"></a>
+<span class="sourceLineNo">958</span>                cs = ColorSpace.getInstance(ColorSpace.CS_sRGB);<a name="line.958"></a>
+<span class="sourceLineNo">959</span>            } else {<a name="line.959"></a>
+<span class="sourceLineNo">960</span>                cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);<a name="line.960"></a>
+<span class="sourceLineNo">961</span>            }<a name="line.961"></a>
+<span class="sourceLineNo">962</span><a name="line.962"></a>
+<span class="sourceLineNo">963</span>            int[] bitsPerComponent = new int[hi.siz.csiz];<a name="line.963"></a>
+<span class="sourceLineNo">964</span>            boolean isSigned = false;<a name="line.964"></a>
+<span class="sourceLineNo">965</span>            int maxBitDepth = -1;<a name="line.965"></a>
+<span class="sourceLineNo">966</span>            for(int i = 0; i &lt; hi.siz.csiz; i++) {<a name="line.966"></a>
+<span class="sourceLineNo">967</span>                bitsPerComponent[i] = hi.siz.getOrigBitDepth(i);<a name="line.967"></a>
+<span class="sourceLineNo">968</span>                if(maxBitDepth &lt; bitsPerComponent[i]) {<a name="line.968"></a>
+<span class="sourceLineNo">969</span>                    maxBitDepth = bitsPerComponent[i];<a name="line.969"></a>
+<span class="sourceLineNo">970</span>                }<a name="line.970"></a>
+<span class="sourceLineNo">971</span>                isSigned |= hi.siz.isOrigSigned(i);<a name="line.971"></a>
+<span class="sourceLineNo">972</span>            }<a name="line.972"></a>
+<span class="sourceLineNo">973</span><a name="line.973"></a>
+<span class="sourceLineNo">974</span>            boolean hasAlpha = hi.siz.csiz % 2 == 0;<a name="line.974"></a>
+<span class="sourceLineNo">975</span><a name="line.975"></a>
+<span class="sourceLineNo">976</span>            int type = -1;<a name="line.976"></a>
+<span class="sourceLineNo">977</span><a name="line.977"></a>
+<span class="sourceLineNo">978</span>            if (maxBitDepth &lt;= 8) {<a name="line.978"></a>
+<span class="sourceLineNo">979</span>                type = DataBuffer.TYPE_BYTE;<a name="line.979"></a>
+<span class="sourceLineNo">980</span>            } else if (maxBitDepth &lt;= 16) {<a name="line.980"></a>
+<span class="sourceLineNo">981</span>                type = isSigned ? DataBuffer.TYPE_SHORT : DataBuffer.TYPE_USHORT;<a name="line.981"></a>
+<span class="sourceLineNo">982</span>            } else if (maxBitDepth &lt;= 32) {<a name="line.982"></a>
+<span class="sourceLineNo">983</span>                type = DataBuffer.TYPE_INT;<a name="line.983"></a>
+<span class="sourceLineNo">984</span>            }<a name="line.984"></a>
+<span class="sourceLineNo">985</span><a name="line.985"></a>
+<span class="sourceLineNo">986</span>            if (type != -1) {<a name="line.986"></a>
+<span class="sourceLineNo">987</span>                if(hi.siz.csiz == 1 &amp;&amp;<a name="line.987"></a>
+<span class="sourceLineNo">988</span>                   (maxBitDepth == 1 || maxBitDepth == 2 || maxBitDepth == 4)) {<a name="line.988"></a>
+<span class="sourceLineNo">989</span>                    colorModel = ImageUtil.createColorModel(getSampleModel());<a name="line.989"></a>
+<span class="sourceLineNo">990</span>                } else {<a name="line.990"></a>
+<span class="sourceLineNo">991</span>                    colorModel = new ComponentColorModel(cs,<a name="line.991"></a>
+<span class="sourceLineNo">992</span>                                                         bitsPerComponent,<a name="line.992"></a>
+<span class="sourceLineNo">993</span>                                                         hasAlpha,<a name="line.993"></a>
+<span class="sourceLineNo">994</span>                                                         false,<a name="line.994"></a>
+<span class="sourceLineNo">995</span>                                                         hasAlpha ?<a name="line.995"></a>
+<span class="sourceLineNo">996</span>                                                         Transparency.TRANSLUCENT :<a name="line.996"></a>
+<span class="sourceLineNo">997</span>                                                         Transparency.OPAQUE ,<a name="line.997"></a>
+<span class="sourceLineNo">998</span>                                                         type);<a name="line.998"></a>
+<span class="sourceLineNo">999</span>                }<a name="line.999"></a>
+<span class="sourceLineNo">1000</span><a name="line.1000"></a>
+<span class="sourceLineNo">1001</span>                return colorModel;<a name="line.1001"></a>
+<span class="sourceLineNo">1002</span>            }<a name="line.1002"></a>
+<span class="sourceLineNo">1003</span>        }<a name="line.1003"></a>
+<span class="sourceLineNo">1004</span><a name="line.1004"></a>
+<span class="sourceLineNo">1005</span>        if(sampleModel == null) {<a name="line.1005"></a>
+<span class="sourceLineNo">1006</span>            sampleModel = getSampleModel();<a name="line.1006"></a>
+<span class="sourceLineNo">1007</span>        }<a name="line.1007"></a>
+<span class="sourceLineNo">1008</span><a name="line.1008"></a>
+<span class="sourceLineNo">1009</span>        if (sampleModel == null)<a name="line.1009"></a>
+<span class="sourceLineNo">1010</span>            return null;<a name="line.1010"></a>
+<span class="sourceLineNo">1011</span><a name="line.1011"></a>
+<span class="sourceLineNo">1012</span>        return ImageUtil.createColorModel(null, sampleModel);<a name="line.1012"></a>
+<span class="sourceLineNo">1013</span>    }<a name="line.1013"></a>
+<span class="sourceLineNo">1014</span><a name="line.1014"></a>
+<span class="sourceLineNo">1015</span>    /**<a name="line.1015"></a>
+<span class="sourceLineNo">1016</span>     * Returns the bounding rectangle of the upper left tile at<a name="line.1016"></a>
+<span class="sourceLineNo">1017</span>     * the current resolution level.<a name="line.1017"></a>
+<span class="sourceLineNo">1018</span>     */<a name="line.1018"></a>
+<span class="sourceLineNo">1019</span>    Rectangle getTile0Rect() {<a name="line.1019"></a>
+<span class="sourceLineNo">1020</span>        return new Rectangle(tileXOffset, tileYOffset, tileWidth, tileHeight);<a name="line.1020"></a>
+<span class="sourceLineNo">1021</span>    }<a name="line.1021"></a>
+<span class="sourceLineNo">1022</span><a name="line.1022"></a>
+<span class="sourceLineNo">1023</span>    private int clip(int value, int min, int max) {<a name="line.1023"></a>
+<span class="sourceLineNo">1024</span>        if (value &lt; min)<a name="line.1024"></a>
+<span class="sourceLineNo">1025</span>            value = min;<a name="line.1025"></a>
+<span class="sourceLineNo">1026</span>        if (value &gt; max)<a name="line.1026"></a>
+<span class="sourceLineNo">1027</span>            value = max;<a name="line.1027"></a>
+<span class="sourceLineNo">1028</span>        return value;<a name="line.1028"></a>
+<span class="sourceLineNo">1029</span>    }<a name="line.1029"></a>
+<span class="sourceLineNo">1030</span><a name="line.1030"></a>
+<span class="sourceLineNo">1031</span>    private void clipDestination(Rectangle dest) {<a name="line.1031"></a>
+<span class="sourceLineNo">1032</span>        Point offset = j2krparam.getDestinationOffset();<a name="line.1032"></a>
+<span class="sourceLineNo">1033</span>        if (dest.x &lt; offset.x) {<a name="line.1033"></a>
+<span class="sourceLineNo">1034</span>            dest.width += dest.x - offset.x;<a name="line.1034"></a>
+<span class="sourceLineNo">1035</span>            dest.x = offset.x ;<a name="line.1035"></a>
+<span class="sourceLineNo">1036</span>        }<a name="line.1036"></a>
+<span class="sourceLineNo">1037</span>        if (dest.y &lt; offset.y) {<a name="line.1037"></a>
+<span class="sourceLineNo">1038</span>            dest.height += dest.y - offset.y;<a name="line.1038"></a>
+<span class="sourceLineNo">1039</span>            dest.y = offset.y ;<a name="line.1039"></a>
+<span class="sourceLineNo">1040</span>        }<a name="line.1040"></a>
+<span class="sourceLineNo">1041</span>    }<a name="line.1041"></a>
+<span class="sourceLineNo">1042</span>}<a name="line.1042"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: DecLyrdCBlk.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:06 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Class:                   DecLyrdCBlk<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:             The coded (compressed) code-block<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *                          with layered organization for the decoder.<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * COPYRIGHT:<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * software module is an implementation of a part of the JPEG 2000<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * including other intellectual property rights, for this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * or modifications thereof for use in hardware or software products<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * this software module in hardware or software products are advised that<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * their use may infringe existing patents. The original developers of<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * for use of this software module or modifications thereof. No license<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module for his/her own purpose, assign or donate this<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * software module to any third party and to inhibit third parties from<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * products. This copyright notice must be included in all copies or<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * derivative works of this software module.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> *<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> *<a name="line.44"></a>
+<span class="sourceLineNo">045</span> *<a name="line.45"></a>
+<span class="sourceLineNo">046</span> *<a name="line.46"></a>
+<span class="sourceLineNo">047</span> */<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>package jj2000.j2k.entropy.decoder;<a name="line.50"></a>
+<span class="sourceLineNo">051</span><a name="line.51"></a>
+<span class="sourceLineNo">052</span>import jj2000.j2k.entropy.*;<a name="line.52"></a>
+<span class="sourceLineNo">053</span><a name="line.53"></a>
+<span class="sourceLineNo">054</span>/**<a name="line.54"></a>
+<span class="sourceLineNo">055</span> * This class stores coded (compressed) code-blocks that are organized<a name="line.55"></a>
+<span class="sourceLineNo">056</span> * in layers. This object can contain either all the data of the<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * code-block (i.e. all layers), or a subset of all the layers that<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * make up the whole compressed-code-block. It is applicable to the<a name="line.58"></a>
+<span class="sourceLineNo">059</span> * decoder engine only. Some data of the coded-block is stored<a name="line.59"></a>
+<span class="sourceLineNo">060</span> * in the super class, see CodedCBlk.<a name="line.60"></a>
+<span class="sourceLineNo">061</span> *<a name="line.61"></a>
+<span class="sourceLineNo">062</span> * &lt;P&gt;A code-block may have its progressive attribute set (i.e. the<a name="line.62"></a>
+<span class="sourceLineNo">063</span> * 'prog' flag is true). If a code-block is progressive then it means<a name="line.63"></a>
+<span class="sourceLineNo">064</span> * that more data for it may be obtained for an improved quality. If<a name="line.64"></a>
+<span class="sourceLineNo">065</span> * the progressive flag is false then no more data is available from<a name="line.65"></a>
+<span class="sourceLineNo">066</span> * the source for this code-block.<a name="line.66"></a>
+<span class="sourceLineNo">067</span> *<a name="line.67"></a>
+<span class="sourceLineNo">068</span> * @see CodedCBlk<a name="line.68"></a>
+<span class="sourceLineNo">069</span> * */<a name="line.69"></a>
+<span class="sourceLineNo">070</span>public class DecLyrdCBlk extends CodedCBlk {<a name="line.70"></a>
+<span class="sourceLineNo">071</span><a name="line.71"></a>
+<span class="sourceLineNo">072</span>    /** The horizontal coordinate of the upper-left corner of the code-block */<a name="line.72"></a>
+<span class="sourceLineNo">073</span>    public int ulx;<a name="line.73"></a>
+<span class="sourceLineNo">074</span><a name="line.74"></a>
+<span class="sourceLineNo">075</span>    /** The vertical coordinate of the upper left corner of the code-block */<a name="line.75"></a>
+<span class="sourceLineNo">076</span>    public int uly;<a name="line.76"></a>
+<span class="sourceLineNo">077</span><a name="line.77"></a>
+<span class="sourceLineNo">078</span>    /** The width of the code-block */<a name="line.78"></a>
+<span class="sourceLineNo">079</span>    public int w;<a name="line.79"></a>
+<span class="sourceLineNo">080</span><a name="line.80"></a>
+<span class="sourceLineNo">081</span>    /** The height of the code-block */<a name="line.81"></a>
+<span class="sourceLineNo">082</span>    public int h;<a name="line.82"></a>
+<span class="sourceLineNo">083</span><a name="line.83"></a>
+<span class="sourceLineNo">084</span>    /** The coded (compressed) data length. The data is stored in the<a name="line.84"></a>
+<span class="sourceLineNo">085</span>     * 'data' array (see super class).<a name="line.85"></a>
+<span class="sourceLineNo">086</span>     */<a name="line.86"></a>
+<span class="sourceLineNo">087</span>    public int dl;<a name="line.87"></a>
+<span class="sourceLineNo">088</span><a name="line.88"></a>
+<span class="sourceLineNo">089</span>    /** The progressive flag, false by default (see above). */<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    public boolean prog;<a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91"></a>
+<span class="sourceLineNo">092</span>    /** The number of layers in the coded data. */<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    public int nl;<a name="line.93"></a>
+<span class="sourceLineNo">094</span><a name="line.94"></a>
+<span class="sourceLineNo">095</span>    /** The index of the first truncation point returned */<a name="line.95"></a>
+<span class="sourceLineNo">096</span>    public int ftpIdx;<a name="line.96"></a>
+<span class="sourceLineNo">097</span><a name="line.97"></a>
+<span class="sourceLineNo">098</span>    /** The total number of truncation points from layer 1 to the last one in<a name="line.98"></a>
+<span class="sourceLineNo">099</span>     * this object. The number of truncation points in 'data' is<a name="line.99"></a>
+<span class="sourceLineNo">100</span>     * 'nTrunc-ftpIdx'. */<a name="line.100"></a>
+<span class="sourceLineNo">101</span>    public int nTrunc;<a name="line.101"></a>
+<span class="sourceLineNo">102</span><a name="line.102"></a>
+<span class="sourceLineNo">103</span>    /** The length of each terminated segment. If null then there is only one<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     * terminated segment, and its length is 'dl'. The number of terminated<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     * segments is to be deduced from 'ftpIdx', 'nTrunc' and the coding<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     * options. This array contains all terminated segments from the 'ftpIdx'<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     * truncation point, upto, and including, the 'nTrunc-1' truncation<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     * point. Any data after 'nTrunc-1' is not included in any length. */<a name="line.108"></a>
+<span class="sourceLineNo">109</span>    public int tsLengths[];<a name="line.109"></a>
+<span class="sourceLineNo">110</span><a name="line.110"></a>
+<span class="sourceLineNo">111</span>    /** Object information in a string<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     *<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * @return Information in a string<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     *<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     *<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     */<a name="line.116"></a>
+<span class="sourceLineNo">117</span>    public String toString(){<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        String str=<a name="line.118"></a>
+<span class="sourceLineNo">119</span>            "Coded code-block ("+m+","+n+"): "+skipMSBP+" MSB skipped, "+<a name="line.119"></a>
+<span class="sourceLineNo">120</span>            dl+" bytes, "+nTrunc+" truncation points, "+nl+" layers, "+<a name="line.120"></a>
+<span class="sourceLineNo">121</span>            "progressive= "+prog+", ulx= "+ulx+", uly= "+uly+<a name="line.121"></a>
+<span class="sourceLineNo">122</span>            ", w= "+w+", h= "+h+", ftpIdx="+ftpIdx;<a name="line.122"></a>
+<span class="sourceLineNo">123</span>        if(tsLengths!=null){<a name="line.123"></a>
+<span class="sourceLineNo">124</span>            str += " {";<a name="line.124"></a>
+<span class="sourceLineNo">125</span>            for(int i=0; i&lt;tsLengths.length; i++)<a name="line.125"></a>
+<span class="sourceLineNo">126</span>                str += " "+tsLengths[i];<a name="line.126"></a>
+<span class="sourceLineNo">127</span>            str += " }";<a name="line.127"></a>
+<span class="sourceLineNo">128</span>        }<a name="line.128"></a>
+<span class="sourceLineNo">129</span>        return str;<a name="line.129"></a>
+<span class="sourceLineNo">130</span>    }<a name="line.130"></a>
+<span class="sourceLineNo">131</span>}<a name="line.131"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

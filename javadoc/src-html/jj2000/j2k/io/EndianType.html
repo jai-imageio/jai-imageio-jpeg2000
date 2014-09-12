@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: EndianType.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:16 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Interface:           EndianType<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:         Defines the two types of endianess (i.e. byte<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *                      ordering).<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * COPYRIGHT:<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * software module is an implementation of a part of the JPEG 2000<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * including other intellectual property rights, for this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * or modifications thereof for use in hardware or software products<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * this software module in hardware or software products are advised that<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * their use may infringe existing patents. The original developers of<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * for use of this software module or modifications thereof. No license<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module for his/her own purpose, assign or donate this<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * software module to any third party and to inhibit third parties from<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * products. This copyright notice must be included in all copies or<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * derivative works of this software module.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> *<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> *<a name="line.44"></a>
+<span class="sourceLineNo">045</span> *<a name="line.45"></a>
+<span class="sourceLineNo">046</span> *<a name="line.46"></a>
+<span class="sourceLineNo">047</span> */<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>package jj2000.j2k.io;<a name="line.49"></a>
+<span class="sourceLineNo">050</span><a name="line.50"></a>
+<span class="sourceLineNo">051</span>/**<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * This interface defines constants for the two types of byte<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * ordering: little- and big-endian.<a name="line.53"></a>
+<span class="sourceLineNo">054</span> *<a name="line.54"></a>
+<span class="sourceLineNo">055</span> * &lt;P&gt;Little-endian is least significant byte first.<a name="line.55"></a>
+<span class="sourceLineNo">056</span> *<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * &lt;P&gt;Big-endian is most significant byte first.<a name="line.57"></a>
+<span class="sourceLineNo">058</span> *<a name="line.58"></a>
+<span class="sourceLineNo">059</span> * &lt;P&gt;This interface defines the constants only. In order to use the<a name="line.59"></a>
+<span class="sourceLineNo">060</span> * constants in any other class you can either use the fully qualified<a name="line.60"></a>
+<span class="sourceLineNo">061</span> * name (e.g., &lt;tt&gt;EndianType.LITTLE_ENDIAN&lt;/tt&gt;) or declare this<a name="line.61"></a>
+<span class="sourceLineNo">062</span> * interface in the implements clause of the class and then access the<a name="line.62"></a>
+<span class="sourceLineNo">063</span> * identifier directly.<a name="line.63"></a>
+<span class="sourceLineNo">064</span> *<a name="line.64"></a>
+<span class="sourceLineNo">065</span> */<a name="line.65"></a>
+<span class="sourceLineNo">066</span>public interface EndianType {<a name="line.66"></a>
+<span class="sourceLineNo">067</span><a name="line.67"></a>
+<span class="sourceLineNo">068</span>    /** Identifier for big-endian byte ordering (i.e. most significant<a name="line.68"></a>
+<span class="sourceLineNo">069</span>     * byte first) */<a name="line.69"></a>
+<span class="sourceLineNo">070</span>    public static final int BIG_ENDIAN = 0;<a name="line.70"></a>
+<span class="sourceLineNo">071</span><a name="line.71"></a>
+<span class="sourceLineNo">072</span>    /** Identifier for little-endian byte ordering (i.e. least<a name="line.72"></a>
+<span class="sourceLineNo">073</span>     * significant byte first) */<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    public static final int LITTLE_ENDIAN = 1;<a name="line.74"></a>
+<span class="sourceLineNo">075</span>}<a name="line.75"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

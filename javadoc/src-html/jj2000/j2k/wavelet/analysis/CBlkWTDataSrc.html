@@ -1,0 +1,263 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: CBlkWTDataSrc.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:30 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Class:                   CBlkWTDataSrc<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:             Interface that define methods for transfer of WT<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *                          data in a code-block basis.<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * COPYRIGHT:<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * software module is an implementation of a part of the JPEG 2000<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * including other intellectual property rights, for this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * or modifications thereof for use in hardware or software products<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * this software module in hardware or software products are advised that<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * their use may infringe existing patents. The original developers of<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * for use of this software module or modifications thereof. No license<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module for his/her own purpose, assign or donate this<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * software module to any third party and to inhibit third parties from<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * products. This copyright notice must be included in all copies or<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * derivative works of this software module.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> *<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> *<a name="line.44"></a>
+<span class="sourceLineNo">045</span> *<a name="line.45"></a>
+<span class="sourceLineNo">046</span> *<a name="line.46"></a>
+<span class="sourceLineNo">047</span> */<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>package jj2000.j2k.wavelet.analysis;<a name="line.50"></a>
+<span class="sourceLineNo">051</span><a name="line.51"></a>
+<span class="sourceLineNo">052</span>import jj2000.j2k.image.*;<a name="line.52"></a>
+<span class="sourceLineNo">053</span>import jj2000.j2k.wavelet.*;<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>/**<a name="line.55"></a>
+<span class="sourceLineNo">056</span> * This abstract class defines methods to transfer wavelet data in a<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * code-block by code-block basis. In each call to 'getNextCodeBlock()' or<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * 'getNextInternCodeBlock()' a new code-block is returned. The code-blocks<a name="line.58"></a>
+<span class="sourceLineNo">059</span> * are returned in no specific order.<a name="line.59"></a>
+<span class="sourceLineNo">060</span> *<a name="line.60"></a>
+<span class="sourceLineNo">061</span> * &lt;P&gt;This class is the source of data for the quantizer. See the 'Quantizer'<a name="line.61"></a>
+<span class="sourceLineNo">062</span> * class.<a name="line.62"></a>
+<span class="sourceLineNo">063</span> *<a name="line.63"></a>
+<span class="sourceLineNo">064</span> * &lt;P&gt;Note that no more of one object may request data, otherwise one object<a name="line.64"></a>
+<span class="sourceLineNo">065</span> * would get some of the data and another one another part, in no defined<a name="line.65"></a>
+<span class="sourceLineNo">066</span> * manner.<a name="line.66"></a>
+<span class="sourceLineNo">067</span> *<a name="line.67"></a>
+<span class="sourceLineNo">068</span> * @see ForwWTDataProps<a name="line.68"></a>
+<span class="sourceLineNo">069</span> *<a name="line.69"></a>
+<span class="sourceLineNo">070</span> * @see WaveletTransform<a name="line.70"></a>
+<span class="sourceLineNo">071</span> *<a name="line.71"></a>
+<span class="sourceLineNo">072</span> * @see jj2000.j2k.quantization.quantizer.CBlkQuantDataSrcEnc<a name="line.72"></a>
+<span class="sourceLineNo">073</span> *<a name="line.73"></a>
+<span class="sourceLineNo">074</span> * @see jj2000.j2k.quantization.quantizer.Quantizer<a name="line.74"></a>
+<span class="sourceLineNo">075</span> * */<a name="line.75"></a>
+<span class="sourceLineNo">076</span>public interface CBlkWTDataSrc extends ForwWTDataProps {<a name="line.76"></a>
+<span class="sourceLineNo">077</span><a name="line.77"></a>
+<span class="sourceLineNo">078</span>    /**<a name="line.78"></a>
+<span class="sourceLineNo">079</span>     * Returns the position of the fixed point in the specified component, or<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     * equivalently the number of fractional bits. This is the position of the<a name="line.80"></a>
+<span class="sourceLineNo">081</span>     * least significant integral (i.e. non-fractional) bit, which is<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     * equivalent to the number of fractional bits. For instance, for<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * fixed-point values with 2 fractional bits, 2 is returned. For<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     * floating-point data this value does not apply and 0 should be<a name="line.84"></a>
+<span class="sourceLineNo">085</span>     * returned. Position 0 is the position of the least significant bit in<a name="line.85"></a>
+<span class="sourceLineNo">086</span>     * the data.<a name="line.86"></a>
+<span class="sourceLineNo">087</span>     *<a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * @param n The index of the component.<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     *<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * @return The position of the fixed-point, which is the same as<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * the number of fractional bits. For floating-point data 0 is<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     * returned.<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     *<a name="line.93"></a>
+<span class="sourceLineNo">094</span>     *<a name="line.94"></a>
+<span class="sourceLineNo">095</span>     * */<a name="line.95"></a>
+<span class="sourceLineNo">096</span>     public int getFixedPoint(int n);<a name="line.96"></a>
+<span class="sourceLineNo">097</span><a name="line.97"></a>
+<span class="sourceLineNo">098</span>    /** Return the data type of this CBlkWTDataSrc for the given<a name="line.98"></a>
+<span class="sourceLineNo">099</span>     *  component in the current tile. Its value should be either<a name="line.99"></a>
+<span class="sourceLineNo">100</span>     *  DataBlk.TYPE_INT or DataBlk.TYPE_FLOAT but can change<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     *  according to the current tile-component.<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     *<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * @param t Tile index<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     *<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     * @param c Component index<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     *<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     * @return Current data type<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     *<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     */<a name="line.109"></a>
+<span class="sourceLineNo">110</span>    public int getDataType(int t,int c);<a name="line.110"></a>
+<span class="sourceLineNo">111</span><a name="line.111"></a>
+<span class="sourceLineNo">112</span>    /**<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * Returns the next code-block in the current tile for the specified<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     * component, as a copy (see below). The order in which code-blocks are<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     * returned is not specified. However each code-block is returned only<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     * once and all code-blocks will be returned if the method is called 'N'<a name="line.116"></a>
+<span class="sourceLineNo">117</span>     * times, where 'N' is the number of code-blocks in the tile. After all<a name="line.117"></a>
+<span class="sourceLineNo">118</span>     * the code-blocks have been returned for the current tile calls to this<a name="line.118"></a>
+<span class="sourceLineNo">119</span>     * method will return 'null'.<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     *<a name="line.120"></a>
+<span class="sourceLineNo">121</span>     * &lt;P&gt;When changing the current tile (through 'setTile()' or 'nextTile()')<a name="line.121"></a>
+<span class="sourceLineNo">122</span>     * this method will always return the first code-block, as if this method<a name="line.122"></a>
+<span class="sourceLineNo">123</span>     * was never called before for the new current tile.<a name="line.123"></a>
+<span class="sourceLineNo">124</span>     *<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * &lt;P&gt;The data returned by this method is always a copy of the internal<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     * data of this object, if any, and it can be modified "in place" without<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     * any problems after being returned. The 'offset' of the returned data is<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     * 0, and the 'scanw' is the same as the code-block width.  The 'magbits'<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     * of the returned data is not set by this method and should be<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     * ignored. See the 'CBlkWTData' class.<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     *<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     * &lt;P&gt;The 'ulx' and 'uly' members of the returned 'CBlkWTData' object<a name="line.132"></a>
+<span class="sourceLineNo">133</span>     * contain the coordinates of the top-left corner of the block, with<a name="line.133"></a>
+<span class="sourceLineNo">134</span>     * respect to the tile, not the subband.<a name="line.134"></a>
+<span class="sourceLineNo">135</span>     *<a name="line.135"></a>
+<span class="sourceLineNo">136</span>     * @param n The component for which to return the next code-block.<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     *<a name="line.137"></a>
+<span class="sourceLineNo">138</span>     * @param cblk If non-null this object will be used to return the new<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     * code-block. If null a new one will be allocated and returned. If the<a name="line.139"></a>
+<span class="sourceLineNo">140</span>     * "data" array of the object is non-null it will be reused, if possible,<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     * to return the data.<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     *<a name="line.142"></a>
+<span class="sourceLineNo">143</span>     * @return The next code-block in the current tile for component 'n', or<a name="line.143"></a>
+<span class="sourceLineNo">144</span>     * null if all code-blocks for the current tile have been returned.<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     *<a name="line.145"></a>
+<span class="sourceLineNo">146</span>     * @see CBlkWTData<a name="line.146"></a>
+<span class="sourceLineNo">147</span>     *<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     *<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * */<a name="line.149"></a>
+<span class="sourceLineNo">150</span>    public abstract CBlkWTData getNextCodeBlock(int n, CBlkWTData cblk);<a name="line.150"></a>
+<span class="sourceLineNo">151</span><a name="line.151"></a>
+<span class="sourceLineNo">152</span>    /**<a name="line.152"></a>
+<span class="sourceLineNo">153</span>     * Returns the next code-block in the current tile for the specified<a name="line.153"></a>
+<span class="sourceLineNo">154</span>     * component. The order in which code-blocks are returned is not<a name="line.154"></a>
+<span class="sourceLineNo">155</span>     * specified. However each code-block is returned only once and all<a name="line.155"></a>
+<span class="sourceLineNo">156</span>     * code-blocks will be returned if the method is called 'N' times, where<a name="line.156"></a>
+<span class="sourceLineNo">157</span>     * 'N' is the number of code-blocks in the tile. After all the code-blocks<a name="line.157"></a>
+<span class="sourceLineNo">158</span>     * have been returned for the current tile calls to this method will<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     * return 'null'.<a name="line.159"></a>
+<span class="sourceLineNo">160</span>     *<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     * &lt;P&gt;When changing the current tile (through 'setTile()' or 'nextTile()')<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     * this method will always return the first code-block, as if this method<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     * was never called before for the new current tile.<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     *<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     * &lt;P&gt;The data returned by this method can be the data in the internal<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     * buffer of this object, if any, and thus can not be modified by the<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     * caller. The 'offset' and 'scanw' of the returned data can be<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     * arbitrary. The 'magbits' of the returned data is not set by this method<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     * and should be ignored. See the 'CBlkWTData' class.<a name="line.169"></a>
+<span class="sourceLineNo">170</span>     *<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     * &lt;P&gt;The 'ulx' and 'uly' members of the returned 'CBlkWTData' object<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     * contain the coordinates of the top-left corner of the block, with<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     * respect to the tile, not the subband.<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     *<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     * @param n The component for which to return the next code-block.<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     *<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     * @param cblk If non-null this object will be used to return the new<a name="line.177"></a>
+<span class="sourceLineNo">178</span>     * code-block. If null a new one will be allocated and returned. If the<a name="line.178"></a>
+<span class="sourceLineNo">179</span>     * "data" array of the object is non-null it will be reused, if possible,<a name="line.179"></a>
+<span class="sourceLineNo">180</span>     * to return the data.<a name="line.180"></a>
+<span class="sourceLineNo">181</span>     *<a name="line.181"></a>
+<span class="sourceLineNo">182</span>     * @return The next code-block in the current tile for component 'n', or<a name="line.182"></a>
+<span class="sourceLineNo">183</span>     * null if all code-blocks for the current tile have been returned.<a name="line.183"></a>
+<span class="sourceLineNo">184</span>     *<a name="line.184"></a>
+<span class="sourceLineNo">185</span>     * @see CBlkWTData<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     *<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     *<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     * */<a name="line.188"></a>
+<span class="sourceLineNo">189</span>    public abstract CBlkWTData getNextInternCodeBlock(int n, CBlkWTData cblk);<a name="line.189"></a>
+<span class="sourceLineNo">190</span><a name="line.190"></a>
+<span class="sourceLineNo">191</span>}<a name="line.191"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

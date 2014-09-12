@@ -1,0 +1,331 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: BitOutputBuffer.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:02 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Class:                   BitOutputBuffer<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:             &lt;short description of class&gt;<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * COPYRIGHT:<a name="line.13"></a>
+<span class="sourceLineNo">014</span> *<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * software module is an implementation of a part of the JPEG 2000<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * including other intellectual property rights, for this software module<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * or modifications thereof for use in hardware or software products<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * this software module in hardware or software products are advised that<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * their use may infringe existing patents. The original developers of<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * for use of this software module or modifications thereof. No license<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * software module for his/her own purpose, assign or donate this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module to any third party and to inhibit third parties from<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * products. This copyright notice must be included in all copies or<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * derivative works of this software module.<a name="line.40"></a>
+<span class="sourceLineNo">041</span> *<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * */<a name="line.43"></a>
+<span class="sourceLineNo">044</span>package jj2000.j2k.codestream.writer;<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span>import jj2000.j2k.util.*;<a name="line.46"></a>
+<span class="sourceLineNo">047</span><a name="line.47"></a>
+<span class="sourceLineNo">048</span>/**<a name="line.48"></a>
+<span class="sourceLineNo">049</span> * This class implements a buffer for writing bits, with the required bit<a name="line.49"></a>
+<span class="sourceLineNo">050</span> * stuffing policy for the packet headers. The bits are stored in a byte array<a name="line.50"></a>
+<span class="sourceLineNo">051</span> * in the order in which they are written. The byte array is automatically<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * reallocated and enlarged whenever necessary. A BitOutputBuffer object may<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * be reused by calling its 'reset()' method.<a name="line.53"></a>
+<span class="sourceLineNo">054</span> *<a name="line.54"></a>
+<span class="sourceLineNo">055</span> * &lt;P&gt;NOTE: The methods implemented in this class are intended to be used only<a name="line.55"></a>
+<span class="sourceLineNo">056</span> * in writing packet heads, since a special bit stuffing procedure is used, as<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * required for the packet heads.<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * */<a name="line.58"></a>
+<span class="sourceLineNo">059</span>public class BitOutputBuffer {<a name="line.59"></a>
+<span class="sourceLineNo">060</span><a name="line.60"></a>
+<span class="sourceLineNo">061</span>    /** The buffer where we store the data */<a name="line.61"></a>
+<span class="sourceLineNo">062</span>    byte buf[];<a name="line.62"></a>
+<span class="sourceLineNo">063</span><a name="line.63"></a>
+<span class="sourceLineNo">064</span>    /** The position of the current byte to write */<a name="line.64"></a>
+<span class="sourceLineNo">065</span>    int curbyte;<a name="line.65"></a>
+<span class="sourceLineNo">066</span><a name="line.66"></a>
+<span class="sourceLineNo">067</span>    /** The number of available bits in the current byte */<a name="line.67"></a>
+<span class="sourceLineNo">068</span>    int avbits = 8;<a name="line.68"></a>
+<span class="sourceLineNo">069</span><a name="line.69"></a>
+<span class="sourceLineNo">070</span>    /** The increment size for the buffer, 16 bytes. This is the<a name="line.70"></a>
+<span class="sourceLineNo">071</span>     * number of bytes that are added to the buffer each time it is<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     * needed to enlarge it.*/<a name="line.72"></a>
+<span class="sourceLineNo">073</span>    // This must be always 6 or larger.<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    public final static int SZ_INCR = 16;<a name="line.74"></a>
+<span class="sourceLineNo">075</span><a name="line.75"></a>
+<span class="sourceLineNo">076</span>    /** The initial size for the buffer, 32 bytes. */<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    public final static int SZ_INIT = 32;<a name="line.77"></a>
+<span class="sourceLineNo">078</span><a name="line.78"></a>
+<span class="sourceLineNo">079</span>    /**<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     * Creates a new BitOutputBuffer width a buffer of length<a name="line.80"></a>
+<span class="sourceLineNo">081</span>     * 'SZ_INIT'.<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     * */<a name="line.82"></a>
+<span class="sourceLineNo">083</span>    public BitOutputBuffer() {<a name="line.83"></a>
+<span class="sourceLineNo">084</span>        buf = new byte[SZ_INIT];<a name="line.84"></a>
+<span class="sourceLineNo">085</span>    }<a name="line.85"></a>
+<span class="sourceLineNo">086</span><a name="line.86"></a>
+<span class="sourceLineNo">087</span>    /**<a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * Resets the buffer. This rewinds the current position to the start of<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     * the buffer and sets all tha data to 0. Note that no new buffer is<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * allocated, so this will affect any data that was returned by the<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * 'getBuffer()' method.<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     * */<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    public void reset() {<a name="line.93"></a>
+<span class="sourceLineNo">094</span>        int i;<a name="line.94"></a>
+<span class="sourceLineNo">095</span>        // Reinit pointers<a name="line.95"></a>
+<span class="sourceLineNo">096</span>        curbyte = 0;<a name="line.96"></a>
+<span class="sourceLineNo">097</span>        avbits = 8;<a name="line.97"></a>
+<span class="sourceLineNo">098</span>        ArrayUtil.byteArraySet(buf,(byte)0);<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    }<a name="line.99"></a>
+<span class="sourceLineNo">100</span><a name="line.100"></a>
+<span class="sourceLineNo">101</span>    /**<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     * Writes a bit to the buffer at the current position. The value 'bit'<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * must be either 0 or 1, otherwise it corrupts the bits that have been<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     * already written. The buffer is enlarged, by 'SZ_INCR' bytes, if<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     * necessary.<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     *<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     * &lt;P&gt;This method is declared final to increase performance.<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     *<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     * @param bit The bit to write, 0 or 1.<a name="line.109"></a>
+<span class="sourceLineNo">110</span>     * */<a name="line.110"></a>
+<span class="sourceLineNo">111</span>    public final void writeBit(int bit) {<a name="line.111"></a>
+<span class="sourceLineNo">112</span>        buf[curbyte] |= bit &lt;&lt; --avbits;<a name="line.112"></a>
+<span class="sourceLineNo">113</span>        if (avbits &gt; 0) {<a name="line.113"></a>
+<span class="sourceLineNo">114</span>            // There is still place in current byte for next bit<a name="line.114"></a>
+<span class="sourceLineNo">115</span>            return;<a name="line.115"></a>
+<span class="sourceLineNo">116</span>        }<a name="line.116"></a>
+<span class="sourceLineNo">117</span>        else { // End of current byte =&gt; goto next<a name="line.117"></a>
+<span class="sourceLineNo">118</span>            if (buf[curbyte] != (byte) 0xFF) { // We don't need bit stuffing<a name="line.118"></a>
+<span class="sourceLineNo">119</span>                avbits = 8;<a name="line.119"></a>
+<span class="sourceLineNo">120</span>            }<a name="line.120"></a>
+<span class="sourceLineNo">121</span>            else { // We need to stuff a bit (next MSBit is 0)<a name="line.121"></a>
+<span class="sourceLineNo">122</span>                avbits = 7;<a name="line.122"></a>
+<span class="sourceLineNo">123</span>            }<a name="line.123"></a>
+<span class="sourceLineNo">124</span>            curbyte++;<a name="line.124"></a>
+<span class="sourceLineNo">125</span>            if (curbyte == buf.length) {<a name="line.125"></a>
+<span class="sourceLineNo">126</span>                // We are at end of 'buf' =&gt; extend it<a name="line.126"></a>
+<span class="sourceLineNo">127</span>                byte oldbuf[] = buf;<a name="line.127"></a>
+<span class="sourceLineNo">128</span>                buf = new byte[oldbuf.length+SZ_INCR];<a name="line.128"></a>
+<span class="sourceLineNo">129</span>                System.arraycopy(oldbuf,0,buf,0,oldbuf.length);<a name="line.129"></a>
+<span class="sourceLineNo">130</span>            }<a name="line.130"></a>
+<span class="sourceLineNo">131</span>        }<a name="line.131"></a>
+<span class="sourceLineNo">132</span>    }<a name="line.132"></a>
+<span class="sourceLineNo">133</span><a name="line.133"></a>
+<span class="sourceLineNo">134</span>    /**<a name="line.134"></a>
+<span class="sourceLineNo">135</span>     * Writes the n least significant bits of 'bits' to the buffer at the<a name="line.135"></a>
+<span class="sourceLineNo">136</span>     * current position. The least significant bit is written last. The 32-n<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     * most significant bits of 'bits' must be 0, otherwise corruption of the<a name="line.137"></a>
+<span class="sourceLineNo">138</span>     * buffer will result. The buffer is enlarged, by 'SZ_INCR' bytes, if<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     * necessary.<a name="line.139"></a>
+<span class="sourceLineNo">140</span>     *<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     * &lt;P&gt;This method is declared final to increase performance.<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     *<a name="line.142"></a>
+<span class="sourceLineNo">143</span>     * @param bits The bits to write.<a name="line.143"></a>
+<span class="sourceLineNo">144</span>     *<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     * @param n The number of LSBs in 'bits' to write.<a name="line.145"></a>
+<span class="sourceLineNo">146</span>     * */<a name="line.146"></a>
+<span class="sourceLineNo">147</span>    public final void writeBits(int bits, int n) {<a name="line.147"></a>
+<span class="sourceLineNo">148</span>        // Check that we have enough place in 'buf' for n bits, and that we do<a name="line.148"></a>
+<span class="sourceLineNo">149</span>        // not fill last byte, taking into account possibly stuffed bits (max<a name="line.149"></a>
+<span class="sourceLineNo">150</span>        // 2)<a name="line.150"></a>
+<span class="sourceLineNo">151</span>        if (((buf.length-curbyte)&lt;&lt;3)-8+avbits &lt;= n+2) {<a name="line.151"></a>
+<span class="sourceLineNo">152</span>            // Not enough place, extend it<a name="line.152"></a>
+<span class="sourceLineNo">153</span>            byte oldbuf[] = buf;<a name="line.153"></a>
+<span class="sourceLineNo">154</span>            buf = new byte[oldbuf.length+SZ_INCR];<a name="line.154"></a>
+<span class="sourceLineNo">155</span>            System.arraycopy(oldbuf,0,buf,0,oldbuf.length);<a name="line.155"></a>
+<span class="sourceLineNo">156</span>            // SZ_INCR is always 6 or more, so it is enough to hold all the<a name="line.156"></a>
+<span class="sourceLineNo">157</span>            // new bits plus the ones to come after<a name="line.157"></a>
+<span class="sourceLineNo">158</span>        }<a name="line.158"></a>
+<span class="sourceLineNo">159</span>        // Now write the bits<a name="line.159"></a>
+<span class="sourceLineNo">160</span>        if (n &gt;= avbits) {<a name="line.160"></a>
+<span class="sourceLineNo">161</span>            // Complete the current byte<a name="line.161"></a>
+<span class="sourceLineNo">162</span>            n -= avbits;<a name="line.162"></a>
+<span class="sourceLineNo">163</span>            buf[curbyte] |= bits &gt;&gt; n;<a name="line.163"></a>
+<span class="sourceLineNo">164</span>            if (buf[curbyte] != (byte) 0xFF) { // We don't need bit stuffing<a name="line.164"></a>
+<span class="sourceLineNo">165</span>                avbits = 8;<a name="line.165"></a>
+<span class="sourceLineNo">166</span>            }<a name="line.166"></a>
+<span class="sourceLineNo">167</span>            else { // We need to stuff a bit (next MSBit is 0)<a name="line.167"></a>
+<span class="sourceLineNo">168</span>                avbits = 7;<a name="line.168"></a>
+<span class="sourceLineNo">169</span>            }<a name="line.169"></a>
+<span class="sourceLineNo">170</span>            curbyte++;<a name="line.170"></a>
+<span class="sourceLineNo">171</span>            // Write whole bytes<a name="line.171"></a>
+<span class="sourceLineNo">172</span>            while (n &gt;= avbits) {<a name="line.172"></a>
+<span class="sourceLineNo">173</span>                n -= avbits;<a name="line.173"></a>
+<span class="sourceLineNo">174</span>                buf[curbyte] |= (bits &gt;&gt; n) &amp; (~(1 &lt;&lt; avbits));<a name="line.174"></a>
+<span class="sourceLineNo">175</span>                if (buf[curbyte] != (byte) 0xFF) { // We don't need bit<a name="line.175"></a>
+<span class="sourceLineNo">176</span>                    // stuffing<a name="line.176"></a>
+<span class="sourceLineNo">177</span>                    avbits = 8;<a name="line.177"></a>
+<span class="sourceLineNo">178</span>                }<a name="line.178"></a>
+<span class="sourceLineNo">179</span>                else { // We need to stuff a bit (next MSBit is 0)<a name="line.179"></a>
+<span class="sourceLineNo">180</span>                    avbits = 7;<a name="line.180"></a>
+<span class="sourceLineNo">181</span>                }<a name="line.181"></a>
+<span class="sourceLineNo">182</span>                curbyte++;<a name="line.182"></a>
+<span class="sourceLineNo">183</span>            }<a name="line.183"></a>
+<span class="sourceLineNo">184</span>        }<a name="line.184"></a>
+<span class="sourceLineNo">185</span>        // Finish last byte (we know that now n &lt; avbits)<a name="line.185"></a>
+<span class="sourceLineNo">186</span>        if (n &gt; 0) {<a name="line.186"></a>
+<span class="sourceLineNo">187</span>            avbits -= n;<a name="line.187"></a>
+<span class="sourceLineNo">188</span>            buf[curbyte] |= (bits &amp; ((1&lt;&lt;n)-1)) &lt;&lt; avbits;<a name="line.188"></a>
+<span class="sourceLineNo">189</span>        }<a name="line.189"></a>
+<span class="sourceLineNo">190</span>        if (avbits == 0) { // Last byte is full<a name="line.190"></a>
+<span class="sourceLineNo">191</span>            if (buf[curbyte] != (byte) 0xFF) { // We don't need bit stuffing<a name="line.191"></a>
+<span class="sourceLineNo">192</span>                avbits = 8;<a name="line.192"></a>
+<span class="sourceLineNo">193</span>            }<a name="line.193"></a>
+<span class="sourceLineNo">194</span>            else { // We need to stuff a bit (next MSBit is 0)<a name="line.194"></a>
+<span class="sourceLineNo">195</span>                avbits = 7;<a name="line.195"></a>
+<span class="sourceLineNo">196</span>            }<a name="line.196"></a>
+<span class="sourceLineNo">197</span>            curbyte++; // We already ensured that we have enough place<a name="line.197"></a>
+<span class="sourceLineNo">198</span>        }<a name="line.198"></a>
+<span class="sourceLineNo">199</span>    }<a name="line.199"></a>
+<span class="sourceLineNo">200</span><a name="line.200"></a>
+<span class="sourceLineNo">201</span>    /**<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     * Returns the current length of the buffer, in bytes.<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     *<a name="line.203"></a>
+<span class="sourceLineNo">204</span>     * &lt;P&gt;This method is declared final to increase performance.<a name="line.204"></a>
+<span class="sourceLineNo">205</span>     *<a name="line.205"></a>
+<span class="sourceLineNo">206</span>     * @return The currebt length of the buffer in bytes.<a name="line.206"></a>
+<span class="sourceLineNo">207</span>     * */<a name="line.207"></a>
+<span class="sourceLineNo">208</span>    public final int getLength() {<a name="line.208"></a>
+<span class="sourceLineNo">209</span>        if (avbits == 8) { // A integral number of bytes<a name="line.209"></a>
+<span class="sourceLineNo">210</span>            return curbyte;<a name="line.210"></a>
+<span class="sourceLineNo">211</span>        }<a name="line.211"></a>
+<span class="sourceLineNo">212</span>        else { // Some bits in last byte<a name="line.212"></a>
+<span class="sourceLineNo">213</span>            return curbyte+1;<a name="line.213"></a>
+<span class="sourceLineNo">214</span>        }<a name="line.214"></a>
+<span class="sourceLineNo">215</span>    }<a name="line.215"></a>
+<span class="sourceLineNo">216</span><a name="line.216"></a>
+<span class="sourceLineNo">217</span>    /**<a name="line.217"></a>
+<span class="sourceLineNo">218</span>     * Returns the byte buffer. This is the internal byte buffer so it should<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     * not be modified. Only the first N elements have valid data, where N is<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * the value returned by 'getLength()'<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     *<a name="line.221"></a>
+<span class="sourceLineNo">222</span>     * &lt;P&gt;This method is declared final to increase performance.<a name="line.222"></a>
+<span class="sourceLineNo">223</span>     *<a name="line.223"></a>
+<span class="sourceLineNo">224</span>     * @return The internal byte buffer.<a name="line.224"></a>
+<span class="sourceLineNo">225</span>     * */<a name="line.225"></a>
+<span class="sourceLineNo">226</span>    public final byte[] getBuffer() {<a name="line.226"></a>
+<span class="sourceLineNo">227</span>        return buf;<a name="line.227"></a>
+<span class="sourceLineNo">228</span>    }<a name="line.228"></a>
+<span class="sourceLineNo">229</span><a name="line.229"></a>
+<span class="sourceLineNo">230</span>    /**<a name="line.230"></a>
+<span class="sourceLineNo">231</span>     * Returns the byte buffer data in a new array. This is a copy of the<a name="line.231"></a>
+<span class="sourceLineNo">232</span>     * internal byte buffer. If 'data' is non-null it is used to return the<a name="line.232"></a>
+<span class="sourceLineNo">233</span>     * data. This array should be large enough to contain all the data,<a name="line.233"></a>
+<span class="sourceLineNo">234</span>     * otherwise a IndexOutOfBoundsException is thrown by the Java system. The<a name="line.234"></a>
+<span class="sourceLineNo">235</span>     * number of elements returned is what 'getLength()' returns.<a name="line.235"></a>
+<span class="sourceLineNo">236</span>     *<a name="line.236"></a>
+<span class="sourceLineNo">237</span>     * @param data If non-null this array is used to return the data, which<a name="line.237"></a>
+<span class="sourceLineNo">238</span>     * mus be large enough. Otherwise a new one is created and returned.<a name="line.238"></a>
+<span class="sourceLineNo">239</span>     *<a name="line.239"></a>
+<span class="sourceLineNo">240</span>     * @return The byte buffer data.<a name="line.240"></a>
+<span class="sourceLineNo">241</span>     * */<a name="line.241"></a>
+<span class="sourceLineNo">242</span>    public byte[] toByteArray(byte data[]) {<a name="line.242"></a>
+<span class="sourceLineNo">243</span>        if (data == null) {<a name="line.243"></a>
+<span class="sourceLineNo">244</span>            data = new byte[(avbits==8)?curbyte:curbyte+1];<a name="line.244"></a>
+<span class="sourceLineNo">245</span>        }<a name="line.245"></a>
+<span class="sourceLineNo">246</span>        System.arraycopy(buf,0,data,0,(avbits==8)?curbyte:curbyte+1);<a name="line.246"></a>
+<span class="sourceLineNo">247</span>        return data;<a name="line.247"></a>
+<span class="sourceLineNo">248</span>    }<a name="line.248"></a>
+<span class="sourceLineNo">249</span><a name="line.249"></a>
+<span class="sourceLineNo">250</span>    /**<a name="line.250"></a>
+<span class="sourceLineNo">251</span>     * Prints information about this object for debugging purposes<a name="line.251"></a>
+<span class="sourceLineNo">252</span>     *<a name="line.252"></a>
+<span class="sourceLineNo">253</span>     * @return Information about the object.<a name="line.253"></a>
+<span class="sourceLineNo">254</span>     * */<a name="line.254"></a>
+<span class="sourceLineNo">255</span>    public String toString() {<a name="line.255"></a>
+<span class="sourceLineNo">256</span>        return "bits written = "+(curbyte*8+(8-avbits))+<a name="line.256"></a>
+<span class="sourceLineNo">257</span>            ", curbyte = "+curbyte+", avbits = "+avbits;<a name="line.257"></a>
+<span class="sourceLineNo">258</span>    }<a name="line.258"></a>
+<span class="sourceLineNo">259</span>}<a name="line.259"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

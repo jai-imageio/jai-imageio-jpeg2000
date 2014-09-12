@@ -1,0 +1,303 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: WaveletFilter.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:28 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Class:                   WaveletFilter<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:             Defines the interface for WT filters (analysis<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *                          and synthesis)<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * COPYRIGHT:<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * <a name="line.15"></a>
+<span class="sourceLineNo">016</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * software module is an implementation of a part of the JPEG 2000<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * including other intellectual property rights, for this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * or modifications thereof for use in hardware or software products<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * this software module in hardware or software products are advised that<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * their use may infringe existing patents. The original developers of<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * for use of this software module or modifications thereof. No license<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module for his/her own purpose, assign or donate this<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * software module to any third party and to inhibit third parties from<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * products. This copyright notice must be included in all copies or<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * derivative works of this software module.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * <a name="line.42"></a>
+<span class="sourceLineNo">043</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> */<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>package jj2000.j2k.wavelet;<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>/**<a name="line.49"></a>
+<span class="sourceLineNo">050</span> * This interface defines how a wavelet filter implementation should<a name="line.50"></a>
+<span class="sourceLineNo">051</span> * present itself. This interface defines only the commonalities<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * between the analysis and synthesis filters. The AnWTFilter<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * and SynWTFilter classes provide the specifics of analysis and<a name="line.53"></a>
+<span class="sourceLineNo">054</span> * synthesis filters.<a name="line.54"></a>
+<span class="sourceLineNo">055</span> *<a name="line.55"></a>
+<span class="sourceLineNo">056</span> * &lt;P&gt;Both analysis and filters must be able to return the<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * extent of the negative and positive support for both synthesis and<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * analysis sides. This simplifies the sue of some functionalities<a name="line.58"></a>
+<span class="sourceLineNo">059</span> * that need extra information about the filters.<a name="line.59"></a>
+<span class="sourceLineNo">060</span> *<a name="line.60"></a>
+<span class="sourceLineNo">061</span> * @see jj2000.j2k.wavelet.analysis.AnWTFilter<a name="line.61"></a>
+<span class="sourceLineNo">062</span> *<a name="line.62"></a>
+<span class="sourceLineNo">063</span> * @see jj2000.j2k.wavelet.synthesis.SynWTFilter<a name="line.63"></a>
+<span class="sourceLineNo">064</span> * */<a name="line.64"></a>
+<span class="sourceLineNo">065</span>public interface WaveletFilter {<a name="line.65"></a>
+<span class="sourceLineNo">066</span><a name="line.66"></a>
+<span class="sourceLineNo">067</span>    /** The ID for integer lifting spteps implementations */<a name="line.67"></a>
+<span class="sourceLineNo">068</span>    public final static int WT_FILTER_INT_LIFT = 0;<a name="line.68"></a>
+<span class="sourceLineNo">069</span><a name="line.69"></a>
+<span class="sourceLineNo">070</span>    /** The ID for floating-point lifting spteps implementations */<a name="line.70"></a>
+<span class="sourceLineNo">071</span>    public final static int WT_FILTER_FLOAT_LIFT = 1;<a name="line.71"></a>
+<span class="sourceLineNo">072</span><a name="line.72"></a>
+<span class="sourceLineNo">073</span>    /** The ID for floatring-poitn convolution implementations */<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    public final static int WT_FILTER_FLOAT_CONVOL = 2;<a name="line.74"></a>
+<span class="sourceLineNo">075</span><a name="line.75"></a>
+<span class="sourceLineNo">076</span>    /**<a name="line.76"></a>
+<span class="sourceLineNo">077</span>     * Returns the negative support of the low-pass analysis<a name="line.77"></a>
+<span class="sourceLineNo">078</span>     * filter. That is the number of taps of the filter in the<a name="line.78"></a>
+<span class="sourceLineNo">079</span>     * negative direction.<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     *<a name="line.80"></a>
+<span class="sourceLineNo">081</span>     * &lt;P&gt;A MORE PRECISE DEFINITION IS NEEDED<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     *<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * @return The number of taps of the low-pass analysis filter in<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     * the negative direction<a name="line.84"></a>
+<span class="sourceLineNo">085</span>     */<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    public int getAnLowNegSupport();<a name="line.86"></a>
+<span class="sourceLineNo">087</span><a name="line.87"></a>
+<span class="sourceLineNo">088</span>    /**<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     * Returns the positive support of the low-pass analysis<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * filter. That is the number of taps of the filter in the<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * negative direction.<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     *<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     * &lt;P&gt;A MORE PRECISE DEFINITION IS NEEDED<a name="line.93"></a>
+<span class="sourceLineNo">094</span>     *<a name="line.94"></a>
+<span class="sourceLineNo">095</span>     * @return The number of taps of the low-pass analysis filter in<a name="line.95"></a>
+<span class="sourceLineNo">096</span>     * the positive direction<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     */<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    public int getAnLowPosSupport();<a name="line.98"></a>
+<span class="sourceLineNo">099</span><a name="line.99"></a>
+<span class="sourceLineNo">100</span>    /**<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     * Returns the negative support of the high-pass analysis<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     * filter. That is the number of taps of the filter in the<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * negative direction.<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     *<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     * &lt;P&gt;A MORE PRECISE DEFINITION IS NEEDED<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     *<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     * @return The number of taps of the high-pass analysis filter in<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     * the negative direction<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     */<a name="line.109"></a>
+<span class="sourceLineNo">110</span>    public int getAnHighNegSupport();<a name="line.110"></a>
+<span class="sourceLineNo">111</span><a name="line.111"></a>
+<span class="sourceLineNo">112</span>    /**<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * Returns the positive support of the high-pass analysis<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     * filter. That is the number of taps of the filter in the<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     * negative direction.<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     *<a name="line.116"></a>
+<span class="sourceLineNo">117</span>     * &lt;P&gt;A MORE PRECISE DEFINITION IS NEEDED<a name="line.117"></a>
+<span class="sourceLineNo">118</span>     *<a name="line.118"></a>
+<span class="sourceLineNo">119</span>     * @return The number of taps of the high-pass analysis filter in<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     * the positive direction<a name="line.120"></a>
+<span class="sourceLineNo">121</span>     */<a name="line.121"></a>
+<span class="sourceLineNo">122</span>    public int getAnHighPosSupport();<a name="line.122"></a>
+<span class="sourceLineNo">123</span><a name="line.123"></a>
+<span class="sourceLineNo">124</span>    /**<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * Returns the negative support of the low-pass synthesis<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     * filter. That is the number of taps of the filter in the<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     * negative direction.<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     *<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     * &lt;P&gt;A MORE PRECISE DEFINITION IS NEEDED<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     *<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     * @return The number of taps of the low-pass synthesis filter in<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     * the negative direction<a name="line.132"></a>
+<span class="sourceLineNo">133</span>     */<a name="line.133"></a>
+<span class="sourceLineNo">134</span>    public int getSynLowNegSupport();<a name="line.134"></a>
+<span class="sourceLineNo">135</span><a name="line.135"></a>
+<span class="sourceLineNo">136</span>    /**<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     * Returns the positive support of the low-pass synthesis<a name="line.137"></a>
+<span class="sourceLineNo">138</span>     * filter. That is the number of taps of the filter in the<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     * negative direction.<a name="line.139"></a>
+<span class="sourceLineNo">140</span>     *<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     * &lt;P&gt;A MORE PRECISE DEFINITION IS NEEDED<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     *<a name="line.142"></a>
+<span class="sourceLineNo">143</span>     * @return The number of taps of the low-pass synthesis filter in<a name="line.143"></a>
+<span class="sourceLineNo">144</span>     * the positive direction<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     */<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    public int getSynLowPosSupport();<a name="line.146"></a>
+<span class="sourceLineNo">147</span><a name="line.147"></a>
+<span class="sourceLineNo">148</span>    /**<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * Returns the negative support of the high-pass synthesis<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     * filter. That is the number of taps of the filter in the<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * negative direction.<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     *<a name="line.152"></a>
+<span class="sourceLineNo">153</span>     * &lt;P&gt;A MORE PRECISE DEFINITION IS NEEDED<a name="line.153"></a>
+<span class="sourceLineNo">154</span>     *<a name="line.154"></a>
+<span class="sourceLineNo">155</span>     * @return The number of taps of the high-pass synthesis filter in<a name="line.155"></a>
+<span class="sourceLineNo">156</span>     * the negative direction<a name="line.156"></a>
+<span class="sourceLineNo">157</span>     */<a name="line.157"></a>
+<span class="sourceLineNo">158</span>    public int getSynHighNegSupport();<a name="line.158"></a>
+<span class="sourceLineNo">159</span><a name="line.159"></a>
+<span class="sourceLineNo">160</span>    /**<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     * Returns the positive support of the high-pass synthesis<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     * filter. That is the number of taps of the filter in the<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     * negative direction.<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     *<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     * &lt;P&gt;A MORE PRECISE DEFINITION IS NEEDED<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     *<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     * @return The number of taps of the high-pass synthesis filter in<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     * the positive direction<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     */<a name="line.169"></a>
+<span class="sourceLineNo">170</span>    public int getSynHighPosSupport();<a name="line.170"></a>
+<span class="sourceLineNo">171</span><a name="line.171"></a>
+<span class="sourceLineNo">172</span>    /**<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     * Returns the implementation type of this filter, as defined in<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     * this class, such as WT_FILTER_INT_LIFT, WT_FILTER_FLOAT_LIFT,<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     * WT_FILTER_FLOAT_CONVOL.<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     *<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     * @return The implementation type of this filter:<a name="line.177"></a>
+<span class="sourceLineNo">178</span>     * WT_FILTER_INT_LIFT, WT_FILTER_FLOAT_LIFT, WT_FILTER_FLOAT_CONVOL.<a name="line.178"></a>
+<span class="sourceLineNo">179</span>     */<a name="line.179"></a>
+<span class="sourceLineNo">180</span>    public int getImplType();<a name="line.180"></a>
+<span class="sourceLineNo">181</span><a name="line.181"></a>
+<span class="sourceLineNo">182</span>    /**<a name="line.182"></a>
+<span class="sourceLineNo">183</span>     * Returns the type of data on which this filter works, as defined<a name="line.183"></a>
+<span class="sourceLineNo">184</span>     * in the DataBlk interface.<a name="line.184"></a>
+<span class="sourceLineNo">185</span>     *<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     * @return The type of data as defined in the DataBlk interface.<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     *<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     * @see jj2000.j2k.image.DataBlk<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     */<a name="line.189"></a>
+<span class="sourceLineNo">190</span>    public int getDataType();<a name="line.190"></a>
+<span class="sourceLineNo">191</span><a name="line.191"></a>
+<span class="sourceLineNo">192</span>    /**<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     * Returns the reversibility of the filter. A filter is considered<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     * reversible if it is suitable for lossless coding.<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     *<a name="line.195"></a>
+<span class="sourceLineNo">196</span>     * @return true if the filter is reversible, false otherwise.<a name="line.196"></a>
+<span class="sourceLineNo">197</span>     */<a name="line.197"></a>
+<span class="sourceLineNo">198</span>    public boolean isReversible();<a name="line.198"></a>
+<span class="sourceLineNo">199</span><a name="line.199"></a>
+<span class="sourceLineNo">200</span>    /**<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     * Returns true if the wavelet filter computes or uses the<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     * same "inner" subband coefficient as the full frame wavelet transform,<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     * and false otherwise. In particular, for block based transforms with <a name="line.203"></a>
+<span class="sourceLineNo">204</span>     * reduced overlap, this method should return false. The term "inner"<a name="line.204"></a>
+<span class="sourceLineNo">205</span>     * indicates that this applies only with respect to the coefficient that <a name="line.205"></a>
+<span class="sourceLineNo">206</span>     * are not affected by image boundaries processings such as symmetric<a name="line.206"></a>
+<span class="sourceLineNo">207</span>     * extension, since there is not reference method for this.<a name="line.207"></a>
+<span class="sourceLineNo">208</span>     *<a name="line.208"></a>
+<span class="sourceLineNo">209</span>     * &lt;P&gt;The result depends on the length of the allowed overlap when<a name="line.209"></a>
+<span class="sourceLineNo">210</span>     * compared to the overlap required by the wavelet filter. It also<a name="line.210"></a>
+<span class="sourceLineNo">211</span>     * depends on how overlap processing is implemented in the wavelet<a name="line.211"></a>
+<span class="sourceLineNo">212</span>     * filter.<a name="line.212"></a>
+<span class="sourceLineNo">213</span>     *<a name="line.213"></a>
+<span class="sourceLineNo">214</span>     * @param tailOvrlp This is the number of samples in the input<a name="line.214"></a>
+<span class="sourceLineNo">215</span>     * signal before the first sample to filter that can be used for<a name="line.215"></a>
+<span class="sourceLineNo">216</span>     * overlap.<a name="line.216"></a>
+<span class="sourceLineNo">217</span>     *<a name="line.217"></a>
+<span class="sourceLineNo">218</span>     * @param headOvrlp This is the number of samples in the input<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     * signal after the last sample to filter that can be used for<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * overlap.<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     *<a name="line.221"></a>
+<span class="sourceLineNo">222</span>     * @param inLen This is the lenght of the input signal to filter.The<a name="line.222"></a>
+<span class="sourceLineNo">223</span>     * required number of samples in the input signal after the last sample<a name="line.223"></a>
+<span class="sourceLineNo">224</span>     * depends on the length of the input signal.<a name="line.224"></a>
+<span class="sourceLineNo">225</span>     *<a name="line.225"></a>
+<span class="sourceLineNo">226</span>     * @return true if the overlaps are large enough and correct processing is <a name="line.226"></a>
+<span class="sourceLineNo">227</span>     * performed, false otherwise.<a name="line.227"></a>
+<span class="sourceLineNo">228</span>     */<a name="line.228"></a>
+<span class="sourceLineNo">229</span>    public boolean isSameAsFullWT(int tailOvrlp, int headOvrlp, int inLen);<a name="line.229"></a>
+<span class="sourceLineNo">230</span><a name="line.230"></a>
+<span class="sourceLineNo">231</span>}<a name="line.231"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: DataBlk.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:12 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Interface:           DataBlk<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:         A generic interface to hold 2D blocks of data.<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * COPYRIGHT:<a name="line.13"></a>
+<span class="sourceLineNo">014</span> *<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * software module is an implementation of a part of the JPEG 2000<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * including other intellectual property rights, for this software module<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * or modifications thereof for use in hardware or software products<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * this software module in hardware or software products are advised that<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * their use may infringe existing patents. The original developers of<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * for use of this software module or modifications thereof. No license<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * software module for his/her own purpose, assign or donate this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module to any third party and to inhibit third parties from<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * products. This copyright notice must be included in all copies or<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * derivative works of this software module.<a name="line.40"></a>
+<span class="sourceLineNo">041</span> *<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.42"></a>
+<span class="sourceLineNo">043</span> *<a name="line.43"></a>
+<span class="sourceLineNo">044</span> *<a name="line.44"></a>
+<span class="sourceLineNo">045</span> *<a name="line.45"></a>
+<span class="sourceLineNo">046</span> */<a name="line.46"></a>
+<span class="sourceLineNo">047</span><a name="line.47"></a>
+<span class="sourceLineNo">048</span>package jj2000.j2k.image;<a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>/**<a name="line.50"></a>
+<span class="sourceLineNo">051</span> * This is a generic abstract class to store data from a block of an<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * image. This class does not have the notion of components. Therefore, it<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * should be used for data from a single component. Subclasses should<a name="line.53"></a>
+<span class="sourceLineNo">054</span> * implement the different types of storage (&lt;tt&gt;int&lt;/tt&gt;,<a name="line.54"></a>
+<span class="sourceLineNo">055</span> * &lt;tt&gt;float&lt;/tt&gt;, etc.).<a name="line.55"></a>
+<span class="sourceLineNo">056</span> *<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * &lt;P&gt;The data is always stored in one array, of the type matching the data<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * type (i.e. for 'int' it's an 'int[]'). The data should be stored in the<a name="line.58"></a>
+<span class="sourceLineNo">059</span> * array in standard scan-line order. That is the samples go from the top-left<a name="line.59"></a>
+<span class="sourceLineNo">060</span> * corner of the code-block to the lower-right corner by line and then column.<a name="line.60"></a>
+<span class="sourceLineNo">061</span> *<a name="line.61"></a>
+<span class="sourceLineNo">062</span> * &lt;P&gt;The member variable 'offset' gives the index in the array of the first<a name="line.62"></a>
+<span class="sourceLineNo">063</span> * data element (i.e. the top-left coefficient (ulx,uly)). The member variable<a name="line.63"></a>
+<span class="sourceLineNo">064</span> * 'scanw' gives the width of the scan that is used to store the data, that<a name="line.64"></a>
+<span class="sourceLineNo">065</span> * can be different from the width of the block. Element '(x,y)' of the<a name="line.65"></a>
+<span class="sourceLineNo">066</span> * code-block (i.e. '(ulx,uly)' is the top-left coefficient), will appear at<a name="line.66"></a>
+<span class="sourceLineNo">067</span> * position 'offset+(y-uly)*scanw+(x-ulx)' in the array of data.<a name="line.67"></a>
+<span class="sourceLineNo">068</span> *<a name="line.68"></a>
+<span class="sourceLineNo">069</span> * &lt;P&gt;A block of data can have the &lt;i&gt;progressive&lt;/i&gt; attribute<a name="line.69"></a>
+<span class="sourceLineNo">070</span> * set. Data is progressive when it is obtained by successive<a name="line.70"></a>
+<span class="sourceLineNo">071</span> * refinement and the values in this block are approximations of the<a name="line.71"></a>
+<span class="sourceLineNo">072</span> * "final" values. When the final values are returned the progressive<a name="line.72"></a>
+<span class="sourceLineNo">073</span> * attribute must be turned off.<a name="line.73"></a>
+<span class="sourceLineNo">074</span> *<a name="line.74"></a>
+<span class="sourceLineNo">075</span> * &lt;P&gt;The classes &lt;tt&gt;DataBlkInt&lt;/tt&gt; and &lt;tt&gt;DataBlkFloat&lt;/tt&gt;<a name="line.75"></a>
+<span class="sourceLineNo">076</span> * provide implementations for &lt;tt&gt;int&lt;/tt&gt; and &lt;tt&gt;float&lt;/tt&gt; types<a name="line.76"></a>
+<span class="sourceLineNo">077</span> * respectively.<a name="line.77"></a>
+<span class="sourceLineNo">078</span> *<a name="line.78"></a>
+<span class="sourceLineNo">079</span> * @see DataBlkInt<a name="line.79"></a>
+<span class="sourceLineNo">080</span> *<a name="line.80"></a>
+<span class="sourceLineNo">081</span> * @see DataBlkFloat<a name="line.81"></a>
+<span class="sourceLineNo">082</span> * */<a name="line.82"></a>
+<span class="sourceLineNo">083</span>public abstract class DataBlk {<a name="line.83"></a>
+<span class="sourceLineNo">084</span><a name="line.84"></a>
+<span class="sourceLineNo">085</span>    /** The identifier for the &lt;tt&gt;byte&lt;/tt&gt; data type, as signed 8<a name="line.85"></a>
+<span class="sourceLineNo">086</span>        bits. */<a name="line.86"></a>
+<span class="sourceLineNo">087</span>    public final static int TYPE_BYTE = 0;<a name="line.87"></a>
+<span class="sourceLineNo">088</span><a name="line.88"></a>
+<span class="sourceLineNo">089</span>    /** The identifier for the &lt;tt&gt;short&lt;/tt&gt; data type, as signed 16<a name="line.89"></a>
+<span class="sourceLineNo">090</span>        bits. */<a name="line.90"></a>
+<span class="sourceLineNo">091</span>    public final static int TYPE_SHORT = 1;<a name="line.91"></a>
+<span class="sourceLineNo">092</span><a name="line.92"></a>
+<span class="sourceLineNo">093</span>    /** The identifier for the &lt;tt&gt;int&lt;/tt&gt; data type, as signed 32<a name="line.93"></a>
+<span class="sourceLineNo">094</span>        bits. */<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    public final static int TYPE_INT = 3;<a name="line.95"></a>
+<span class="sourceLineNo">096</span><a name="line.96"></a>
+<span class="sourceLineNo">097</span>    /** The identifier for the &lt;tt&gt;float&lt;/tt&gt; data type */<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    public final static int TYPE_FLOAT = 4;<a name="line.98"></a>
+<span class="sourceLineNo">099</span><a name="line.99"></a>
+<span class="sourceLineNo">100</span>    /** The horizontal coordinate (in pixels) of the upper-left corner<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     *  of the block of data. This is relative to the component of the<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     *  image from where this block was filled or is to be filled.<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     */<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    public int ulx;<a name="line.104"></a>
+<span class="sourceLineNo">105</span><a name="line.105"></a>
+<span class="sourceLineNo">106</span>    /** The vertical coordinate of the upper-left corner of the block<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     *  of data. This is relative to the component of the image from where<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     *  this block was filled or is to be filled.<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     */<a name="line.109"></a>
+<span class="sourceLineNo">110</span>    public int uly;<a name="line.110"></a>
+<span class="sourceLineNo">111</span><a name="line.111"></a>
+<span class="sourceLineNo">112</span>    /** The width of the block, in pixels. */<a name="line.112"></a>
+<span class="sourceLineNo">113</span>    public int w;<a name="line.113"></a>
+<span class="sourceLineNo">114</span><a name="line.114"></a>
+<span class="sourceLineNo">115</span>    /** The height of the block, in pixels. */<a name="line.115"></a>
+<span class="sourceLineNo">116</span>    public int h;<a name="line.116"></a>
+<span class="sourceLineNo">117</span><a name="line.117"></a>
+<span class="sourceLineNo">118</span>    /** The offset in the array of the top-left coefficient */<a name="line.118"></a>
+<span class="sourceLineNo">119</span>    public int offset;<a name="line.119"></a>
+<span class="sourceLineNo">120</span><a name="line.120"></a>
+<span class="sourceLineNo">121</span>    /** The width of the scanlines used to store the data in the array */<a name="line.121"></a>
+<span class="sourceLineNo">122</span>    public int scanw;<a name="line.122"></a>
+<span class="sourceLineNo">123</span><a name="line.123"></a>
+<span class="sourceLineNo">124</span>    /** The progressive attribute (&lt;tt&gt;false&lt;/tt&gt; by default) */<a name="line.124"></a>
+<span class="sourceLineNo">125</span>    public boolean progressive;<a name="line.125"></a>
+<span class="sourceLineNo">126</span><a name="line.126"></a>
+<span class="sourceLineNo">127</span>    /**<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     * Returns the size in bits, given the data type. The data type<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     * must be one defined in this class. An<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     * &lt;tt&gt;IllegalArgumentException&lt;/tt&gt; is thrown if &lt;tt&gt;type&lt;/tt&gt; is<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     * not defined in this class.<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     *<a name="line.132"></a>
+<span class="sourceLineNo">133</span>     * @param type The data type.<a name="line.133"></a>
+<span class="sourceLineNo">134</span>     *<a name="line.134"></a>
+<span class="sourceLineNo">135</span>     * @return The size in bits of the data type.<a name="line.135"></a>
+<span class="sourceLineNo">136</span>     *<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     *<a name="line.137"></a>
+<span class="sourceLineNo">138</span>     *<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     */<a name="line.139"></a>
+<span class="sourceLineNo">140</span>    public static int getSize(int type) {<a name="line.140"></a>
+<span class="sourceLineNo">141</span>        switch (type) {<a name="line.141"></a>
+<span class="sourceLineNo">142</span>        case TYPE_BYTE:<a name="line.142"></a>
+<span class="sourceLineNo">143</span>            return 8;<a name="line.143"></a>
+<span class="sourceLineNo">144</span>        case TYPE_SHORT:<a name="line.144"></a>
+<span class="sourceLineNo">145</span>            return 16;<a name="line.145"></a>
+<span class="sourceLineNo">146</span>        case TYPE_INT:<a name="line.146"></a>
+<span class="sourceLineNo">147</span>        case TYPE_FLOAT:<a name="line.147"></a>
+<span class="sourceLineNo">148</span>            return 32;<a name="line.148"></a>
+<span class="sourceLineNo">149</span>        default:<a name="line.149"></a>
+<span class="sourceLineNo">150</span>            throw new IllegalArgumentException();<a name="line.150"></a>
+<span class="sourceLineNo">151</span>        }<a name="line.151"></a>
+<span class="sourceLineNo">152</span>    }<a name="line.152"></a>
+<span class="sourceLineNo">153</span><a name="line.153"></a>
+<span class="sourceLineNo">154</span>    /**<a name="line.154"></a>
+<span class="sourceLineNo">155</span>     * Returns the data type of the &lt;tt&gt;DataBlk&lt;/tt&gt; object, as<a name="line.155"></a>
+<span class="sourceLineNo">156</span>     * defined in this class.<a name="line.156"></a>
+<span class="sourceLineNo">157</span>     *<a name="line.157"></a>
+<span class="sourceLineNo">158</span>     * @return The data type of the object, as defined in thsi class.<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     *<a name="line.159"></a>
+<span class="sourceLineNo">160</span>     *<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     *<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     */<a name="line.162"></a>
+<span class="sourceLineNo">163</span>    public abstract int getDataType();<a name="line.163"></a>
+<span class="sourceLineNo">164</span><a name="line.164"></a>
+<span class="sourceLineNo">165</span>    /**<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     * Returns the array containing the data, or null if there is no<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     * data. The returned array is of the type returned by<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     * &lt;tt&gt;getDataType()&lt;/tt&gt; (e.g., for &lt;tt&gt;TYPE_INT&lt;/tt&gt;, it is a<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     * &lt;tt&gt;int[]&lt;/tt&gt;).<a name="line.169"></a>
+<span class="sourceLineNo">170</span>     *<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     * &lt;P&gt;Each implementing class should provide a type specific<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     * equivalent method (e.g., &lt;tt&gt;getDataInt()&lt;/tt&gt; in<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     * &lt;tt&gt;DataBlkInt&lt;/tt&gt;) which returns an array of the correct<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     * type explicetely and not through an &lt;tt&gt;Object&lt;/tt&gt;.<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     *<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     * @return The array containing the data, or &lt;tt&gt;null&lt;/tt&gt; if<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     *         there is no data.<a name="line.177"></a>
+<span class="sourceLineNo">178</span>     *<a name="line.178"></a>
+<span class="sourceLineNo">179</span>     *<a name="line.179"></a>
+<span class="sourceLineNo">180</span>     *<a name="line.180"></a>
+<span class="sourceLineNo">181</span>     * @see #getDataType<a name="line.181"></a>
+<span class="sourceLineNo">182</span>     *<a name="line.182"></a>
+<span class="sourceLineNo">183</span>     */<a name="line.183"></a>
+<span class="sourceLineNo">184</span>    public abstract Object getData();<a name="line.184"></a>
+<span class="sourceLineNo">185</span><a name="line.185"></a>
+<span class="sourceLineNo">186</span>    /**<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     * Sets the data array to the specified one. The type of the<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     * specified data array must match the one returned by<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     * &lt;tt&gt;getDataType()&lt;/tt&gt; (e.g., for &lt;tt&gt;TYPE_INT&lt;/tt&gt;, it should<a name="line.189"></a>
+<span class="sourceLineNo">190</span>     * be a &lt;tt&gt;int[]&lt;/tt&gt;). If the wrong type of array is given a<a name="line.190"></a>
+<span class="sourceLineNo">191</span>     * &lt;tt&gt;ClassCastException&lt;/tt&gt; will be thrown.<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     *<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     * &lt;P&gt;The size of the array is not necessarily checked for<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     * consistency with &lt;tt&gt;w&lt;/tt&gt; and &lt;tt&gt;h&lt;/tt&gt; or any other fields.<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     *<a name="line.195"></a>
+<span class="sourceLineNo">196</span>     * &lt;P&gt;Each implementing class should provide a type specific<a name="line.196"></a>
+<span class="sourceLineNo">197</span>     * equivalent method (e.g., &lt;tt&gt;setDataInt()&lt;/tt&gt; in<a name="line.197"></a>
+<span class="sourceLineNo">198</span>     * &lt;tt&gt;DataBlkInt&lt;/tt&gt;) which takes an array of the correct<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     * type explicetely and not through an &lt;tt&gt;Object&lt;/tt&gt;.<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     *<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     * @param arr The new data array to use<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     *<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     *<a name="line.203"></a>
+<span class="sourceLineNo">204</span>     *<a name="line.204"></a>
+<span class="sourceLineNo">205</span>     * @see #getDataType<a name="line.205"></a>
+<span class="sourceLineNo">206</span>     * */<a name="line.206"></a>
+<span class="sourceLineNo">207</span>    public abstract void setData(Object arr);<a name="line.207"></a>
+<span class="sourceLineNo">208</span><a name="line.208"></a>
+<span class="sourceLineNo">209</span>    /**<a name="line.209"></a>
+<span class="sourceLineNo">210</span>     * Returns a string of informations about the DataBlk<a name="line.210"></a>
+<span class="sourceLineNo">211</span>     *<a name="line.211"></a>
+<span class="sourceLineNo">212</span>     * @return Block dimensions and progressiveness in a string<a name="line.212"></a>
+<span class="sourceLineNo">213</span>     *<a name="line.213"></a>
+<span class="sourceLineNo">214</span>     *<a name="line.214"></a>
+<span class="sourceLineNo">215</span>     */<a name="line.215"></a>
+<span class="sourceLineNo">216</span>    public String toString(){<a name="line.216"></a>
+<span class="sourceLineNo">217</span>        String typeString = "";<a name="line.217"></a>
+<span class="sourceLineNo">218</span>        switch(getDataType()){<a name="line.218"></a>
+<span class="sourceLineNo">219</span>        case  TYPE_BYTE:<a name="line.219"></a>
+<span class="sourceLineNo">220</span>            typeString = "Unsigned Byte";<a name="line.220"></a>
+<span class="sourceLineNo">221</span>            break;<a name="line.221"></a>
+<span class="sourceLineNo">222</span>        case  TYPE_SHORT:<a name="line.222"></a>
+<span class="sourceLineNo">223</span>            typeString = "Short";<a name="line.223"></a>
+<span class="sourceLineNo">224</span>            break;<a name="line.224"></a>
+<span class="sourceLineNo">225</span>        case  TYPE_INT:<a name="line.225"></a>
+<span class="sourceLineNo">226</span>            typeString = "Integer";<a name="line.226"></a>
+<span class="sourceLineNo">227</span>            break;<a name="line.227"></a>
+<span class="sourceLineNo">228</span>        case  TYPE_FLOAT:<a name="line.228"></a>
+<span class="sourceLineNo">229</span>            typeString = "Float";<a name="line.229"></a>
+<span class="sourceLineNo">230</span>            break;<a name="line.230"></a>
+<span class="sourceLineNo">231</span>        }<a name="line.231"></a>
+<span class="sourceLineNo">232</span><a name="line.232"></a>
+<span class="sourceLineNo">233</span>        return<a name="line.233"></a>
+<span class="sourceLineNo">234</span>            "DataBlk: "+<a name="line.234"></a>
+<span class="sourceLineNo">235</span>            "upper-left("+ulx+","+uly+"), width= "+w+<a name="line.235"></a>
+<span class="sourceLineNo">236</span>            ", height= "+h+", progressive= "+progressive+<a name="line.236"></a>
+<span class="sourceLineNo">237</span>            ", offset= "+offset+", scanw= "+scanw+<a name="line.237"></a>
+<span class="sourceLineNo">238</span>            ", type= "+typeString;<a name="line.238"></a>
+<span class="sourceLineNo">239</span>    }<a name="line.239"></a>
+<span class="sourceLineNo">240</span>}<a name="line.240"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

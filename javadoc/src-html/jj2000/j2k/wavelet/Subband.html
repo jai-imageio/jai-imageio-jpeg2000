@@ -1,0 +1,653 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> *<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $RCSfile: Subband.java,v $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Revision: 1.1 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $Date: 2005/02/11 05:02:27 $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * $State: Exp $<a name="line.6"></a>
+<span class="sourceLineNo">007</span> *<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * Class:                   Subband<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *<a name="line.9"></a>
+<span class="sourceLineNo">010</span> * Description:             Asbtract element for a tree strcuture for<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *                          a description of subbands.<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *<a name="line.13"></a>
+<span class="sourceLineNo">014</span> *<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * COPYRIGHT:<a name="line.15"></a>
+<span class="sourceLineNo">016</span> *<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * software module is an implementation of a part of the JPEG 2000<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * including other intellectual property rights, for this software module<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * or modifications thereof for use in hardware or software products<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * this software module in hardware or software products are advised that<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * their use may infringe existing patents. The original developers of<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * for use of this software module or modifications thereof. No license<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * software module for his/her own purpose, assign or donate this<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * software module to any third party and to inhibit third parties from<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * products. This copyright notice must be included in all copies or<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * derivative works of this software module.<a name="line.42"></a>
+<span class="sourceLineNo">043</span> *<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.44"></a>
+<span class="sourceLineNo">045</span> *  */<a name="line.45"></a>
+<span class="sourceLineNo">046</span>package jj2000.j2k.wavelet;<a name="line.46"></a>
+<span class="sourceLineNo">047</span><a name="line.47"></a>
+<span class="sourceLineNo">048</span>import java.awt.Point;<a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>/**<a name="line.50"></a>
+<span class="sourceLineNo">051</span> * This abstract class represents a subband in a bidirectional tree structure<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * that describes the subband decomposition for a wavelet transform. This<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * class is implemented by the SubbandAn and SubbandSyn classes, which are for<a name="line.53"></a>
+<span class="sourceLineNo">054</span> * the analysis and synthesis sides, respectively.<a name="line.54"></a>
+<span class="sourceLineNo">055</span> *<a name="line.55"></a>
+<span class="sourceLineNo">056</span> * &lt;P&gt;The element can be either a node or a leaf of the tree. If it is a node<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * then ther are 4 descendants (LL, HL, LH and HH). If it is a leaf ther are<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * no descendants.<a name="line.58"></a>
+<span class="sourceLineNo">059</span> *<a name="line.59"></a>
+<span class="sourceLineNo">060</span> * &lt;P&gt;The tree is bidirectional. Each element in the tree structure has a<a name="line.60"></a>
+<span class="sourceLineNo">061</span> * "parent", which is the subband from which the element was obtained by<a name="line.61"></a>
+<span class="sourceLineNo">062</span> * decomposition. The only exception is the root element which has no parent<a name="line.62"></a>
+<span class="sourceLineNo">063</span> * (i.e.it's null), for obvious reasons.<a name="line.63"></a>
+<span class="sourceLineNo">064</span> *<a name="line.64"></a>
+<span class="sourceLineNo">065</span> * @see jj2000.j2k.wavelet.analysis.SubbandAn<a name="line.65"></a>
+<span class="sourceLineNo">066</span> * @see jj2000.j2k.wavelet.synthesis.SubbandSyn<a name="line.66"></a>
+<span class="sourceLineNo">067</span> * */<a name="line.67"></a>
+<span class="sourceLineNo">068</span>public abstract class Subband {<a name="line.68"></a>
+<span class="sourceLineNo">069</span><a name="line.69"></a>
+<span class="sourceLineNo">070</span>    /** The ID for the LL orientation */<a name="line.70"></a>
+<span class="sourceLineNo">071</span>    public final static int WT_ORIENT_LL = 0;<a name="line.71"></a>
+<span class="sourceLineNo">072</span><a name="line.72"></a>
+<span class="sourceLineNo">073</span>    /** The ID for the HL (horizontal high-pass) orientation */<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    public final static int WT_ORIENT_HL = 1;<a name="line.74"></a>
+<span class="sourceLineNo">075</span><a name="line.75"></a>
+<span class="sourceLineNo">076</span>    /** The ID for the LH (vertical high-pass) orientation */<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    public final static int WT_ORIENT_LH = 2;<a name="line.77"></a>
+<span class="sourceLineNo">078</span><a name="line.78"></a>
+<span class="sourceLineNo">079</span>    /** The ID for the HH orientation */<a name="line.79"></a>
+<span class="sourceLineNo">080</span>    public final static int WT_ORIENT_HH = 3;<a name="line.80"></a>
+<span class="sourceLineNo">081</span><a name="line.81"></a>
+<span class="sourceLineNo">082</span>    /**<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * True if it is a node in the tree, false if it is a leaf. False by<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     * default.  */<a name="line.84"></a>
+<span class="sourceLineNo">085</span>    public boolean isNode;<a name="line.85"></a>
+<span class="sourceLineNo">086</span><a name="line.86"></a>
+<span class="sourceLineNo">087</span>    /**<a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * The orientation of this subband (WT_ORIENT_LL, WT_ORIENT_HL,<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     * WT_ORIENT_LH, WT_ORIENT_HH). It is WT_ORIENT_LL by default. The<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * orientation of the top-level node (i.e. the full image before any<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * decomposition) is WT_ORIENT_LL.  */<a name="line.91"></a>
+<span class="sourceLineNo">092</span>    // The default value is always 0, which is WT_ORIENT_LL.<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    public int orientation;<a name="line.93"></a>
+<span class="sourceLineNo">094</span><a name="line.94"></a>
+<span class="sourceLineNo">095</span>    /**<a name="line.95"></a>
+<span class="sourceLineNo">096</span>     * The level in the tree to which this subband belongs, which is the<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     * number of wavelet decompositions performed to produce this subband. It<a name="line.97"></a>
+<span class="sourceLineNo">098</span>     * is 0 for the top-level (i.e. root) node. It is 0 by default.<a name="line.98"></a>
+<span class="sourceLineNo">099</span>     * */<a name="line.99"></a>
+<span class="sourceLineNo">100</span>    public int level;<a name="line.100"></a>
+<span class="sourceLineNo">101</span><a name="line.101"></a>
+<span class="sourceLineNo">102</span>    /**<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * The resolution level to which this subband contributes. Level 0 is the<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     * smallest resolution level (the one with the lowest frequency LL<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     * subband). It is 0 by default.<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     * */<a name="line.106"></a>
+<span class="sourceLineNo">107</span>    public int resLvl;<a name="line.107"></a>
+<span class="sourceLineNo">108</span><a name="line.108"></a>
+<span class="sourceLineNo">109</span>    /** The number of code-blocks (in both directions) contained in this<a name="line.109"></a>
+<span class="sourceLineNo">110</span>     * subband.  */<a name="line.110"></a>
+<span class="sourceLineNo">111</span>    public Point numCb = null;<a name="line.111"></a>
+<span class="sourceLineNo">112</span><a name="line.112"></a>
+<span class="sourceLineNo">113</span>    /**<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     * The base 2 exponent of the analysis gain of the subband. The analysis<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     * gain of a subband is defined as the gain of the previous subband<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     * (i.e. the one from which this one was obtained) multiplied by the line<a name="line.116"></a>
+<span class="sourceLineNo">117</span>     * gain and by the column gain. The line (column) gain is the gain of the<a name="line.117"></a>
+<span class="sourceLineNo">118</span>     * line (column) filter that was used to obtain it, which is the DC gain<a name="line.118"></a>
+<span class="sourceLineNo">119</span>     * for a low-pass filter and the Nyquist gain for a high-pass filter. It<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     * is 0 by default.<a name="line.120"></a>
+<span class="sourceLineNo">121</span>     *<a name="line.121"></a>
+<span class="sourceLineNo">122</span>     * &lt;P&gt;Using the base 2 exponent of the value contrains the possible gains<a name="line.122"></a>
+<span class="sourceLineNo">123</span>     * to powers of 2. However this is perfectly compatible to the filter<a name="line.123"></a>
+<span class="sourceLineNo">124</span>     * normalization policy assumed here. See the split() method for more<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * details.<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     *<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     * @see #split<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     * */<a name="line.128"></a>
+<span class="sourceLineNo">129</span>    public int anGainExp;<a name="line.129"></a>
+<span class="sourceLineNo">130</span><a name="line.130"></a>
+<span class="sourceLineNo">131</span>    /**<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     * The subband index within its resolution level. This value uniquely<a name="line.132"></a>
+<span class="sourceLineNo">133</span>     * identifies a subband within a resolution level and a decomposition<a name="line.133"></a>
+<span class="sourceLineNo">134</span>     * level within it. Note that only leaf elements represent "real"<a name="line.134"></a>
+<span class="sourceLineNo">135</span>     * subbands, while node elements represent only intermediate stages.<a name="line.135"></a>
+<span class="sourceLineNo">136</span>     *<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     * &lt;P&gt;It is defined recursively. The root node gets a value of 0. For a<a name="line.137"></a>
+<span class="sourceLineNo">138</span>     * given node, with a subband index 'b', its LL descendant gets 4*b, its<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     * HL descendant 4*b+1, its LH descendant 4*b+2, and its HH descendant<a name="line.139"></a>
+<span class="sourceLineNo">140</span>     * 4*b+3, for their subband indexes.<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     * */<a name="line.141"></a>
+<span class="sourceLineNo">142</span>    public int sbandIdx = 0;<a name="line.142"></a>
+<span class="sourceLineNo">143</span><a name="line.143"></a>
+<span class="sourceLineNo">144</span>    /**<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     * The horizontal coordinate of the upper-left corner of the subband, with<a name="line.145"></a>
+<span class="sourceLineNo">146</span>     * respect to the canvas origin, in the component's grid and subband's<a name="line.146"></a>
+<span class="sourceLineNo">147</span>     * decomposition level. This is the real horizontal index of the first<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     * column of this subband. If even the horizontal decomposition of this<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * subband should be done with the low-pass-first convention. If odd it<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     * should be done with the high-pass-first convention.<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * */<a name="line.151"></a>
+<span class="sourceLineNo">152</span>    public int ulcx;<a name="line.152"></a>
+<span class="sourceLineNo">153</span><a name="line.153"></a>
+<span class="sourceLineNo">154</span>    /**<a name="line.154"></a>
+<span class="sourceLineNo">155</span>     * The vertical coordinate of the upper-left corner of the subband, with<a name="line.155"></a>
+<span class="sourceLineNo">156</span>     * respect to the canvas origin, in the component's grid and subband's<a name="line.156"></a>
+<span class="sourceLineNo">157</span>     * decomposition level. This is the real vertical index of the first<a name="line.157"></a>
+<span class="sourceLineNo">158</span>     * column of this subband. If even the vertical decomposition of this<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     * subband should be done with the low-pass-first convention. If odd it<a name="line.159"></a>
+<span class="sourceLineNo">160</span>     * should be done with the high-pass-first convention.<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     * */<a name="line.161"></a>
+<span class="sourceLineNo">162</span>    public int ulcy;<a name="line.162"></a>
+<span class="sourceLineNo">163</span><a name="line.163"></a>
+<span class="sourceLineNo">164</span>    /** The horizontal coordinate of the upper-left corner of the subband */<a name="line.164"></a>
+<span class="sourceLineNo">165</span>    public int ulx;<a name="line.165"></a>
+<span class="sourceLineNo">166</span><a name="line.166"></a>
+<span class="sourceLineNo">167</span>    /** The vertical coordinate of the upper-left corner of the subband */<a name="line.167"></a>
+<span class="sourceLineNo">168</span>    public int uly;<a name="line.168"></a>
+<span class="sourceLineNo">169</span><a name="line.169"></a>
+<span class="sourceLineNo">170</span>    /** The width of the subband */<a name="line.170"></a>
+<span class="sourceLineNo">171</span>    public int w;<a name="line.171"></a>
+<span class="sourceLineNo">172</span><a name="line.172"></a>
+<span class="sourceLineNo">173</span>    /** The height of the subband */<a name="line.173"></a>
+<span class="sourceLineNo">174</span>    public int h;<a name="line.174"></a>
+<span class="sourceLineNo">175</span><a name="line.175"></a>
+<span class="sourceLineNo">176</span>    /** The nominal code-block width */<a name="line.176"></a>
+<span class="sourceLineNo">177</span>    public int nomCBlkW;<a name="line.177"></a>
+<span class="sourceLineNo">178</span><a name="line.178"></a>
+<span class="sourceLineNo">179</span>    /** The nominal code-block height */<a name="line.179"></a>
+<span class="sourceLineNo">180</span>    public int nomCBlkH;<a name="line.180"></a>
+<span class="sourceLineNo">181</span><a name="line.181"></a>
+<span class="sourceLineNo">182</span>    /**<a name="line.182"></a>
+<span class="sourceLineNo">183</span>     * Returns the parent of this subband. The parent of a subband is the<a name="line.183"></a>
+<span class="sourceLineNo">184</span>     * subband from which this one was obtained by decomposition. The root<a name="line.184"></a>
+<span class="sourceLineNo">185</span>     * element has no parent subband (null).<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     *<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     * @return The parent subband, or null for the root one.<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     * */<a name="line.188"></a>
+<span class="sourceLineNo">189</span>    public abstract Subband getParent();<a name="line.189"></a>
+<span class="sourceLineNo">190</span><a name="line.190"></a>
+<span class="sourceLineNo">191</span>    /**<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     * Returns the LL child subband of this subband.<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     *<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     * @return The LL child subband, or null if there are no childs.<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     * */<a name="line.195"></a>
+<span class="sourceLineNo">196</span>    public abstract Subband getLL();<a name="line.196"></a>
+<span class="sourceLineNo">197</span><a name="line.197"></a>
+<span class="sourceLineNo">198</span>    /**<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     * Returns the HL (horizontal high-pass) child subband of this subband.<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     *<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     * @return The HL child subband, or null if there are no childs.<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     * */<a name="line.202"></a>
+<span class="sourceLineNo">203</span>    public abstract Subband getHL();<a name="line.203"></a>
+<span class="sourceLineNo">204</span><a name="line.204"></a>
+<span class="sourceLineNo">205</span>    /**<a name="line.205"></a>
+<span class="sourceLineNo">206</span>     * Returns the LH (vertical high-pass) child subband of this subband.<a name="line.206"></a>
+<span class="sourceLineNo">207</span>     *<a name="line.207"></a>
+<span class="sourceLineNo">208</span>     * @return The LH child subband, or null if there are no childs.<a name="line.208"></a>
+<span class="sourceLineNo">209</span>     * */<a name="line.209"></a>
+<span class="sourceLineNo">210</span>    public abstract Subband getLH();<a name="line.210"></a>
+<span class="sourceLineNo">211</span><a name="line.211"></a>
+<span class="sourceLineNo">212</span>    /**<a name="line.212"></a>
+<span class="sourceLineNo">213</span>     * Returns the HH child subband of this subband.<a name="line.213"></a>
+<span class="sourceLineNo">214</span>     *<a name="line.214"></a>
+<span class="sourceLineNo">215</span>     * @return The HH child subband, or null if there are no childs.<a name="line.215"></a>
+<span class="sourceLineNo">216</span>     * */<a name="line.216"></a>
+<span class="sourceLineNo">217</span>    public abstract Subband getHH();<a name="line.217"></a>
+<span class="sourceLineNo">218</span><a name="line.218"></a>
+<span class="sourceLineNo">219</span>    /**<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * Splits the current subband in its four subbands. This creates the four<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     * childs (LL, HL, LH and HH) and converts the leaf in a node.<a name="line.221"></a>
+<span class="sourceLineNo">222</span>     *<a name="line.222"></a>
+<span class="sourceLineNo">223</span>     * @param hfilter The horizontal wavelet filter used to decompose this<a name="line.223"></a>
+<span class="sourceLineNo">224</span>     * subband.<a name="line.224"></a>
+<span class="sourceLineNo">225</span>     *<a name="line.225"></a>
+<span class="sourceLineNo">226</span>     * @param vfilter The vertical wavelet filter used to decompose this<a name="line.226"></a>
+<span class="sourceLineNo">227</span>     * subband.<a name="line.227"></a>
+<span class="sourceLineNo">228</span>     *<a name="line.228"></a>
+<span class="sourceLineNo">229</span>     * @return  A reference to the LL leaf (getLL()).<a name="line.229"></a>
+<span class="sourceLineNo">230</span>     * */<a name="line.230"></a>
+<span class="sourceLineNo">231</span>    protected abstract Subband split(WaveletFilter hfilter,<a name="line.231"></a>
+<span class="sourceLineNo">232</span>                                     WaveletFilter vfilter);<a name="line.232"></a>
+<span class="sourceLineNo">233</span><a name="line.233"></a>
+<span class="sourceLineNo">234</span>    /**<a name="line.234"></a>
+<span class="sourceLineNo">235</span>     * Initializes the childs of this node with the correct values. The sizes<a name="line.235"></a>
+<span class="sourceLineNo">236</span>     * of the child subbands are calculated by taking into account the<a name="line.236"></a>
+<span class="sourceLineNo">237</span>     * position of the subband in the canvas.<a name="line.237"></a>
+<span class="sourceLineNo">238</span>     *<a name="line.238"></a>
+<span class="sourceLineNo">239</span>     * &lt;P&gt;For the analysis subband gain calculation it is assumed that<a name="line.239"></a>
+<span class="sourceLineNo">240</span>     * analysis filters are normalized with a DC gain of 1 and a Nyquist gain<a name="line.240"></a>
+<span class="sourceLineNo">241</span>     * of 2.<a name="line.241"></a>
+<span class="sourceLineNo">242</span>     * */<a name="line.242"></a>
+<span class="sourceLineNo">243</span>    protected void initChilds() {<a name="line.243"></a>
+<span class="sourceLineNo">244</span>        Subband subb_LL = getLL();<a name="line.244"></a>
+<span class="sourceLineNo">245</span>        Subband subb_HL = getHL();<a name="line.245"></a>
+<span class="sourceLineNo">246</span>        Subband subb_LH = getLH();<a name="line.246"></a>
+<span class="sourceLineNo">247</span>        Subband subb_HH = getHH();<a name="line.247"></a>
+<span class="sourceLineNo">248</span><a name="line.248"></a>
+<span class="sourceLineNo">249</span>        // LL subband<a name="line.249"></a>
+<span class="sourceLineNo">250</span>        subb_LL.level = level+1;<a name="line.250"></a>
+<span class="sourceLineNo">251</span>        subb_LL.ulcx = (ulcx+1)&gt;&gt;1;<a name="line.251"></a>
+<span class="sourceLineNo">252</span>        subb_LL.ulcy = (ulcy+1)&gt;&gt;1;<a name="line.252"></a>
+<span class="sourceLineNo">253</span>        subb_LL.ulx = ulx;<a name="line.253"></a>
+<span class="sourceLineNo">254</span>        subb_LL.uly = uly;<a name="line.254"></a>
+<span class="sourceLineNo">255</span>        subb_LL.w = ((ulcx+w+1)&gt;&gt;1)-subb_LL.ulcx;<a name="line.255"></a>
+<span class="sourceLineNo">256</span>        subb_LL.h = ((ulcy+h+1)&gt;&gt;1)-subb_LL.ulcy;<a name="line.256"></a>
+<span class="sourceLineNo">257</span>        // If this subband in in the all LL path (i.e. it's global orientation<a name="line.257"></a>
+<span class="sourceLineNo">258</span>        // is LL) then child LL band contributes to a lower resolution level.<a name="line.258"></a>
+<span class="sourceLineNo">259</span>        subb_LL.resLvl = (orientation == WT_ORIENT_LL) ? resLvl-1 : resLvl;<a name="line.259"></a>
+<span class="sourceLineNo">260</span>        subb_LL.anGainExp = anGainExp;<a name="line.260"></a>
+<span class="sourceLineNo">261</span>        subb_LL.sbandIdx = (sbandIdx&lt;&lt;2);<a name="line.261"></a>
+<span class="sourceLineNo">262</span>        // HL subband<a name="line.262"></a>
+<span class="sourceLineNo">263</span>        subb_HL.orientation = WT_ORIENT_HL;<a name="line.263"></a>
+<span class="sourceLineNo">264</span>        subb_HL.level = subb_LL.level;<a name="line.264"></a>
+<span class="sourceLineNo">265</span>        subb_HL.ulcx = ulcx&gt;&gt;1;<a name="line.265"></a>
+<span class="sourceLineNo">266</span>        subb_HL.ulcy = subb_LL.ulcy;<a name="line.266"></a>
+<span class="sourceLineNo">267</span>        subb_HL.ulx = ulx + subb_LL.w;<a name="line.267"></a>
+<span class="sourceLineNo">268</span>        subb_HL.uly = uly;<a name="line.268"></a>
+<span class="sourceLineNo">269</span>        subb_HL.w = ((ulcx+w)&gt;&gt;1)-subb_HL.ulcx;<a name="line.269"></a>
+<span class="sourceLineNo">270</span>        subb_HL.h = subb_LL.h;<a name="line.270"></a>
+<span class="sourceLineNo">271</span>        subb_HL.resLvl = resLvl;<a name="line.271"></a>
+<span class="sourceLineNo">272</span>        subb_HL.anGainExp = anGainExp+1;<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        subb_HL.sbandIdx = (sbandIdx&lt;&lt;2)+1;<a name="line.273"></a>
+<span class="sourceLineNo">274</span>        // LH subband<a name="line.274"></a>
+<span class="sourceLineNo">275</span>        subb_LH.orientation = WT_ORIENT_LH;<a name="line.275"></a>
+<span class="sourceLineNo">276</span>        subb_LH.level = subb_LL.level;<a name="line.276"></a>
+<span class="sourceLineNo">277</span>        subb_LH.ulcx = subb_LL.ulcx;<a name="line.277"></a>
+<span class="sourceLineNo">278</span>        subb_LH.ulcy = ulcy&gt;&gt;1;<a name="line.278"></a>
+<span class="sourceLineNo">279</span>        subb_LH.ulx = ulx;<a name="line.279"></a>
+<span class="sourceLineNo">280</span>        subb_LH.uly = uly + subb_LL.h;<a name="line.280"></a>
+<span class="sourceLineNo">281</span>        subb_LH.w = subb_LL.w;<a name="line.281"></a>
+<span class="sourceLineNo">282</span>        subb_LH.h = ((ulcy+h)&gt;&gt;1)-subb_LH.ulcy;<a name="line.282"></a>
+<span class="sourceLineNo">283</span>        subb_LH.resLvl = resLvl;<a name="line.283"></a>
+<span class="sourceLineNo">284</span>        subb_LH.anGainExp = anGainExp+1;<a name="line.284"></a>
+<span class="sourceLineNo">285</span>        subb_LH.sbandIdx = (sbandIdx&lt;&lt;2)+2;<a name="line.285"></a>
+<span class="sourceLineNo">286</span>        // HH subband<a name="line.286"></a>
+<span class="sourceLineNo">287</span>        subb_HH.orientation = WT_ORIENT_HH;<a name="line.287"></a>
+<span class="sourceLineNo">288</span>        subb_HH.level = subb_LL.level;<a name="line.288"></a>
+<span class="sourceLineNo">289</span>        subb_HH.ulcx = subb_HL.ulcx;<a name="line.289"></a>
+<span class="sourceLineNo">290</span>        subb_HH.ulcy = subb_LH.ulcy;<a name="line.290"></a>
+<span class="sourceLineNo">291</span>        subb_HH.ulx = subb_HL.ulx;<a name="line.291"></a>
+<span class="sourceLineNo">292</span>        subb_HH.uly = subb_LH.uly;<a name="line.292"></a>
+<span class="sourceLineNo">293</span>        subb_HH.w = subb_HL.w;<a name="line.293"></a>
+<span class="sourceLineNo">294</span>        subb_HH.h = subb_LH.h;<a name="line.294"></a>
+<span class="sourceLineNo">295</span>        subb_HH.resLvl = resLvl;<a name="line.295"></a>
+<span class="sourceLineNo">296</span>        subb_HH.anGainExp = anGainExp+2;<a name="line.296"></a>
+<span class="sourceLineNo">297</span>        subb_HH.sbandIdx = (sbandIdx&lt;&lt;2)+3;<a name="line.297"></a>
+<span class="sourceLineNo">298</span>    }<a name="line.298"></a>
+<span class="sourceLineNo">299</span><a name="line.299"></a>
+<span class="sourceLineNo">300</span>    /**<a name="line.300"></a>
+<span class="sourceLineNo">301</span>     * Creates a Subband element with all the default values. The dimensions<a name="line.301"></a>
+<span class="sourceLineNo">302</span>     * are (0,0), the upper left corner is (0,0) and the upper-left corner<a name="line.302"></a>
+<span class="sourceLineNo">303</span>     * with respect to the canvas is (0,0) too.<a name="line.303"></a>
+<span class="sourceLineNo">304</span>     * */<a name="line.304"></a>
+<span class="sourceLineNo">305</span>    public Subband() {<a name="line.305"></a>
+<span class="sourceLineNo">306</span>    }<a name="line.306"></a>
+<span class="sourceLineNo">307</span><a name="line.307"></a>
+<span class="sourceLineNo">308</span>    /**<a name="line.308"></a>
+<span class="sourceLineNo">309</span>     * Creates the top-level node and the entire subband tree, with the<a name="line.309"></a>
+<span class="sourceLineNo">310</span>     * top-level dimensions, the number of decompositions, and the<a name="line.310"></a>
+<span class="sourceLineNo">311</span>     * decomposition tree as specified.<a name="line.311"></a>
+<span class="sourceLineNo">312</span>     *<a name="line.312"></a>
+<span class="sourceLineNo">313</span>     * &lt;P&gt;For the analysis subband gain calculation it is assumed that<a name="line.313"></a>
+<span class="sourceLineNo">314</span>     * analysis filters are normalized with a DC gain of 1 and a Nyquist gain<a name="line.314"></a>
+<span class="sourceLineNo">315</span>     * of 2.<a name="line.315"></a>
+<span class="sourceLineNo">316</span>     *<a name="line.316"></a>
+<span class="sourceLineNo">317</span>     * &lt;P&gt;This constructor does not initialize the value of the magBits member<a name="line.317"></a>
+<span class="sourceLineNo">318</span>     * variable. This variable is normally initialized by the quantizer, on<a name="line.318"></a>
+<span class="sourceLineNo">319</span>     * the encoder side, or the bit stream reader, on the decoder side.<a name="line.319"></a>
+<span class="sourceLineNo">320</span>     *<a name="line.320"></a>
+<span class="sourceLineNo">321</span>     * @param w The top-level width<a name="line.321"></a>
+<span class="sourceLineNo">322</span>     *<a name="line.322"></a>
+<span class="sourceLineNo">323</span>     * @param h The top-level height<a name="line.323"></a>
+<span class="sourceLineNo">324</span>     *<a name="line.324"></a>
+<span class="sourceLineNo">325</span>     * @param ulcx The horizontal coordinate of the upper-left corner with<a name="line.325"></a>
+<span class="sourceLineNo">326</span>     * respect to the canvas origin, in the component grid.<a name="line.326"></a>
+<span class="sourceLineNo">327</span>     *<a name="line.327"></a>
+<span class="sourceLineNo">328</span>     * @param ulcy The vertical coordinate of the upper-left corner with<a name="line.328"></a>
+<span class="sourceLineNo">329</span>     * respect to the canvas origin, in the component grid.<a name="line.329"></a>
+<span class="sourceLineNo">330</span>     *<a name="line.330"></a>
+<span class="sourceLineNo">331</span>     * @param lvls The number of levels (or LL decompositions) in the tree.<a name="line.331"></a>
+<span class="sourceLineNo">332</span>     *<a name="line.332"></a>
+<span class="sourceLineNo">333</span>     * @param hfilters The horizontal wavelet filters (analysis or synthesis)<a name="line.333"></a>
+<span class="sourceLineNo">334</span>     * for each resolution level, starting at resolution level 0. If there are<a name="line.334"></a>
+<span class="sourceLineNo">335</span>     * less elements in the array than there are resolution levels, the last<a name="line.335"></a>
+<span class="sourceLineNo">336</span>     * element is used for the remaining resolution levels.<a name="line.336"></a>
+<span class="sourceLineNo">337</span>     *<a name="line.337"></a>
+<span class="sourceLineNo">338</span>     * @param vfilters The vertical wavelet filters (analysis or synthesis)<a name="line.338"></a>
+<span class="sourceLineNo">339</span>     * for each resolution level, starting at resolution level 0. If there are<a name="line.339"></a>
+<span class="sourceLineNo">340</span>     * less elements in the array than there are resolution levels, the last<a name="line.340"></a>
+<span class="sourceLineNo">341</span>     * element is used for the remaining resolution levels.<a name="line.341"></a>
+<span class="sourceLineNo">342</span>     *<a name="line.342"></a>
+<span class="sourceLineNo">343</span>     * @see WaveletTransform<a name="line.343"></a>
+<span class="sourceLineNo">344</span>     * */<a name="line.344"></a>
+<span class="sourceLineNo">345</span>    public Subband(int w, int h, int ulcx, int ulcy, int lvls,<a name="line.345"></a>
+<span class="sourceLineNo">346</span>                   WaveletFilter hfilters[], WaveletFilter vfilters[]) {<a name="line.346"></a>
+<span class="sourceLineNo">347</span>        int i,hi,vi;<a name="line.347"></a>
+<span class="sourceLineNo">348</span>        Subband cur; // The current subband<a name="line.348"></a>
+<span class="sourceLineNo">349</span><a name="line.349"></a>
+<span class="sourceLineNo">350</span>        // Initialize top-level node<a name="line.350"></a>
+<span class="sourceLineNo">351</span>        this.w = w;<a name="line.351"></a>
+<span class="sourceLineNo">352</span>        this.h = h;<a name="line.352"></a>
+<span class="sourceLineNo">353</span>        this.ulcx = ulcx;<a name="line.353"></a>
+<span class="sourceLineNo">354</span>        this.ulcy = ulcy;<a name="line.354"></a>
+<span class="sourceLineNo">355</span>        this.resLvl = lvls;<a name="line.355"></a>
+<span class="sourceLineNo">356</span>        // First create dyadic decomposition.<a name="line.356"></a>
+<span class="sourceLineNo">357</span>        cur = this;<a name="line.357"></a>
+<span class="sourceLineNo">358</span>        for (i=0; i&lt;lvls; i++) {<a name="line.358"></a>
+<span class="sourceLineNo">359</span>            hi = (cur.resLvl &lt;= hfilters.length) ? cur.resLvl-1 :<a name="line.359"></a>
+<span class="sourceLineNo">360</span>                hfilters.length-1;<a name="line.360"></a>
+<span class="sourceLineNo">361</span>            vi = (cur.resLvl &lt;= vfilters.length) ? cur.resLvl-1 :<a name="line.361"></a>
+<span class="sourceLineNo">362</span>                vfilters.length-1;<a name="line.362"></a>
+<span class="sourceLineNo">363</span>            cur = cur.split(hfilters[hi],vfilters[vi]);<a name="line.363"></a>
+<span class="sourceLineNo">364</span>        }<a name="line.364"></a>
+<span class="sourceLineNo">365</span>    }<a name="line.365"></a>
+<span class="sourceLineNo">366</span><a name="line.366"></a>
+<span class="sourceLineNo">367</span>    /**<a name="line.367"></a>
+<span class="sourceLineNo">368</span>     * Returns the next subband in the same resolution level, following the<a name="line.368"></a>
+<span class="sourceLineNo">369</span>     * subband index order. If already at the last subband then null is<a name="line.369"></a>
+<span class="sourceLineNo">370</span>     * returned. If this subband is not a leaf an IllegalArgumentException is<a name="line.370"></a>
+<span class="sourceLineNo">371</span>     * thrown.<a name="line.371"></a>
+<span class="sourceLineNo">372</span>     *<a name="line.372"></a>
+<span class="sourceLineNo">373</span>     * @return The next subband in the same resolution level, following the<a name="line.373"></a>
+<span class="sourceLineNo">374</span>     * subband index order, or null if already at last subband.<a name="line.374"></a>
+<span class="sourceLineNo">375</span>     * */<a name="line.375"></a>
+<span class="sourceLineNo">376</span>    public Subband nextSubband() {<a name="line.376"></a>
+<span class="sourceLineNo">377</span>        Subband sb;<a name="line.377"></a>
+<span class="sourceLineNo">378</span><a name="line.378"></a>
+<span class="sourceLineNo">379</span>        if (isNode) {<a name="line.379"></a>
+<span class="sourceLineNo">380</span>            throw new IllegalArgumentException();<a name="line.380"></a>
+<span class="sourceLineNo">381</span>        }<a name="line.381"></a>
+<span class="sourceLineNo">382</span><a name="line.382"></a>
+<span class="sourceLineNo">383</span>        switch (orientation) {<a name="line.383"></a>
+<span class="sourceLineNo">384</span>        case WT_ORIENT_LL:<a name="line.384"></a>
+<span class="sourceLineNo">385</span>            sb = getParent();<a name="line.385"></a>
+<span class="sourceLineNo">386</span>            if (sb == null || sb.resLvl != resLvl) {<a name="line.386"></a>
+<span class="sourceLineNo">387</span>                // Already at top-level or last subband in res. level<a name="line.387"></a>
+<span class="sourceLineNo">388</span>                return null;<a name="line.388"></a>
+<span class="sourceLineNo">389</span>            }<a name="line.389"></a>
+<span class="sourceLineNo">390</span>            else {<a name="line.390"></a>
+<span class="sourceLineNo">391</span>                return sb.getHL();<a name="line.391"></a>
+<span class="sourceLineNo">392</span>            }<a name="line.392"></a>
+<span class="sourceLineNo">393</span>        case WT_ORIENT_HL:<a name="line.393"></a>
+<span class="sourceLineNo">394</span>            return getParent().getLH();<a name="line.394"></a>
+<span class="sourceLineNo">395</span>        case WT_ORIENT_LH:<a name="line.395"></a>
+<span class="sourceLineNo">396</span>            return getParent().getHH();<a name="line.396"></a>
+<span class="sourceLineNo">397</span>        case WT_ORIENT_HH:<a name="line.397"></a>
+<span class="sourceLineNo">398</span>            // This is the complicated one<a name="line.398"></a>
+<span class="sourceLineNo">399</span>            sb = this;<a name="line.399"></a>
+<span class="sourceLineNo">400</span>            while (sb.orientation == WT_ORIENT_HH) {<a name="line.400"></a>
+<span class="sourceLineNo">401</span>                sb = sb.getParent();<a name="line.401"></a>
+<span class="sourceLineNo">402</span>            }<a name="line.402"></a>
+<span class="sourceLineNo">403</span>            switch (sb.orientation) {<a name="line.403"></a>
+<span class="sourceLineNo">404</span>            case WT_ORIENT_LL:<a name="line.404"></a>
+<span class="sourceLineNo">405</span>                sb = sb.getParent();<a name="line.405"></a>
+<span class="sourceLineNo">406</span>                if (sb == null || sb.resLvl != resLvl) {<a name="line.406"></a>
+<span class="sourceLineNo">407</span>                    // Already at top-level or last subband in res. level<a name="line.407"></a>
+<span class="sourceLineNo">408</span>                    return null;<a name="line.408"></a>
+<span class="sourceLineNo">409</span>                }<a name="line.409"></a>
+<span class="sourceLineNo">410</span>                else {<a name="line.410"></a>
+<span class="sourceLineNo">411</span>                    sb = sb.getHL();<a name="line.411"></a>
+<span class="sourceLineNo">412</span>                }<a name="line.412"></a>
+<span class="sourceLineNo">413</span>                break;<a name="line.413"></a>
+<span class="sourceLineNo">414</span>            case WT_ORIENT_HL:<a name="line.414"></a>
+<span class="sourceLineNo">415</span>                sb = sb.getParent().getLH();<a name="line.415"></a>
+<span class="sourceLineNo">416</span>                break;<a name="line.416"></a>
+<span class="sourceLineNo">417</span>            case WT_ORIENT_LH:<a name="line.417"></a>
+<span class="sourceLineNo">418</span>                sb = sb.getParent().getHH();<a name="line.418"></a>
+<span class="sourceLineNo">419</span>                break;<a name="line.419"></a>
+<span class="sourceLineNo">420</span>            default:<a name="line.420"></a>
+<span class="sourceLineNo">421</span>                throw new Error("You have found a bug in JJ2000");<a name="line.421"></a>
+<span class="sourceLineNo">422</span>            }<a name="line.422"></a>
+<span class="sourceLineNo">423</span>            while (sb.isNode) {<a name="line.423"></a>
+<span class="sourceLineNo">424</span>                sb = sb.getLL();<a name="line.424"></a>
+<span class="sourceLineNo">425</span>            }<a name="line.425"></a>
+<span class="sourceLineNo">426</span>            return sb;<a name="line.426"></a>
+<span class="sourceLineNo">427</span>        default:<a name="line.427"></a>
+<span class="sourceLineNo">428</span>            throw new Error("You have found a bug in JJ2000");<a name="line.428"></a>
+<span class="sourceLineNo">429</span>        }<a name="line.429"></a>
+<span class="sourceLineNo">430</span>    }<a name="line.430"></a>
+<span class="sourceLineNo">431</span><a name="line.431"></a>
+<span class="sourceLineNo">432</span>    /**<a name="line.432"></a>
+<span class="sourceLineNo">433</span>     * Returns the first leaf subband element in the next higher resolution<a name="line.433"></a>
+<span class="sourceLineNo">434</span>     * level.<a name="line.434"></a>
+<span class="sourceLineNo">435</span>     *<a name="line.435"></a>
+<span class="sourceLineNo">436</span>     * @return The first leaf element in the next higher resolution level, or<a name="line.436"></a>
+<span class="sourceLineNo">437</span>     * null if there is no higher resolution level.<a name="line.437"></a>
+<span class="sourceLineNo">438</span>     * */<a name="line.438"></a>
+<span class="sourceLineNo">439</span>    public Subband getNextResLevel() {<a name="line.439"></a>
+<span class="sourceLineNo">440</span>        Subband sb;<a name="line.440"></a>
+<span class="sourceLineNo">441</span><a name="line.441"></a>
+<span class="sourceLineNo">442</span>        if (level == 0) { // No higher res. level<a name="line.442"></a>
+<span class="sourceLineNo">443</span>            return null;<a name="line.443"></a>
+<span class="sourceLineNo">444</span>        }<a name="line.444"></a>
+<span class="sourceLineNo">445</span>        // Go up until we get to a different resolution level<a name="line.445"></a>
+<span class="sourceLineNo">446</span>        sb = this;<a name="line.446"></a>
+<span class="sourceLineNo">447</span>        do {<a name="line.447"></a>
+<span class="sourceLineNo">448</span>            sb = sb.getParent();<a name="line.448"></a>
+<span class="sourceLineNo">449</span>            if (sb == null) { // No higher resolution level<a name="line.449"></a>
+<span class="sourceLineNo">450</span>                return null;<a name="line.450"></a>
+<span class="sourceLineNo">451</span>            }<a name="line.451"></a>
+<span class="sourceLineNo">452</span>        } while (sb.resLvl == resLvl);<a name="line.452"></a>
+<span class="sourceLineNo">453</span>        // Now go down to HL, which is in next higher resolution level<a name="line.453"></a>
+<span class="sourceLineNo">454</span>        sb = sb.getHL();<a name="line.454"></a>
+<span class="sourceLineNo">455</span>        // Now go down LL until get to a leaf<a name="line.455"></a>
+<span class="sourceLineNo">456</span>        while (sb.isNode) {<a name="line.456"></a>
+<span class="sourceLineNo">457</span>            sb = sb.getLL();<a name="line.457"></a>
+<span class="sourceLineNo">458</span>        }<a name="line.458"></a>
+<span class="sourceLineNo">459</span>        return sb;<a name="line.459"></a>
+<span class="sourceLineNo">460</span>    }<a name="line.460"></a>
+<span class="sourceLineNo">461</span><a name="line.461"></a>
+<span class="sourceLineNo">462</span>    /**<a name="line.462"></a>
+<span class="sourceLineNo">463</span>     * Returns a subband element in the tree, given its resolution level and<a name="line.463"></a>
+<span class="sourceLineNo">464</span>     * subband index. This method searches through the tree.<a name="line.464"></a>
+<span class="sourceLineNo">465</span>     *<a name="line.465"></a>
+<span class="sourceLineNo">466</span>     * @param rl The resolution level.<a name="line.466"></a>
+<span class="sourceLineNo">467</span>     *<a name="line.467"></a>
+<span class="sourceLineNo">468</span>     * @param sbi The subband index, within the resolution level.<a name="line.468"></a>
+<span class="sourceLineNo">469</span>     * */<a name="line.469"></a>
+<span class="sourceLineNo">470</span>    public Subband getSubbandByIdx(int rl, int sbi) {<a name="line.470"></a>
+<span class="sourceLineNo">471</span>        Subband sb = this;<a name="line.471"></a>
+<span class="sourceLineNo">472</span><a name="line.472"></a>
+<span class="sourceLineNo">473</span>        // Find the root subband for the resolution level<a name="line.473"></a>
+<span class="sourceLineNo">474</span>        if (rl&gt;sb.resLvl || rl&lt;0) {<a name="line.474"></a>
+<span class="sourceLineNo">475</span>            throw new IllegalArgumentException("Resolution level index "+<a name="line.475"></a>
+<span class="sourceLineNo">476</span>                                               "out of range");<a name="line.476"></a>
+<span class="sourceLineNo">477</span>        }<a name="line.477"></a>
+<span class="sourceLineNo">478</span><a name="line.478"></a>
+<span class="sourceLineNo">479</span>        // Returns directly if it is itself<a name="line.479"></a>
+<span class="sourceLineNo">480</span>        if(rl==sb.resLvl &amp;&amp; sbi==sb.sbandIdx) return sb;<a name="line.480"></a>
+<span class="sourceLineNo">481</span><a name="line.481"></a>
+<span class="sourceLineNo">482</span>        if(sb.sbandIdx!=0) sb = sb.getParent();<a name="line.482"></a>
+<span class="sourceLineNo">483</span><a name="line.483"></a>
+<span class="sourceLineNo">484</span>        while(sb.resLvl&gt;rl) sb = sb.getLL();<a name="line.484"></a>
+<span class="sourceLineNo">485</span>        while(sb.resLvl&lt;rl) sb = sb.getParent();<a name="line.485"></a>
+<span class="sourceLineNo">486</span><a name="line.486"></a>
+<span class="sourceLineNo">487</span>        switch(sbi) {<a name="line.487"></a>
+<span class="sourceLineNo">488</span>        case 0:<a name="line.488"></a>
+<span class="sourceLineNo">489</span>        default:<a name="line.489"></a>
+<span class="sourceLineNo">490</span>            return sb;<a name="line.490"></a>
+<span class="sourceLineNo">491</span>        case 1:<a name="line.491"></a>
+<span class="sourceLineNo">492</span>            return sb.getHL();<a name="line.492"></a>
+<span class="sourceLineNo">493</span>        case 2:<a name="line.493"></a>
+<span class="sourceLineNo">494</span>            return sb.getLH();<a name="line.494"></a>
+<span class="sourceLineNo">495</span>        case 3:<a name="line.495"></a>
+<span class="sourceLineNo">496</span>            return sb.getHH();<a name="line.496"></a>
+<span class="sourceLineNo">497</span>        }<a name="line.497"></a>
+<span class="sourceLineNo">498</span><a name="line.498"></a>
+<span class="sourceLineNo">499</span>    }<a name="line.499"></a>
+<span class="sourceLineNo">500</span><a name="line.500"></a>
+<span class="sourceLineNo">501</span>    /**<a name="line.501"></a>
+<span class="sourceLineNo">502</span>     * Returns a reference to the Subband element to which the specified point<a name="line.502"></a>
+<span class="sourceLineNo">503</span>     * belongs. The specified point must be inside this (i.e. the one defined<a name="line.503"></a>
+<span class="sourceLineNo">504</span>     * by this object) subband. This method searches through the tree.<a name="line.504"></a>
+<span class="sourceLineNo">505</span>     *<a name="line.505"></a>
+<span class="sourceLineNo">506</span>     * @param x horizontal coordinate of the specified point.<a name="line.506"></a>
+<span class="sourceLineNo">507</span>     *<a name="line.507"></a>
+<span class="sourceLineNo">508</span>     * @param y horizontal coordinate of the specified point.<a name="line.508"></a>
+<span class="sourceLineNo">509</span>     * */<a name="line.509"></a>
+<span class="sourceLineNo">510</span>    public Subband getSubband(int x,int y) {<a name="line.510"></a>
+<span class="sourceLineNo">511</span>        Subband cur,hhs;<a name="line.511"></a>
+<span class="sourceLineNo">512</span><a name="line.512"></a>
+<span class="sourceLineNo">513</span>        // Check that we are inside this subband<a name="line.513"></a>
+<span class="sourceLineNo">514</span>        if (x&lt;ulx || y&lt;uly || x&gt;=ulx+w || y&gt;=uly+h) {<a name="line.514"></a>
+<span class="sourceLineNo">515</span>            throw new IllegalArgumentException();<a name="line.515"></a>
+<span class="sourceLineNo">516</span>        }<a name="line.516"></a>
+<span class="sourceLineNo">517</span><a name="line.517"></a>
+<span class="sourceLineNo">518</span>        cur = this;<a name="line.518"></a>
+<span class="sourceLineNo">519</span>        while (cur.isNode) {<a name="line.519"></a>
+<span class="sourceLineNo">520</span>            hhs = cur.getHH();<a name="line.520"></a>
+<span class="sourceLineNo">521</span>            // While we are still at a node -&gt; continue<a name="line.521"></a>
+<span class="sourceLineNo">522</span>            if (x&lt;hhs.ulx) {<a name="line.522"></a>
+<span class="sourceLineNo">523</span>                // Is the result of horizontal low-pass<a name="line.523"></a>
+<span class="sourceLineNo">524</span>                if (y&lt;hhs.uly) {<a name="line.524"></a>
+<span class="sourceLineNo">525</span>                    // Vertical low-pass<a name="line.525"></a>
+<span class="sourceLineNo">526</span>                    cur = cur.getLL();<a name="line.526"></a>
+<span class="sourceLineNo">527</span>                } else {<a name="line.527"></a>
+<span class="sourceLineNo">528</span>                    // Vertical high-pass<a name="line.528"></a>
+<span class="sourceLineNo">529</span>                    cur = cur.getLH();<a name="line.529"></a>
+<span class="sourceLineNo">530</span>                }<a name="line.530"></a>
+<span class="sourceLineNo">531</span>            } else {<a name="line.531"></a>
+<span class="sourceLineNo">532</span>                // Is the result of horizontal high-pass<a name="line.532"></a>
+<span class="sourceLineNo">533</span>                if (y&lt;hhs.uly) {<a name="line.533"></a>
+<span class="sourceLineNo">534</span>                    // Vertical low-pass<a name="line.534"></a>
+<span class="sourceLineNo">535</span>                    cur = cur.getHL();<a name="line.535"></a>
+<span class="sourceLineNo">536</span>                } else {<a name="line.536"></a>
+<span class="sourceLineNo">537</span>                    // Vertical high-pass<a name="line.537"></a>
+<span class="sourceLineNo">538</span>                    cur = cur.getHH();<a name="line.538"></a>
+<span class="sourceLineNo">539</span>                }<a name="line.539"></a>
+<span class="sourceLineNo">540</span>            }<a name="line.540"></a>
+<span class="sourceLineNo">541</span>        }<a name="line.541"></a>
+<span class="sourceLineNo">542</span><a name="line.542"></a>
+<span class="sourceLineNo">543</span>        return cur;<a name="line.543"></a>
+<span class="sourceLineNo">544</span>    }<a name="line.544"></a>
+<span class="sourceLineNo">545</span><a name="line.545"></a>
+<span class="sourceLineNo">546</span>    /**<a name="line.546"></a>
+<span class="sourceLineNo">547</span>     * Returns subband informations in a string.<a name="line.547"></a>
+<span class="sourceLineNo">548</span>     *<a name="line.548"></a>
+<span class="sourceLineNo">549</span>     * @return Subband informations<a name="line.549"></a>
+<span class="sourceLineNo">550</span>     * */<a name="line.550"></a>
+<span class="sourceLineNo">551</span>    public String toString() {<a name="line.551"></a>
+<span class="sourceLineNo">552</span><a name="line.552"></a>
+<span class="sourceLineNo">553</span>        String string =<a name="line.553"></a>
+<span class="sourceLineNo">554</span>            "w=" + w + ", h=" + h + ", ulx=" + ulx + ", uly=" + uly +<a name="line.554"></a>
+<span class="sourceLineNo">555</span>            ", ulcx= "+ulcx+", ulcy="+ulcy+", idx=" + sbandIdx +<a name="line.555"></a>
+<span class="sourceLineNo">556</span>            "\norient=" + orientation + ", node=" + isNode +<a name="line.556"></a>
+<span class="sourceLineNo">557</span>            ", level=" + level + ", resLvl=" + resLvl+ ", nomCBlkW=" +<a name="line.557"></a>
+<span class="sourceLineNo">558</span>            nomCBlkW + ", nomCBlkH=" + nomCBlkH;<a name="line.558"></a>
+<span class="sourceLineNo">559</span><a name="line.559"></a>
+<span class="sourceLineNo">560</span>        return string;<a name="line.560"></a>
+<span class="sourceLineNo">561</span>    }<a name="line.561"></a>
+<span class="sourceLineNo">562</span><a name="line.562"></a>
+<span class="sourceLineNo">563</span>    /**<a name="line.563"></a>
+<span class="sourceLineNo">564</span>     * This function returns the horizontal wavelet filter relevant to this<a name="line.564"></a>
+<span class="sourceLineNo">565</span>     * subband<a name="line.565"></a>
+<span class="sourceLineNo">566</span>     *<a name="line.566"></a>
+<span class="sourceLineNo">567</span>     * @return The horizontal wavelet filter<a name="line.567"></a>
+<span class="sourceLineNo">568</span>     * */<a name="line.568"></a>
+<span class="sourceLineNo">569</span>    public abstract WaveletFilter getHorWFilter();<a name="line.569"></a>
+<span class="sourceLineNo">570</span><a name="line.570"></a>
+<span class="sourceLineNo">571</span>    /**<a name="line.571"></a>
+<span class="sourceLineNo">572</span>     * This function returns the vertical wavelet filter relevant to this<a name="line.572"></a>
+<span class="sourceLineNo">573</span>     * subband<a name="line.573"></a>
+<span class="sourceLineNo">574</span>     *<a name="line.574"></a>
+<span class="sourceLineNo">575</span>     * @return The vertical wavelet filter<a name="line.575"></a>
+<span class="sourceLineNo">576</span>     * */<a name="line.576"></a>
+<span class="sourceLineNo">577</span>    public abstract WaveletFilter getVerWFilter();<a name="line.577"></a>
+<span class="sourceLineNo">578</span><a name="line.578"></a>
+<span class="sourceLineNo">579</span><a name="line.579"></a>
+<span class="sourceLineNo">580</span>}<a name="line.580"></a>
+<span class="sourceLineNo">581</span><a name="line.581"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

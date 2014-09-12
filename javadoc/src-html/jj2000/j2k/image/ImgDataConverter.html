@@ -1,0 +1,443 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: ImgDataConverter.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:13 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Interface:           ImgDataConverter<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:         The abstract class for classes that provide<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *                      Image Data Convertres (int -&gt; float, float-&gt;int).<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * COPYRIGHT:<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * software module is an implementation of a part of the JPEG 2000<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * including other intellectual property rights, for this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * or modifications thereof for use in hardware or software products<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * this software module in hardware or software products are advised that<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * their use may infringe existing patents. The original developers of<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * for use of this software module or modifications thereof. No license<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module for his/her own purpose, assign or donate this<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * software module to any third party and to inhibit third parties from<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * products. This copyright notice must be included in all copies or<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * derivative works of this software module.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> *<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * */<a name="line.44"></a>
+<span class="sourceLineNo">045</span>package jj2000.j2k.image;<a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>import jj2000.j2k.image.*;<a name="line.47"></a>
+<span class="sourceLineNo">048</span>import jj2000.j2k.*;<a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>/**<a name="line.50"></a>
+<span class="sourceLineNo">051</span> * This class is responsible of all data type conversions. It should be used,<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * at encoder side, between Tiler and ForwardWT modules and, at decoder side,<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * between InverseWT/CompDemixer and ImgWriter modules. The conversion is<a name="line.53"></a>
+<span class="sourceLineNo">054</span> * realized when a block of data is requested: if source and destination data<a name="line.54"></a>
+<span class="sourceLineNo">055</span> * type are the same one, it does nothing, else appropriate cast is done. All<a name="line.55"></a>
+<span class="sourceLineNo">056</span> * the methods of the 'ImgData' interface are implemented by the<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * 'ImgDataAdapter' class that is the superclass of this one, so they don't<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * need to be reimplemented by subclasses.<a name="line.58"></a>
+<span class="sourceLineNo">059</span> * */<a name="line.59"></a>
+<span class="sourceLineNo">060</span>public class ImgDataConverter extends ImgDataAdapter implements BlkImgDataSrc {<a name="line.60"></a>
+<span class="sourceLineNo">061</span><a name="line.61"></a>
+<span class="sourceLineNo">062</span>    /** The block used to request data from the source in the case that a<a name="line.62"></a>
+<span class="sourceLineNo">063</span>     * conversion seems necessary. It can be either int or float at<a name="line.63"></a>
+<span class="sourceLineNo">064</span>     * initialization time. It will be checked (and corrected if necessary) by<a name="line.64"></a>
+<span class="sourceLineNo">065</span>     * the source whenever necessary */<a name="line.65"></a>
+<span class="sourceLineNo">066</span>    private DataBlk srcBlk = new DataBlkInt();<a name="line.66"></a>
+<span class="sourceLineNo">067</span><a name="line.67"></a>
+<span class="sourceLineNo">068</span>    /** The source of image data */<a name="line.68"></a>
+<span class="sourceLineNo">069</span>    private BlkImgDataSrc src;<a name="line.69"></a>
+<span class="sourceLineNo">070</span><a name="line.70"></a>
+<span class="sourceLineNo">071</span>    /** The number of fraction bits in the casted ints */<a name="line.71"></a>
+<span class="sourceLineNo">072</span>    private int fp;<a name="line.72"></a>
+<span class="sourceLineNo">073</span><a name="line.73"></a>
+<span class="sourceLineNo">074</span>    /**<a name="line.74"></a>
+<span class="sourceLineNo">075</span>     * Constructs a new ImgDataConverter object that operates on the specified<a name="line.75"></a>
+<span class="sourceLineNo">076</span>     * source of image data.<a name="line.76"></a>
+<span class="sourceLineNo">077</span>     *<a name="line.77"></a>
+<span class="sourceLineNo">078</span>     * @param imgSrc The source from where to get the data to be transformed<a name="line.78"></a>
+<span class="sourceLineNo">079</span>     *<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     * @param fp The number of fraction bits in the casted ints<a name="line.80"></a>
+<span class="sourceLineNo">081</span>     *<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     * @see BlkImgDataSrc<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * */<a name="line.83"></a>
+<span class="sourceLineNo">084</span>    public ImgDataConverter(BlkImgDataSrc imgSrc, int fp) {<a name="line.84"></a>
+<span class="sourceLineNo">085</span>        super(imgSrc);<a name="line.85"></a>
+<span class="sourceLineNo">086</span>        src = imgSrc;<a name="line.86"></a>
+<span class="sourceLineNo">087</span>        this.fp=fp;<a name="line.87"></a>
+<span class="sourceLineNo">088</span>    }<a name="line.88"></a>
+<span class="sourceLineNo">089</span><a name="line.89"></a>
+<span class="sourceLineNo">090</span>    /**<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * Constructs a new ImgDataConverter object that operates on the specified<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     * source of image data.<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     *<a name="line.93"></a>
+<span class="sourceLineNo">094</span>     * @param imgSrc The source from where to get the data to be transformed<a name="line.94"></a>
+<span class="sourceLineNo">095</span>     *<a name="line.95"></a>
+<span class="sourceLineNo">096</span>     * @see BlkImgDataSrc<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     * */<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    public ImgDataConverter(BlkImgDataSrc imgSrc) {<a name="line.98"></a>
+<span class="sourceLineNo">099</span>        super(imgSrc);<a name="line.99"></a>
+<span class="sourceLineNo">100</span>        src = imgSrc;<a name="line.100"></a>
+<span class="sourceLineNo">101</span>        fp = 0;<a name="line.101"></a>
+<span class="sourceLineNo">102</span>    }<a name="line.102"></a>
+<span class="sourceLineNo">103</span><a name="line.103"></a>
+<span class="sourceLineNo">104</span>    /**<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     * Returns the position of the fixed point in the specified<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     * component. This is the position of the least significant integral<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     * (i.e. non-fractional) bit, which is equivalent to the number of<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     * fractional bits. For instance, for fixed-point values with 2 fractional<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     * bits, 2 is returned. For floating-point data this value does not apply<a name="line.109"></a>
+<span class="sourceLineNo">110</span>     * and 0 should be returned. Position 0 is the position of the least<a name="line.110"></a>
+<span class="sourceLineNo">111</span>     * significant bit in the data.<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     *<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * @param c The index of the component.<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     *<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     * @return The position of the fixed-point, which is the same as the<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     * number of fractional bits.<a name="line.116"></a>
+<span class="sourceLineNo">117</span>     * */<a name="line.117"></a>
+<span class="sourceLineNo">118</span>     public int getFixedPoint(int c){<a name="line.118"></a>
+<span class="sourceLineNo">119</span>        return fp;<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     }<a name="line.120"></a>
+<span class="sourceLineNo">121</span><a name="line.121"></a>
+<span class="sourceLineNo">122</span>    /**<a name="line.122"></a>
+<span class="sourceLineNo">123</span>     * Returns, in the blk argument, a block of image data containing the<a name="line.123"></a>
+<span class="sourceLineNo">124</span>     * specifed rectangular area, in the specified component, using the<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * 'transfer type' specified in the block given as argument. The data is<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     * returned, as a copy of the internal data, therefore the returned data<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     * can be modified "in place".<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     *<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     * &lt;P&gt;The rectangular area to return is specified by the 'ulx', 'uly', 'w'<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     * and 'h' members of the 'blk' argument, relative to the current<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     * tile. These members are not modified by this method. The 'offset' of<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     * the returned data is 0, and the 'scanw' is the same as the block's<a name="line.132"></a>
+<span class="sourceLineNo">133</span>     * width. See the 'DataBlk' class.<a name="line.133"></a>
+<span class="sourceLineNo">134</span>     *<a name="line.134"></a>
+<span class="sourceLineNo">135</span>     * &lt;P&gt;This method, in general, is less efficient than the<a name="line.135"></a>
+<span class="sourceLineNo">136</span>     * 'getInternCompData()' method since, in general, it copies the<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     * data. However if the array of returned data is to be modified by the<a name="line.137"></a>
+<span class="sourceLineNo">138</span>     * caller then this method is preferable.<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     *<a name="line.139"></a>
+<span class="sourceLineNo">140</span>     * &lt;P&gt;If the data array in 'blk' is 'null', then a new one is created. If<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     * the data array is not 'null' then it is reused, and it must be large<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     * enough to contain the block's data. Otherwise an 'ArrayStoreException'<a name="line.142"></a>
+<span class="sourceLineNo">143</span>     * or an 'IndexOutOfBoundsException' is thrown by the Java system.<a name="line.143"></a>
+<span class="sourceLineNo">144</span>     *<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     * &lt;P&gt;The returned data may have its 'progressive' attribute set. In this<a name="line.145"></a>
+<span class="sourceLineNo">146</span>     * case the returned data is only an approximation of the "final" data.<a name="line.146"></a>
+<span class="sourceLineNo">147</span>     *<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     * @param blk Its coordinates and dimensions specify the area to return,<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * relative to the current tile. If it contains a non-null data array,<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     * then it must be large enough. If it contains a null data array a new<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * one is created. Some fields in this object are modified to return the<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     * data.<a name="line.152"></a>
+<span class="sourceLineNo">153</span>     *<a name="line.153"></a>
+<span class="sourceLineNo">154</span>     * @param c The index of the component from which to get the data.<a name="line.154"></a>
+<span class="sourceLineNo">155</span>     *<a name="line.155"></a>
+<span class="sourceLineNo">156</span>     * @see #getInternCompData<a name="line.156"></a>
+<span class="sourceLineNo">157</span>     * */<a name="line.157"></a>
+<span class="sourceLineNo">158</span>    public DataBlk getCompData(DataBlk blk, int c){<a name="line.158"></a>
+<span class="sourceLineNo">159</span>        return getData(blk,c,false);<a name="line.159"></a>
+<span class="sourceLineNo">160</span>    }<a name="line.160"></a>
+<span class="sourceLineNo">161</span><a name="line.161"></a>
+<span class="sourceLineNo">162</span>    /**<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     * Returns, in the blk argument, a block of image data containing the<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     * specifed rectangular area, in the specified component, using the<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     * 'transfer type' defined in the block given as argument. The data is<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     * returned, as a reference to the internal data, if any, instead of as a<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     * copy, therefore the returned data should not be modified.<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     *<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     * &lt;P&gt;The rectangular area to return is specified by the 'ulx', 'uly', 'w'<a name="line.169"></a>
+<span class="sourceLineNo">170</span>     * and 'h' members of the 'blk' argument, relative to the current<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     * tile. These members are not modified by this method. The 'offset' and<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     * 'scanw' of the returned data can be arbitrary. See the 'DataBlk' class.<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     *<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     * &lt;P&gt; If source data and expected data (blk) are using the same type,<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     * block returned without any modification. If not appropriate cast is<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     * used.<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     *<a name="line.177"></a>
+<span class="sourceLineNo">178</span>     * &lt;P&gt;This method, in general, is more efficient than the 'getCompData()'<a name="line.178"></a>
+<span class="sourceLineNo">179</span>     * method since it may not copy the data. However if the array of returned<a name="line.179"></a>
+<span class="sourceLineNo">180</span>     * data is to be modified by the caller then the other method is probably<a name="line.180"></a>
+<span class="sourceLineNo">181</span>     * preferable.<a name="line.181"></a>
+<span class="sourceLineNo">182</span>     *<a name="line.182"></a>
+<span class="sourceLineNo">183</span>     * &lt;P&gt;If the data array in &lt;tt&gt;blk&lt;/tt&gt; is &lt;tt&gt;null&lt;/tt&gt;, then a new one<a name="line.183"></a>
+<span class="sourceLineNo">184</span>     * is created if necessary. The implementation of this interface may<a name="line.184"></a>
+<span class="sourceLineNo">185</span>     * choose to return the same array or a new one, depending on what is more<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     * efficient. Therefore, the data array in &lt;tt&gt;blk&lt;/tt&gt; prior to the<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     * method call should not be considered to contain the returned data, a<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     * new array may have been created. Instead, get the array from<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     * &lt;tt&gt;blk&lt;/tt&gt; after the method has returned.<a name="line.189"></a>
+<span class="sourceLineNo">190</span>     *<a name="line.190"></a>
+<span class="sourceLineNo">191</span>     * &lt;P&gt;The returned data may have its 'progressive' attribute set. In this<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     * case the returned data is only an approximation of the "final" data.<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     *<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     * @param blk Its coordinates and dimensions specify the area to return,<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     * relative to the current tile. Some fields in this object are modified<a name="line.195"></a>
+<span class="sourceLineNo">196</span>     * to return the data.<a name="line.196"></a>
+<span class="sourceLineNo">197</span>     *<a name="line.197"></a>
+<span class="sourceLineNo">198</span>     * @param c The index of the component from which to get the data.<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     *<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     * @return The requested DataBlk<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     *<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     * @see #getCompData<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     * */<a name="line.203"></a>
+<span class="sourceLineNo">204</span>    public final DataBlk getInternCompData(DataBlk blk, int c){<a name="line.204"></a>
+<span class="sourceLineNo">205</span>        return getData(blk,c,true);<a name="line.205"></a>
+<span class="sourceLineNo">206</span>    }<a name="line.206"></a>
+<span class="sourceLineNo">207</span><a name="line.207"></a>
+<span class="sourceLineNo">208</span>    /**<a name="line.208"></a>
+<span class="sourceLineNo">209</span>     * Implements the 'getInternCompData()' and the 'getCompData()'<a name="line.209"></a>
+<span class="sourceLineNo">210</span>     * methods. The 'intern' flag signals which of the two methods should run<a name="line.210"></a>
+<span class="sourceLineNo">211</span>     * as.<a name="line.211"></a>
+<span class="sourceLineNo">212</span>     *<a name="line.212"></a>
+<span class="sourceLineNo">213</span>     * @param blk The data block to get.<a name="line.213"></a>
+<span class="sourceLineNo">214</span>     *<a name="line.214"></a>
+<span class="sourceLineNo">215</span>     * @param c The index of the component from which to get the data.<a name="line.215"></a>
+<span class="sourceLineNo">216</span>     *<a name="line.216"></a>
+<span class="sourceLineNo">217</span>     * @param intern If true behave as 'getInternCompData(). Otherwise behave<a name="line.217"></a>
+<span class="sourceLineNo">218</span>     * as 'getCompData()'<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     *<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * @return The requested data block<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     *<a name="line.221"></a>
+<span class="sourceLineNo">222</span>     * @see #getInternCompData<a name="line.222"></a>
+<span class="sourceLineNo">223</span>     *<a name="line.223"></a>
+<span class="sourceLineNo">224</span>     * @see #getCompData<a name="line.224"></a>
+<span class="sourceLineNo">225</span>     * */<a name="line.225"></a>
+<span class="sourceLineNo">226</span>    private DataBlk getData(DataBlk blk, int c, boolean intern) {<a name="line.226"></a>
+<span class="sourceLineNo">227</span>        DataBlk reqBlk;    // Reference to block used in request to source<a name="line.227"></a>
+<span class="sourceLineNo">228</span><a name="line.228"></a>
+<span class="sourceLineNo">229</span>        // Keep request data type<a name="line.229"></a>
+<span class="sourceLineNo">230</span>        int otype = blk.getDataType();<a name="line.230"></a>
+<span class="sourceLineNo">231</span><a name="line.231"></a>
+<span class="sourceLineNo">232</span>        if (otype == srcBlk.getDataType()) {<a name="line.232"></a>
+<span class="sourceLineNo">233</span>            // Probably requested type is same as source type<a name="line.233"></a>
+<span class="sourceLineNo">234</span>            reqBlk = blk;<a name="line.234"></a>
+<span class="sourceLineNo">235</span>        }<a name="line.235"></a>
+<span class="sourceLineNo">236</span>        else {<a name="line.236"></a>
+<span class="sourceLineNo">237</span>            // Probably requested type is not the same as source type<a name="line.237"></a>
+<span class="sourceLineNo">238</span>            reqBlk = srcBlk;<a name="line.238"></a>
+<span class="sourceLineNo">239</span>            // We need to copy requested coordinates and size<a name="line.239"></a>
+<span class="sourceLineNo">240</span>            reqBlk.ulx = blk.ulx;<a name="line.240"></a>
+<span class="sourceLineNo">241</span>            reqBlk.uly = blk.uly;<a name="line.241"></a>
+<span class="sourceLineNo">242</span>            reqBlk.w = blk.w;<a name="line.242"></a>
+<span class="sourceLineNo">243</span>            reqBlk.h = blk.h;<a name="line.243"></a>
+<span class="sourceLineNo">244</span>        }<a name="line.244"></a>
+<span class="sourceLineNo">245</span><a name="line.245"></a>
+<span class="sourceLineNo">246</span>        // Get source data block<a name="line.246"></a>
+<span class="sourceLineNo">247</span>        if (intern) {<a name="line.247"></a>
+<span class="sourceLineNo">248</span>            // We can use the intern variant<a name="line.248"></a>
+<span class="sourceLineNo">249</span>            srcBlk = src.getInternCompData(reqBlk,c);<a name="line.249"></a>
+<span class="sourceLineNo">250</span>        }<a name="line.250"></a>
+<span class="sourceLineNo">251</span>        else {<a name="line.251"></a>
+<span class="sourceLineNo">252</span>            // Do not use the intern variant. Note that this is not optimal<a name="line.252"></a>
+<span class="sourceLineNo">253</span>            // since if we are going to convert below then we could have used<a name="line.253"></a>
+<span class="sourceLineNo">254</span>            // the intern variant. But there is currently no way to know if we<a name="line.254"></a>
+<span class="sourceLineNo">255</span>            // will need to do conversion or not before getting the data.<a name="line.255"></a>
+<span class="sourceLineNo">256</span>            srcBlk = src.getCompData(reqBlk,c);<a name="line.256"></a>
+<span class="sourceLineNo">257</span>        }<a name="line.257"></a>
+<span class="sourceLineNo">258</span><a name="line.258"></a>
+<span class="sourceLineNo">259</span>        // Check if casting is needed<a name="line.259"></a>
+<span class="sourceLineNo">260</span>        if(srcBlk.getDataType()==otype){<a name="line.260"></a>
+<span class="sourceLineNo">261</span>            return srcBlk;<a name="line.261"></a>
+<span class="sourceLineNo">262</span>        }<a name="line.262"></a>
+<span class="sourceLineNo">263</span><a name="line.263"></a>
+<span class="sourceLineNo">264</span>        int i;<a name="line.264"></a>
+<span class="sourceLineNo">265</span>        int k,kSrc,kmin;<a name="line.265"></a>
+<span class="sourceLineNo">266</span>        float mult;<a name="line.266"></a>
+<span class="sourceLineNo">267</span>        int w=srcBlk.w;<a name="line.267"></a>
+<span class="sourceLineNo">268</span>        int h=srcBlk.h;<a name="line.268"></a>
+<span class="sourceLineNo">269</span><a name="line.269"></a>
+<span class="sourceLineNo">270</span>        switch(otype){<a name="line.270"></a>
+<span class="sourceLineNo">271</span>        case DataBlk.TYPE_FLOAT: // Cast INT -&gt; FLOAT<a name="line.271"></a>
+<span class="sourceLineNo">272</span><a name="line.272"></a>
+<span class="sourceLineNo">273</span>            float farr[];<a name="line.273"></a>
+<span class="sourceLineNo">274</span>            int srcIArr[];<a name="line.274"></a>
+<span class="sourceLineNo">275</span><a name="line.275"></a>
+<span class="sourceLineNo">276</span>            // Get data array from resulting blk<a name="line.276"></a>
+<span class="sourceLineNo">277</span>            farr = (float[]) blk.getData();<a name="line.277"></a>
+<span class="sourceLineNo">278</span>            if (farr == null || farr.length &lt; w*h) {<a name="line.278"></a>
+<span class="sourceLineNo">279</span>                farr = new float[w*h];<a name="line.279"></a>
+<span class="sourceLineNo">280</span>                blk.setData(farr);<a name="line.280"></a>
+<span class="sourceLineNo">281</span>            }<a name="line.281"></a>
+<span class="sourceLineNo">282</span><a name="line.282"></a>
+<span class="sourceLineNo">283</span>            blk.scanw = srcBlk.w;<a name="line.283"></a>
+<span class="sourceLineNo">284</span>            blk.offset = 0;<a name="line.284"></a>
+<span class="sourceLineNo">285</span>            blk.progressive = srcBlk.progressive;<a name="line.285"></a>
+<span class="sourceLineNo">286</span>            srcIArr=(int[]) srcBlk.getData();<a name="line.286"></a>
+<span class="sourceLineNo">287</span><a name="line.287"></a>
+<span class="sourceLineNo">288</span>            // Cast data from source to blk<a name="line.288"></a>
+<span class="sourceLineNo">289</span>            fp=src.getFixedPoint(c);<a name="line.289"></a>
+<span class="sourceLineNo">290</span>            if(fp!=0){<a name="line.290"></a>
+<span class="sourceLineNo">291</span>                mult=1.0f/(1&lt;&lt;fp);<a name="line.291"></a>
+<span class="sourceLineNo">292</span>                for (i=h-1, k=w*h-1, kSrc =<a name="line.292"></a>
+<span class="sourceLineNo">293</span>                         srcBlk.offset+(h-1)*srcBlk.scanw+w-1; i&gt;=0; i--) {<a name="line.293"></a>
+<span class="sourceLineNo">294</span>                    for (kmin = k-w; k&gt;kmin; k--, kSrc--) {<a name="line.294"></a>
+<span class="sourceLineNo">295</span>                        farr[k]=((srcIArr[kSrc]*mult));<a name="line.295"></a>
+<span class="sourceLineNo">296</span>                    }<a name="line.296"></a>
+<span class="sourceLineNo">297</span>                    // Jump to geggining of next line in source<a name="line.297"></a>
+<span class="sourceLineNo">298</span>                    kSrc -= srcBlk.scanw - w;<a name="line.298"></a>
+<span class="sourceLineNo">299</span>                }<a name="line.299"></a>
+<span class="sourceLineNo">300</span>            }<a name="line.300"></a>
+<span class="sourceLineNo">301</span>            else{<a name="line.301"></a>
+<span class="sourceLineNo">302</span>                for (i=h-1, k=w*h-1, kSrc =<a name="line.302"></a>
+<span class="sourceLineNo">303</span>                         srcBlk.offset+(h-1)*srcBlk.scanw+w-1; i&gt;=0; i--) {<a name="line.303"></a>
+<span class="sourceLineNo">304</span>                    for (kmin = k-w; k&gt;kmin; k--, kSrc--) {<a name="line.304"></a>
+<span class="sourceLineNo">305</span>                        farr[k]=((float)(srcIArr[kSrc]));<a name="line.305"></a>
+<span class="sourceLineNo">306</span>                    }<a name="line.306"></a>
+<span class="sourceLineNo">307</span>                    // Jump to geggining of next line in source<a name="line.307"></a>
+<span class="sourceLineNo">308</span>                    kSrc -= srcBlk.scanw - w;<a name="line.308"></a>
+<span class="sourceLineNo">309</span>                }<a name="line.309"></a>
+<span class="sourceLineNo">310</span>            }<a name="line.310"></a>
+<span class="sourceLineNo">311</span>            break; // End of cast INT-&gt; FLOAT<a name="line.311"></a>
+<span class="sourceLineNo">312</span><a name="line.312"></a>
+<span class="sourceLineNo">313</span>        case DataBlk.TYPE_INT: // cast FLOAT -&gt; INT<a name="line.313"></a>
+<span class="sourceLineNo">314</span>                int iarr[];<a name="line.314"></a>
+<span class="sourceLineNo">315</span>                float srcFArr[];<a name="line.315"></a>
+<span class="sourceLineNo">316</span><a name="line.316"></a>
+<span class="sourceLineNo">317</span>                // Get data array from resulting blk<a name="line.317"></a>
+<span class="sourceLineNo">318</span>                iarr = (int[]) blk.getData();<a name="line.318"></a>
+<span class="sourceLineNo">319</span>                if (iarr == null || iarr.length &lt; w*h) {<a name="line.319"></a>
+<span class="sourceLineNo">320</span>                    iarr = new int[w*h];<a name="line.320"></a>
+<span class="sourceLineNo">321</span>                    blk.setData(iarr);<a name="line.321"></a>
+<span class="sourceLineNo">322</span>                }<a name="line.322"></a>
+<span class="sourceLineNo">323</span>                blk.scanw = srcBlk.w;<a name="line.323"></a>
+<span class="sourceLineNo">324</span>                blk.offset = 0;<a name="line.324"></a>
+<span class="sourceLineNo">325</span>                blk.progressive = srcBlk.progressive;<a name="line.325"></a>
+<span class="sourceLineNo">326</span>                srcFArr=(float[]) srcBlk.getData();<a name="line.326"></a>
+<span class="sourceLineNo">327</span><a name="line.327"></a>
+<span class="sourceLineNo">328</span>                // Cast data from source to blk<a name="line.328"></a>
+<span class="sourceLineNo">329</span>                if(fp!=0){<a name="line.329"></a>
+<span class="sourceLineNo">330</span>                    mult=(float)(1&lt;&lt;fp);<a name="line.330"></a>
+<span class="sourceLineNo">331</span>                    for (i=h-1, k=w*h-1, kSrc =<a name="line.331"></a>
+<span class="sourceLineNo">332</span>                             srcBlk.offset+(h-1)*srcBlk.scanw+w-1; i&gt;=0; i--) {<a name="line.332"></a>
+<span class="sourceLineNo">333</span>                        for (kmin = k-w; k&gt;kmin; k--, kSrc--) {<a name="line.333"></a>
+<span class="sourceLineNo">334</span>                            if (srcFArr[kSrc] &gt; 0.0f) {<a name="line.334"></a>
+<span class="sourceLineNo">335</span>                                iarr[k] = (int) (srcFArr[kSrc]*mult+0.5f);<a name="line.335"></a>
+<span class="sourceLineNo">336</span>                            }<a name="line.336"></a>
+<span class="sourceLineNo">337</span>                            else {<a name="line.337"></a>
+<span class="sourceLineNo">338</span>                                iarr[k] = (int) (srcFArr[kSrc]*mult-0.5f);<a name="line.338"></a>
+<span class="sourceLineNo">339</span>                            }<a name="line.339"></a>
+<span class="sourceLineNo">340</span>                        }<a name="line.340"></a>
+<span class="sourceLineNo">341</span>                        // Jump to geggining of next line in source<a name="line.341"></a>
+<span class="sourceLineNo">342</span>                        kSrc -= srcBlk.scanw - w;<a name="line.342"></a>
+<span class="sourceLineNo">343</span>                    }<a name="line.343"></a>
+<span class="sourceLineNo">344</span>                }<a name="line.344"></a>
+<span class="sourceLineNo">345</span>                else{<a name="line.345"></a>
+<span class="sourceLineNo">346</span>                    for (i=h-1, k=w*h-1, kSrc =<a name="line.346"></a>
+<span class="sourceLineNo">347</span>                             srcBlk.offset+(h-1)*srcBlk.scanw+w-1; i&gt;=0; i--) {<a name="line.347"></a>
+<span class="sourceLineNo">348</span>                        for (kmin = k-w; k&gt;kmin; k--, kSrc--) {<a name="line.348"></a>
+<span class="sourceLineNo">349</span>                            if (srcFArr[kSrc] &gt; 0.0f) {<a name="line.349"></a>
+<span class="sourceLineNo">350</span>                                iarr[k] = (int) (srcFArr[kSrc]+0.5f);<a name="line.350"></a>
+<span class="sourceLineNo">351</span>                            }<a name="line.351"></a>
+<span class="sourceLineNo">352</span>                            else {<a name="line.352"></a>
+<span class="sourceLineNo">353</span>                                iarr[k] = (int) (srcFArr[kSrc]-0.5f);<a name="line.353"></a>
+<span class="sourceLineNo">354</span>                            }<a name="line.354"></a>
+<span class="sourceLineNo">355</span>                        }<a name="line.355"></a>
+<span class="sourceLineNo">356</span>                        // Jump to geggining of next line in source<a name="line.356"></a>
+<span class="sourceLineNo">357</span>                        kSrc -= srcBlk.scanw - w;<a name="line.357"></a>
+<span class="sourceLineNo">358</span>                    }<a name="line.358"></a>
+<span class="sourceLineNo">359</span>                }<a name="line.359"></a>
+<span class="sourceLineNo">360</span>                break; // End cast FLOAT -&gt; INT<a name="line.360"></a>
+<span class="sourceLineNo">361</span>        default:<a name="line.361"></a>
+<span class="sourceLineNo">362</span>            throw<a name="line.362"></a>
+<span class="sourceLineNo">363</span>                new IllegalArgumentException("Only integer and float data "+<a name="line.363"></a>
+<span class="sourceLineNo">364</span>                                             "are "+<a name="line.364"></a>
+<span class="sourceLineNo">365</span>                                             "supported by JJ2000");<a name="line.365"></a>
+<span class="sourceLineNo">366</span>        }<a name="line.366"></a>
+<span class="sourceLineNo">367</span>        return blk;<a name="line.367"></a>
+<span class="sourceLineNo">368</span>    }<a name="line.368"></a>
+<span class="sourceLineNo">369</span>}<a name="line.369"></a>
+<span class="sourceLineNo">370</span><a name="line.370"></a>
+<span class="sourceLineNo">371</span><a name="line.371"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

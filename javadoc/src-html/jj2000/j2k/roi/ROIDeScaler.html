@@ -1,0 +1,405 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: ROIDeScaler.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:21 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> *<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * Class:                   ROIDeScaler<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *<a name="line.9"></a>
+<span class="sourceLineNo">010</span> * Description:             The class taking care of de-scaling ROI coeffs.<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * COPYRIGHT:<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * software module is an implementation of a part of the JPEG 2000<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * including other intellectual property rights, for this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * or modifications thereof for use in hardware or software products<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * this software module in hardware or software products are advised that<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * their use may infringe existing patents. The original developers of<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * for use of this software module or modifications thereof. No license<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module for his/her own purpose, assign or donate this<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * software module to any third party and to inhibit third parties from<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * products. This copyright notice must be included in all copies or<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * derivative works of this software module.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> *<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * */<a name="line.44"></a>
+<span class="sourceLineNo">045</span>package jj2000.j2k.roi;<a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>import jj2000.j2k.quantization.dequantizer.*;<a name="line.47"></a>
+<span class="sourceLineNo">048</span>import jj2000.j2k.codestream.reader.*;<a name="line.48"></a>
+<span class="sourceLineNo">049</span>import jj2000.j2k.wavelet.synthesis.*;<a name="line.49"></a>
+<span class="sourceLineNo">050</span>import jj2000.j2k.codestream.*;<a name="line.50"></a>
+<span class="sourceLineNo">051</span>import jj2000.j2k.entropy.*;<a name="line.51"></a>
+<span class="sourceLineNo">052</span>import jj2000.j2k.decoder.*;<a name="line.52"></a>
+<span class="sourceLineNo">053</span>import jj2000.j2k.image.*;<a name="line.53"></a>
+<span class="sourceLineNo">054</span>import jj2000.j2k.util.*;<a name="line.54"></a>
+<span class="sourceLineNo">055</span>import jj2000.j2k.io.*;<a name="line.55"></a>
+<span class="sourceLineNo">056</span>import jj2000.j2k.*;<a name="line.56"></a>
+<span class="sourceLineNo">057</span><a name="line.57"></a>
+<span class="sourceLineNo">058</span>import java.io.*;<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageReadParamJava;<a name="line.60"></a>
+<span class="sourceLineNo">061</span><a name="line.61"></a>
+<span class="sourceLineNo">062</span>/**<a name="line.62"></a>
+<span class="sourceLineNo">063</span> * This class takes care of the de-scaling of ROI coefficients. The de-scaler<a name="line.63"></a>
+<span class="sourceLineNo">064</span> * works on a tile basis and any mask that is generated is for the current<a name="line.64"></a>
+<span class="sourceLineNo">065</span> * mask only<a name="line.65"></a>
+<span class="sourceLineNo">066</span> *<a name="line.66"></a>
+<span class="sourceLineNo">067</span> * &lt;P&gt;Default implementations of the methods in 'MultiResImgData' are provided<a name="line.67"></a>
+<span class="sourceLineNo">068</span> * through the 'MultiResImgDataAdapter' abstract class.<a name="line.68"></a>
+<span class="sourceLineNo">069</span> *<a name="line.69"></a>
+<span class="sourceLineNo">070</span> * &lt;P&gt;Sign magnitude representation is used (instead of two's complement) for<a name="line.70"></a>
+<span class="sourceLineNo">071</span> * the output data. The most significant bit is used for the sign (0 if<a name="line.71"></a>
+<span class="sourceLineNo">072</span> * positive, 1 if negative). Then the magnitude of the quantized coefficient<a name="line.72"></a>
+<span class="sourceLineNo">073</span> * is stored in the next most significat bits. The most significant magnitude<a name="line.73"></a>
+<span class="sourceLineNo">074</span> * bit corresponds to the most significant bit-plane and so on.<a name="line.74"></a>
+<span class="sourceLineNo">075</span> * */<a name="line.75"></a>
+<span class="sourceLineNo">076</span>public class ROIDeScaler extends MultiResImgDataAdapter<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    implements CBlkQuantDataSrcDec{<a name="line.77"></a>
+<span class="sourceLineNo">078</span><a name="line.78"></a>
+<span class="sourceLineNo">079</span>    /** The MaxShiftSpec containing the scaling values for all tile-components<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     * */<a name="line.80"></a>
+<span class="sourceLineNo">081</span>    private MaxShiftSpec mss;<a name="line.81"></a>
+<span class="sourceLineNo">082</span><a name="line.82"></a>
+<span class="sourceLineNo">083</span>    /** The prefix for ROI decoder options: 'R' */<a name="line.83"></a>
+<span class="sourceLineNo">084</span>    public final static char OPT_PREFIX = 'R';<a name="line.84"></a>
+<span class="sourceLineNo">085</span><a name="line.85"></a>
+<span class="sourceLineNo">086</span>    /** The list of parameters that is accepted by the entropy decoders. They<a name="line.86"></a>
+<span class="sourceLineNo">087</span>     * start with 'R'. */<a name="line.87"></a>
+<span class="sourceLineNo">088</span>    private final static String [][] pinfo = {<a name="line.88"></a>
+<span class="sourceLineNo">089</span>        { "Rno_roi",null,<a name="line.89"></a>
+<span class="sourceLineNo">090</span>          "This argument makes sure that the no ROI de-scaling is performed. "+<a name="line.90"></a>
+<span class="sourceLineNo">091</span>          "Decompression is done like there is no ROI in the image",null},<a name="line.91"></a>
+<span class="sourceLineNo">092</span>    };<a name="line.92"></a>
+<span class="sourceLineNo">093</span><a name="line.93"></a>
+<span class="sourceLineNo">094</span>    /** The entropy decoder from where to get the compressed data (the source)<a name="line.94"></a>
+<span class="sourceLineNo">095</span>     * */<a name="line.95"></a>
+<span class="sourceLineNo">096</span>    private CBlkQuantDataSrcDec src;<a name="line.96"></a>
+<span class="sourceLineNo">097</span><a name="line.97"></a>
+<span class="sourceLineNo">098</span>    /**<a name="line.98"></a>
+<span class="sourceLineNo">099</span>     * Constructor of the ROI descaler, takes EntropyDEcoder as source of data<a name="line.99"></a>
+<span class="sourceLineNo">100</span>     * to de-scale.<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     *<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     * @param src The EntropyDecoder that is the source of data.<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     *<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     * @param mss The MaxShiftSpec containing the scaling values for all<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     * tile-components<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     * */<a name="line.106"></a>
+<span class="sourceLineNo">107</span>    public ROIDeScaler(CBlkQuantDataSrcDec src, MaxShiftSpec mss){<a name="line.107"></a>
+<span class="sourceLineNo">108</span>        super(src);<a name="line.108"></a>
+<span class="sourceLineNo">109</span>        this.src=src;<a name="line.109"></a>
+<span class="sourceLineNo">110</span>        this.mss=mss;<a name="line.110"></a>
+<span class="sourceLineNo">111</span>    }<a name="line.111"></a>
+<span class="sourceLineNo">112</span><a name="line.112"></a>
+<span class="sourceLineNo">113</span>    /**<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     * Returns the subband tree, for the specified tile-component. This method<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     * returns the root element of the subband tree structure, see Subband and<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     * SubbandSyn. The tree comprises all the available resolution levels.<a name="line.116"></a>
+<span class="sourceLineNo">117</span>     *<a name="line.117"></a>
+<span class="sourceLineNo">118</span>     * &lt;P&gt;The number of magnitude bits ('magBits' member variable) for each<a name="line.118"></a>
+<span class="sourceLineNo">119</span>     * subband is not initialized.<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     *<a name="line.120"></a>
+<span class="sourceLineNo">121</span>     * @param t The index of the tile, from 0 to T-1.<a name="line.121"></a>
+<span class="sourceLineNo">122</span>     *<a name="line.122"></a>
+<span class="sourceLineNo">123</span>     * @param c The index of the component, from 0 to C-1.<a name="line.123"></a>
+<span class="sourceLineNo">124</span>     *<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * @return The root of the tree structure.<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     * */<a name="line.126"></a>
+<span class="sourceLineNo">127</span>    public SubbandSyn getSynSubbandTree(int t,int c) {<a name="line.127"></a>
+<span class="sourceLineNo">128</span>        return src.getSynSubbandTree(t,c);<a name="line.128"></a>
+<span class="sourceLineNo">129</span>    }<a name="line.129"></a>
+<span class="sourceLineNo">130</span><a name="line.130"></a>
+<span class="sourceLineNo">131</span>    /**<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     * Returns the horizontal code-block partition origin. Allowable values<a name="line.132"></a>
+<span class="sourceLineNo">133</span>     * are 0 and 1, nothing else.<a name="line.133"></a>
+<span class="sourceLineNo">134</span>     * */<a name="line.134"></a>
+<span class="sourceLineNo">135</span>    public int getCbULX() {<a name="line.135"></a>
+<span class="sourceLineNo">136</span>        return src.getCbULX();<a name="line.136"></a>
+<span class="sourceLineNo">137</span>    }<a name="line.137"></a>
+<span class="sourceLineNo">138</span><a name="line.138"></a>
+<span class="sourceLineNo">139</span>    /**<a name="line.139"></a>
+<span class="sourceLineNo">140</span>     * Returns the vertical code-block partition origin. Allowable values are<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     * 0 and 1, nothing else.<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     * */<a name="line.142"></a>
+<span class="sourceLineNo">143</span>    public int getCbULY() {<a name="line.143"></a>
+<span class="sourceLineNo">144</span>        return src.getCbULY();<a name="line.144"></a>
+<span class="sourceLineNo">145</span>    }<a name="line.145"></a>
+<span class="sourceLineNo">146</span><a name="line.146"></a>
+<span class="sourceLineNo">147</span>    /**<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     * Returns the parameters that are used in this class and implementing<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * classes. It returns a 2D String array. Each of the 1D arrays is for a<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     * different option, and they have 3 elements. The first element is the<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * option name, the second one is the synopsis and the third one is a long<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     * description of what the parameter is. The synopsis or description may<a name="line.152"></a>
+<span class="sourceLineNo">153</span>     * be 'null', in which case it is assumed that there is no synopsis or<a name="line.153"></a>
+<span class="sourceLineNo">154</span>     * description of the option, respectively. Null may be returned if no<a name="line.154"></a>
+<span class="sourceLineNo">155</span>     * options are supported.<a name="line.155"></a>
+<span class="sourceLineNo">156</span>     *<a name="line.156"></a>
+<span class="sourceLineNo">157</span>     * @return the options name, their synopsis and their explanation, or null<a name="line.157"></a>
+<span class="sourceLineNo">158</span>     * if no options are supported.<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     * */<a name="line.159"></a>
+<span class="sourceLineNo">160</span>    public static String[][] getParameterInfo() {<a name="line.160"></a>
+<span class="sourceLineNo">161</span>        return pinfo;<a name="line.161"></a>
+<span class="sourceLineNo">162</span>    }<a name="line.162"></a>
+<span class="sourceLineNo">163</span><a name="line.163"></a>
+<span class="sourceLineNo">164</span>    /**<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     * Returns the specified code-block in the current tile for the specified<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     * component, as a copy (see below).<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     *<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     * &lt;P&gt;The returned code-block may be progressive, which is indicated by<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     * the 'progressive' variable of the returned 'DataBlk' object. If a<a name="line.169"></a>
+<span class="sourceLineNo">170</span>     * code-block is progressive it means that in a later request to this<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     * method for the same code-block it is possible to retrieve data which is<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     * a better approximation, since meanwhile more data to decode for the<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     * code-block could have been received. If the code-block is not<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     * progressive then later calls to this method for the same code-block<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     * will return the exact same data values.<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     *<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     * &lt;P&gt;The data returned by this method is always a copy of the internal<a name="line.177"></a>
+<span class="sourceLineNo">178</span>     * data of this object, if any, and it can be modified "in place" without<a name="line.178"></a>
+<span class="sourceLineNo">179</span>     * any problems after being returned. The 'offset' of the returned data is<a name="line.179"></a>
+<span class="sourceLineNo">180</span>     * 0, and the 'scanw' is the same as the code-block width. See the<a name="line.180"></a>
+<span class="sourceLineNo">181</span>     * 'DataBlk' class.<a name="line.181"></a>
+<span class="sourceLineNo">182</span>     *<a name="line.182"></a>
+<span class="sourceLineNo">183</span>     * &lt;P&gt;The 'ulx' and 'uly' members of the returned 'DataBlk' object contain<a name="line.183"></a>
+<span class="sourceLineNo">184</span>     * the coordinates of the top-left corner of the block, with respect to<a name="line.184"></a>
+<span class="sourceLineNo">185</span>     * the tile, not the subband.<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     *<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     * @param c The component for which to return the next code-block.<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     *<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     * @param m The vertical index of the code-block to return, in the<a name="line.189"></a>
+<span class="sourceLineNo">190</span>     * specified subband.<a name="line.190"></a>
+<span class="sourceLineNo">191</span>     *<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     * @param n The horizontal index of the code-block to return, in the<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     * specified subband.<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     *<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     * @param sb The subband in which the code-block to return is.<a name="line.195"></a>
+<span class="sourceLineNo">196</span>     *<a name="line.196"></a>
+<span class="sourceLineNo">197</span>     * @param cblk If non-null this object will be used to return the new<a name="line.197"></a>
+<span class="sourceLineNo">198</span>     * code-block. If null a new one will be allocated and returned. If the<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     * "data" array of the object is non-null it will be reused, if possible,<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     * to return the data.<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     *<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     * @return The next code-block in the current tile for component 'n', or<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     * null if all code-blocks for the current tile have been returned.<a name="line.203"></a>
+<span class="sourceLineNo">204</span>     *<a name="line.204"></a>
+<span class="sourceLineNo">205</span>     * @see DataBlk<a name="line.205"></a>
+<span class="sourceLineNo">206</span>     * */<a name="line.206"></a>
+<span class="sourceLineNo">207</span>    public DataBlk getCodeBlock(int c, int m, int n, SubbandSyn sb,<a name="line.207"></a>
+<span class="sourceLineNo">208</span>                                  DataBlk cblk){<a name="line.208"></a>
+<span class="sourceLineNo">209</span>        return getInternCodeBlock(c,m,n,sb,cblk);<a name="line.209"></a>
+<span class="sourceLineNo">210</span>    }<a name="line.210"></a>
+<span class="sourceLineNo">211</span><a name="line.211"></a>
+<span class="sourceLineNo">212</span>    /**<a name="line.212"></a>
+<span class="sourceLineNo">213</span>     * Returns the specified code-block in the current tile for the specified<a name="line.213"></a>
+<span class="sourceLineNo">214</span>     * component (as a reference or copy).<a name="line.214"></a>
+<span class="sourceLineNo">215</span>     *<a name="line.215"></a>
+<span class="sourceLineNo">216</span>     * &lt;P&gt;The returned code-block may be progressive, which is indicated by<a name="line.216"></a>
+<span class="sourceLineNo">217</span>     * the 'progressive' variable of the returned 'DataBlk' object. If a<a name="line.217"></a>
+<span class="sourceLineNo">218</span>     * code-block is progressive it means that in a later request to this<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     * method for the same code-block it is possible to retrieve data which is<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * a better approximation, since meanwhile more data to decode for the<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     * code-block could have been received. If the code-block is not<a name="line.221"></a>
+<span class="sourceLineNo">222</span>     * progressive then later calls to this method for the same code-block<a name="line.222"></a>
+<span class="sourceLineNo">223</span>     * will return the exact same data values.<a name="line.223"></a>
+<span class="sourceLineNo">224</span>     *<a name="line.224"></a>
+<span class="sourceLineNo">225</span>     * &lt;P&gt;The data returned by this method can be the data in the internal<a name="line.225"></a>
+<span class="sourceLineNo">226</span>     * buffer of this object, if any, and thus can not be modified by the<a name="line.226"></a>
+<span class="sourceLineNo">227</span>     * caller. The 'offset' and 'scanw' of the returned data can be<a name="line.227"></a>
+<span class="sourceLineNo">228</span>     * arbitrary. See the 'DataBlk' class.<a name="line.228"></a>
+<span class="sourceLineNo">229</span>     *<a name="line.229"></a>
+<span class="sourceLineNo">230</span>     * &lt;P&gt;The 'ulx' and 'uly' members of the returned 'DataBlk' object contain<a name="line.230"></a>
+<span class="sourceLineNo">231</span>     * the coordinates of the top-left corner of the block, with respect to<a name="line.231"></a>
+<span class="sourceLineNo">232</span>     * the tile, not the subband.<a name="line.232"></a>
+<span class="sourceLineNo">233</span>     *<a name="line.233"></a>
+<span class="sourceLineNo">234</span>     * @param c The component for which to return the next code-block.<a name="line.234"></a>
+<span class="sourceLineNo">235</span>     *<a name="line.235"></a>
+<span class="sourceLineNo">236</span>     * @param m The vertical index of the code-block to return, in the<a name="line.236"></a>
+<span class="sourceLineNo">237</span>     * specified subband.<a name="line.237"></a>
+<span class="sourceLineNo">238</span>     *<a name="line.238"></a>
+<span class="sourceLineNo">239</span>     * @param n The horizontal index of the code-block to return, in the<a name="line.239"></a>
+<span class="sourceLineNo">240</span>     * specified subband.<a name="line.240"></a>
+<span class="sourceLineNo">241</span>     *<a name="line.241"></a>
+<span class="sourceLineNo">242</span>     * @param sb The subband in which the code-block to return is.<a name="line.242"></a>
+<span class="sourceLineNo">243</span>     *<a name="line.243"></a>
+<span class="sourceLineNo">244</span>     * @param cblk If non-null this object will be used to return the new<a name="line.244"></a>
+<span class="sourceLineNo">245</span>     * code-block. If null a new one will be allocated and returned. If the<a name="line.245"></a>
+<span class="sourceLineNo">246</span>     * "data" array of the object is non-null it will be reused, if possible,<a name="line.246"></a>
+<span class="sourceLineNo">247</span>     * to return the data.<a name="line.247"></a>
+<span class="sourceLineNo">248</span>     *<a name="line.248"></a>
+<span class="sourceLineNo">249</span>     * @return The requested code-block in the current tile for component 'c'.<a name="line.249"></a>
+<span class="sourceLineNo">250</span>     *<a name="line.250"></a>
+<span class="sourceLineNo">251</span>     * @see DataBlk<a name="line.251"></a>
+<span class="sourceLineNo">252</span>     * */<a name="line.252"></a>
+<span class="sourceLineNo">253</span>    public DataBlk getInternCodeBlock(int c, int m, int n, SubbandSyn sb,<a name="line.253"></a>
+<span class="sourceLineNo">254</span>                                        DataBlk cblk){<a name="line.254"></a>
+<span class="sourceLineNo">255</span>        int mi,i,j,k,wrap;<a name="line.255"></a>
+<span class="sourceLineNo">256</span>        int ulx, uly, w, h;<a name="line.256"></a>
+<span class="sourceLineNo">257</span>        int[] data;                       // local copy of quantized data<a name="line.257"></a>
+<span class="sourceLineNo">258</span>        int tmp;<a name="line.258"></a>
+<span class="sourceLineNo">259</span>        int limit;<a name="line.259"></a>
+<span class="sourceLineNo">260</span><a name="line.260"></a>
+<span class="sourceLineNo">261</span>        // Get data block from entropy decoder<a name="line.261"></a>
+<span class="sourceLineNo">262</span>        cblk = src.getInternCodeBlock(c,m,n,sb,cblk);<a name="line.262"></a>
+<span class="sourceLineNo">263</span><a name="line.263"></a>
+<span class="sourceLineNo">264</span>        // If there are no ROIs in the tile, Or if we already got all blocks<a name="line.264"></a>
+<span class="sourceLineNo">265</span>        boolean noRoiInTile = false;<a name="line.265"></a>
+<span class="sourceLineNo">266</span>        if(mss==null || mss.getTileCompVal(getTileIdx(),c)==null )<a name="line.266"></a>
+<span class="sourceLineNo">267</span>            noRoiInTile = true;<a name="line.267"></a>
+<span class="sourceLineNo">268</span><a name="line.268"></a>
+<span class="sourceLineNo">269</span>        if (noRoiInTile || cblk==null) {<a name="line.269"></a>
+<span class="sourceLineNo">270</span>            return cblk;<a name="line.270"></a>
+<span class="sourceLineNo">271</span>        }<a name="line.271"></a>
+<span class="sourceLineNo">272</span>        data = (int[])cblk.getData();<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        ulx = cblk.ulx;<a name="line.273"></a>
+<span class="sourceLineNo">274</span>        uly = cblk.uly;<a name="line.274"></a>
+<span class="sourceLineNo">275</span>        w = cblk.w;<a name="line.275"></a>
+<span class="sourceLineNo">276</span>        h = cblk.h;<a name="line.276"></a>
+<span class="sourceLineNo">277</span><a name="line.277"></a>
+<span class="sourceLineNo">278</span>        // Scale coefficients according to magnitude. If the magnitude of a<a name="line.278"></a>
+<span class="sourceLineNo">279</span>        // coefficient is lower than 2 pow 31-magbits then it is a background<a name="line.279"></a>
+<span class="sourceLineNo">280</span>        // coeff and should be up-scaled<a name="line.280"></a>
+<span class="sourceLineNo">281</span>        int boost = ((Integer) mss.getTileCompVal(getTileIdx(),c)).intValue();<a name="line.281"></a>
+<span class="sourceLineNo">282</span>        int mask = ((1&lt;&lt;sb.magbits)-1)&lt;&lt;(31-sb.magbits);<a name="line.282"></a>
+<span class="sourceLineNo">283</span>        int mask2 = (~mask)&amp;0x7FFFFFFF;<a name="line.283"></a>
+<span class="sourceLineNo">284</span><a name="line.284"></a>
+<span class="sourceLineNo">285</span>        wrap=cblk.scanw-w;<a name="line.285"></a>
+<span class="sourceLineNo">286</span>        i=cblk.offset+cblk.scanw*(h-1)+w-1;<a name="line.286"></a>
+<span class="sourceLineNo">287</span>        for(j=h;j&gt;0;j--){<a name="line.287"></a>
+<span class="sourceLineNo">288</span>            for(k=w;k&gt;0;k--,i--){<a name="line.288"></a>
+<span class="sourceLineNo">289</span>                tmp=data[i];<a name="line.289"></a>
+<span class="sourceLineNo">290</span>                if((tmp &amp; mask) == 0 ) { // BG<a name="line.290"></a>
+<span class="sourceLineNo">291</span>                    data[i] = (tmp &amp; 0x80000000) | (tmp &lt;&lt; boost);<a name="line.291"></a>
+<span class="sourceLineNo">292</span>                }<a name="line.292"></a>
+<span class="sourceLineNo">293</span>                else { // ROI<a name="line.293"></a>
+<span class="sourceLineNo">294</span>                    if ((tmp &amp; mask2) != 0) {<a name="line.294"></a>
+<span class="sourceLineNo">295</span>                        // decoded more than magbits bit-planes, set<a name="line.295"></a>
+<span class="sourceLineNo">296</span>                        // quantization mid-interval approx. bit just after<a name="line.296"></a>
+<span class="sourceLineNo">297</span>                        // the magbits.<a name="line.297"></a>
+<span class="sourceLineNo">298</span>                        data[i] = (tmp&amp;(~mask2)) | (1&lt;&lt;(30-sb.magbits));<a name="line.298"></a>
+<span class="sourceLineNo">299</span>                    }<a name="line.299"></a>
+<span class="sourceLineNo">300</span>                }<a name="line.300"></a>
+<span class="sourceLineNo">301</span>            }<a name="line.301"></a>
+<span class="sourceLineNo">302</span>            i-=wrap;<a name="line.302"></a>
+<span class="sourceLineNo">303</span>        }<a name="line.303"></a>
+<span class="sourceLineNo">304</span>        return cblk;<a name="line.304"></a>
+<span class="sourceLineNo">305</span>    }<a name="line.305"></a>
+<span class="sourceLineNo">306</span><a name="line.306"></a>
+<span class="sourceLineNo">307</span>    /**<a name="line.307"></a>
+<span class="sourceLineNo">308</span>     * Creates a ROIDeScaler object. The information needed to create the<a name="line.308"></a>
+<span class="sourceLineNo">309</span>     * object is the Entropy decoder used and the parameters.<a name="line.309"></a>
+<span class="sourceLineNo">310</span>     *<a name="line.310"></a>
+<span class="sourceLineNo">311</span>     * @param src The source of data that is to be descaled<a name="line.311"></a>
+<span class="sourceLineNo">312</span>     *<a name="line.312"></a>
+<span class="sourceLineNo">313</span>     * @param pl The parameter list (or options).<a name="line.313"></a>
+<span class="sourceLineNo">314</span>     *<a name="line.314"></a>
+<span class="sourceLineNo">315</span>     * @param decSpec The decoding specifications<a name="line.315"></a>
+<span class="sourceLineNo">316</span>     *<a name="line.316"></a>
+<span class="sourceLineNo">317</span>     * @exception IllegalArgumentException If an error occurs while parsing<a name="line.317"></a>
+<span class="sourceLineNo">318</span>     * the options in 'pl'<a name="line.318"></a>
+<span class="sourceLineNo">319</span>     * */<a name="line.319"></a>
+<span class="sourceLineNo">320</span>    public static ROIDeScaler createInstance(CBlkQuantDataSrcDec src,<a name="line.320"></a>
+<span class="sourceLineNo">321</span>                                             J2KImageReadParamJava j2krparam,<a name="line.321"></a>
+<span class="sourceLineNo">322</span>                                             DecoderSpecs decSpec){<a name="line.322"></a>
+<span class="sourceLineNo">323</span>        // Check if no_roi specified in command line or no roi signalled<a name="line.323"></a>
+<span class="sourceLineNo">324</span>        // in bit stream<a name="line.324"></a>
+<span class="sourceLineNo">325</span>        boolean noRoi = j2krparam.getNoROIDescaling();<a name="line.325"></a>
+<span class="sourceLineNo">326</span>        if (noRoi || decSpec.rois == null) {<a name="line.326"></a>
+<span class="sourceLineNo">327</span>            // no_roi specified in commandline!<a name="line.327"></a>
+<span class="sourceLineNo">328</span>            return new ROIDeScaler(src,null);<a name="line.328"></a>
+<span class="sourceLineNo">329</span>        }<a name="line.329"></a>
+<span class="sourceLineNo">330</span><a name="line.330"></a>
+<span class="sourceLineNo">331</span>        return new ROIDeScaler(src, decSpec.rois );<a name="line.331"></a>
+<span class="sourceLineNo">332</span>    }<a name="line.332"></a>
+<span class="sourceLineNo">333</span>}<a name="line.333"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

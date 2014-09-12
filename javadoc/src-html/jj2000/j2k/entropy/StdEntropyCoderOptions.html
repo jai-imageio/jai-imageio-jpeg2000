@@ -1,0 +1,192 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: StdEntropyCoderOptions.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:05 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Class:                   StdEntropyCoderOptions<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:             Entropy coding engine of stripes in<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *                          code-blocks options<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * COPYRIGHT:<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * software module is an implementation of a part of the JPEG 2000<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * including other intellectual property rights, for this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * or modifications thereof for use in hardware or software products<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * this software module in hardware or software products are advised that<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * their use may infringe existing patents. The original developers of<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * for use of this software module or modifications thereof. No license<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module for his/her own purpose, assign or donate this<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * software module to any third party and to inhibit third parties from<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * products. This copyright notice must be included in all copies or<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * derivative works of this software module.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> *<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * */<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>package jj2000.j2k.entropy;<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>/**<a name="line.49"></a>
+<span class="sourceLineNo">050</span> * This interface define the constants that identify the possible options for<a name="line.50"></a>
+<span class="sourceLineNo">051</span> * the entropy coder, as well some fixed parameters of the JPEG 2000 entropy<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * coder.<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * */<a name="line.53"></a>
+<span class="sourceLineNo">054</span>public interface StdEntropyCoderOptions{<a name="line.54"></a>
+<span class="sourceLineNo">055</span><a name="line.55"></a>
+<span class="sourceLineNo">056</span>    /** The flag bit to indicate that selective arithmetic coding bypass<a name="line.56"></a>
+<span class="sourceLineNo">057</span>     * should be used. In this mode some of the coding passes bypass the<a name="line.57"></a>
+<span class="sourceLineNo">058</span>     * arithmetic coder and raw bits are output. If this flag is turned on and<a name="line.58"></a>
+<span class="sourceLineNo">059</span>     * the 'OPT_TERM_PASS' one is turned off then the any non-bypass coding<a name="line.59"></a>
+<span class="sourceLineNo">060</span>     * pass before a bypass coding pass must use MQ termination. */<a name="line.60"></a>
+<span class="sourceLineNo">061</span>    public final static int OPT_BYPASS = 1;<a name="line.61"></a>
+<span class="sourceLineNo">062</span><a name="line.62"></a>
+<span class="sourceLineNo">063</span>    /** The flag bit to indicate that the MQ states for all contexts should be<a name="line.63"></a>
+<span class="sourceLineNo">064</span>     * reset at the end of each non-bypass coding pass. */<a name="line.64"></a>
+<span class="sourceLineNo">065</span>    public final static int OPT_RESET_MQ = 1&lt;&lt;1;<a name="line.65"></a>
+<span class="sourceLineNo">066</span><a name="line.66"></a>
+<span class="sourceLineNo">067</span>    /** The flag bit to indicate that regular termination should be used. When<a name="line.67"></a>
+<span class="sourceLineNo">068</span>     * this is specified termination is performed after each coding<a name="line.68"></a>
+<span class="sourceLineNo">069</span>     * pass. Termination is applied to both arithmetically coded and bypass<a name="line.69"></a>
+<span class="sourceLineNo">070</span>     * (i.e. raw) passes . */<a name="line.70"></a>
+<span class="sourceLineNo">071</span>    public final static int OPT_TERM_PASS = 1&lt;&lt;2;<a name="line.71"></a>
+<span class="sourceLineNo">072</span><a name="line.72"></a>
+<span class="sourceLineNo">073</span>    /** The flag bit to indicate the vertically stripe-causal context<a name="line.73"></a>
+<span class="sourceLineNo">074</span>     * formation should be used. */<a name="line.74"></a>
+<span class="sourceLineNo">075</span>    public final static int OPT_VERT_STR_CAUSAL = 1&lt;&lt;3;<a name="line.75"></a>
+<span class="sourceLineNo">076</span><a name="line.76"></a>
+<span class="sourceLineNo">077</span>    /** The flag bit to indicate that error resilience info is embedded on MQ<a name="line.77"></a>
+<span class="sourceLineNo">078</span>     * termination. The predictable error-resilient MQ termination at the<a name="line.78"></a>
+<span class="sourceLineNo">079</span>     * encoder is necessary in this case. */<a name="line.79"></a>
+<span class="sourceLineNo">080</span>    public final static int OPT_PRED_TERM = 1&lt;&lt;4;<a name="line.80"></a>
+<span class="sourceLineNo">081</span><a name="line.81"></a>
+<span class="sourceLineNo">082</span>    /** The flag bit to indicate that a segmentation marker is to be<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * inserted at the end of each normalization coding pass. The segment<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     * marker is the four symbol sequence 1010 that are sent through the MQ<a name="line.84"></a>
+<span class="sourceLineNo">085</span>     * coder using the UNIFORM context. */<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    public final static int OPT_SEG_SYMBOLS = 1&lt;&lt;5;<a name="line.86"></a>
+<span class="sourceLineNo">087</span><a name="line.87"></a>
+<span class="sourceLineNo">088</span>    /** The minimum code-block dimension. The nominal width or height of a<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     * code-block must never be less than this. It is 4. */<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    public static final int MIN_CB_DIM = 4;<a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91"></a>
+<span class="sourceLineNo">092</span>    /** The maximum code-block dimension. No code-block should be larger,<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     * either in width or height, than this value. It is 1024. */<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    public static final int MAX_CB_DIM = 1024;<a name="line.94"></a>
+<span class="sourceLineNo">095</span><a name="line.95"></a>
+<span class="sourceLineNo">096</span>    /** The maximum code-block area (width x height). The surface covered by<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     * a nominal size block should never be larger than this. It is 4096 */<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    public static final int MAX_CB_AREA = 4096;<a name="line.98"></a>
+<span class="sourceLineNo">099</span><a name="line.99"></a>
+<span class="sourceLineNo">100</span>    /** The stripe height. This is the nominal value of the stripe height. It<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     * is 4. */<a name="line.101"></a>
+<span class="sourceLineNo">102</span>    public static final int STRIPE_HEIGHT = 4;<a name="line.102"></a>
+<span class="sourceLineNo">103</span><a name="line.103"></a>
+<span class="sourceLineNo">104</span>    /** The number of coding passes per bit-plane. This is the number of<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     * passes per bit-plane. It is 3. */<a name="line.105"></a>
+<span class="sourceLineNo">106</span>    public static final int NUM_PASSES = 3;<a name="line.106"></a>
+<span class="sourceLineNo">107</span><a name="line.107"></a>
+<span class="sourceLineNo">108</span>    /** The number of most significant bit-planes where bypass mode is not to<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     * be used, even if bypass mode is on: 4. */<a name="line.109"></a>
+<span class="sourceLineNo">110</span>    public static final int NUM_NON_BYPASS_MS_BP = 4;<a name="line.110"></a>
+<span class="sourceLineNo">111</span><a name="line.111"></a>
+<span class="sourceLineNo">112</span>    /** The number of empty passes in the most significant bit-plane. It is<a name="line.112"></a>
+<span class="sourceLineNo">113</span>        2. */<a name="line.113"></a>
+<span class="sourceLineNo">114</span>    public static final int NUM_EMPTY_PASSES_IN_MS_BP = 2;<a name="line.114"></a>
+<span class="sourceLineNo">115</span><a name="line.115"></a>
+<span class="sourceLineNo">116</span>    /** The index of the first "raw" pass, if bypass mode is on. */<a name="line.116"></a>
+<span class="sourceLineNo">117</span>    public static final int FIRST_BYPASS_PASS_IDX =<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        NUM_PASSES*NUM_NON_BYPASS_MS_BP-NUM_EMPTY_PASSES_IN_MS_BP;<a name="line.118"></a>
+<span class="sourceLineNo">119</span><a name="line.119"></a>
+<span class="sourceLineNo">120</span>}<a name="line.120"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

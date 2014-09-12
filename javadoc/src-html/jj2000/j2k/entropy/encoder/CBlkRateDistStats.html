@@ -1,0 +1,412 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: CBlkRateDistStats.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:07 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Class:                   CBlkRateDistStats<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:             The coded (compressed) code-block with<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *                          rate-distortion statistics.<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * COPYRIGHT:<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * software module is an implementation of a part of the JPEG 2000<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * including other intellectual property rights, for this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * or modifications thereof for use in hardware or software products<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * this software module in hardware or software products are advised that<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * their use may infringe existing patents. The original developers of<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * for use of this software module or modifications thereof. No license<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module for his/her own purpose, assign or donate this<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * software module to any third party and to inhibit third parties from<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * products. This copyright notice must be included in all copies or<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * derivative works of this software module.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> *<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * */<a name="line.44"></a>
+<span class="sourceLineNo">045</span>package jj2000.j2k.entropy.encoder;<a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>import jj2000.j2k.entropy.*;<a name="line.47"></a>
+<span class="sourceLineNo">048</span>import jj2000.j2k.wavelet.analysis.*;<a name="line.48"></a>
+<span class="sourceLineNo">049</span>import java.io.*;<a name="line.49"></a>
+<span class="sourceLineNo">050</span><a name="line.50"></a>
+<span class="sourceLineNo">051</span>/**<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * This class stores coded (compressed) code-blocks with their associated<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * rate-distortion statistics. This object should always contain all the<a name="line.53"></a>
+<span class="sourceLineNo">054</span> * compressed data of the code-block. It is applicable to the encoder engine<a name="line.54"></a>
+<span class="sourceLineNo">055</span> * only. Some data of the coded-block is stored in the super class, see<a name="line.55"></a>
+<span class="sourceLineNo">056</span> * CodedCBlk.<a name="line.56"></a>
+<span class="sourceLineNo">057</span> *<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * &lt;P&gt;The rate-distortion statistics (i.e. R-D slope) is stored for valid<a name="line.58"></a>
+<span class="sourceLineNo">059</span> * points only. The set of valid points is determined by the entropy coder<a name="line.59"></a>
+<span class="sourceLineNo">060</span> * engine itself. Normally they are selected so as to lye in a convex hull,<a name="line.60"></a>
+<span class="sourceLineNo">061</span> * which can be achived by using the 'selectConvexHull' method of this class,<a name="line.61"></a>
+<span class="sourceLineNo">062</span> * but some other strategies might be employed.<a name="line.62"></a>
+<span class="sourceLineNo">063</span> *<a name="line.63"></a>
+<span class="sourceLineNo">064</span> * &lt;P&gt;The rate (in bytes) for each truncation point (valid or not) is stored<a name="line.64"></a>
+<span class="sourceLineNo">065</span> * in the 'truncRates' array. The rate of a truncation point is the total<a name="line.65"></a>
+<span class="sourceLineNo">066</span> * number of bytes in 'data' (see super class) that have to be decoded to<a name="line.66"></a>
+<span class="sourceLineNo">067</span> * reach the truncation point.<a name="line.67"></a>
+<span class="sourceLineNo">068</span> *<a name="line.68"></a>
+<span class="sourceLineNo">069</span> * &lt;P&gt;The slope (reduction of distortion divided by the increase in rate) at<a name="line.69"></a>
+<span class="sourceLineNo">070</span> * each of the valid truncation points is stored in 'truncSlopes'.<a name="line.70"></a>
+<span class="sourceLineNo">071</span> *<a name="line.71"></a>
+<span class="sourceLineNo">072</span> * &lt;P&gt;The index of each valid truncation point is stored in 'truncIdxs'. The<a name="line.72"></a>
+<span class="sourceLineNo">073</span> * index should be interpreted in the following way: a valid truncation point<a name="line.73"></a>
+<span class="sourceLineNo">074</span> * at position 'n' has the index 'truncIdxs[n]', the rate<a name="line.74"></a>
+<span class="sourceLineNo">075</span> * 'truncRates[truncIdxs[n]]' and the slope 'truncSlopes[n]'. The arrays<a name="line.75"></a>
+<span class="sourceLineNo">076</span> * 'truncIdxs' and 'truncRates' have at least 'nVldTrunc' elements. The<a name="line.76"></a>
+<span class="sourceLineNo">077</span> * 'truncRates' array has at least 'nTotTrunc' elements.<a name="line.77"></a>
+<span class="sourceLineNo">078</span> *<a name="line.78"></a>
+<span class="sourceLineNo">079</span> * &lt;P&gt;In addition the 'isTermPass' array contains a flag for each truncation<a name="line.79"></a>
+<span class="sourceLineNo">080</span> * point (valid and non-valid ones) that tells if the pass is terminated or<a name="line.80"></a>
+<span class="sourceLineNo">081</span> * not. If this variable is null then it means that no pass is terminated,<a name="line.81"></a>
+<span class="sourceLineNo">082</span> * except the last one which always is.<a name="line.82"></a>
+<span class="sourceLineNo">083</span> *<a name="line.83"></a>
+<span class="sourceLineNo">084</span> * &lt;P&gt;The compressed data is stored in the 'data' member variable of the super<a name="line.84"></a>
+<span class="sourceLineNo">085</span> * class.<a name="line.85"></a>
+<span class="sourceLineNo">086</span> *<a name="line.86"></a>
+<span class="sourceLineNo">087</span> * @see CodedCBlk<a name="line.87"></a>
+<span class="sourceLineNo">088</span> * */<a name="line.88"></a>
+<span class="sourceLineNo">089</span>public class CBlkRateDistStats extends CodedCBlk {<a name="line.89"></a>
+<span class="sourceLineNo">090</span><a name="line.90"></a>
+<span class="sourceLineNo">091</span>    /** The subband to which the code-block belongs */<a name="line.91"></a>
+<span class="sourceLineNo">092</span>    public SubbandAn sb;<a name="line.92"></a>
+<span class="sourceLineNo">093</span><a name="line.93"></a>
+<span class="sourceLineNo">094</span>    /** The total number of truncation points */<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    public int nTotTrunc;<a name="line.95"></a>
+<span class="sourceLineNo">096</span><a name="line.96"></a>
+<span class="sourceLineNo">097</span>    /** The number of valid truncation points */<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    public int nVldTrunc;<a name="line.98"></a>
+<span class="sourceLineNo">099</span><a name="line.99"></a>
+<span class="sourceLineNo">100</span>    /** The rate (in bytes) for each truncation point (valid and non-valid<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     * ones) */<a name="line.101"></a>
+<span class="sourceLineNo">102</span>    public int truncRates[];<a name="line.102"></a>
+<span class="sourceLineNo">103</span><a name="line.103"></a>
+<span class="sourceLineNo">104</span>    /** The distortion for each truncation point (valid and non-valid ones) */<a name="line.104"></a>
+<span class="sourceLineNo">105</span>    public double truncDists[];<a name="line.105"></a>
+<span class="sourceLineNo">106</span><a name="line.106"></a>
+<span class="sourceLineNo">107</span>    /** The negative of the rate-distortion slope for each valid truncation<a name="line.107"></a>
+<span class="sourceLineNo">108</span>        point */<a name="line.108"></a>
+<span class="sourceLineNo">109</span>    public float truncSlopes[];<a name="line.109"></a>
+<span class="sourceLineNo">110</span><a name="line.110"></a>
+<span class="sourceLineNo">111</span>    /** The indices of the valid truncation points, in increasing<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     * order. */<a name="line.112"></a>
+<span class="sourceLineNo">113</span>    public int truncIdxs[];<a name="line.113"></a>
+<span class="sourceLineNo">114</span><a name="line.114"></a>
+<span class="sourceLineNo">115</span>    /** Array of flags indicating terminated passes (valid or non-valid<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     * truncation points). */<a name="line.116"></a>
+<span class="sourceLineNo">117</span>    public boolean isTermPass[];<a name="line.117"></a>
+<span class="sourceLineNo">118</span><a name="line.118"></a>
+<span class="sourceLineNo">119</span>    /** The number of ROI coefficients in the code-block */<a name="line.119"></a>
+<span class="sourceLineNo">120</span>    public int nROIcoeff = 0;<a name="line.120"></a>
+<span class="sourceLineNo">121</span><a name="line.121"></a>
+<span class="sourceLineNo">122</span>    /** Number of ROI coding passes */<a name="line.122"></a>
+<span class="sourceLineNo">123</span>    public int nROIcp = 0;<a name="line.123"></a>
+<span class="sourceLineNo">124</span><a name="line.124"></a>
+<span class="sourceLineNo">125</span>    /**<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     * Creates a new CBlkRateDistStats object without allocating any space for<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     * 'truncRates', 'truncSlopes', 'truncDists' and 'truncIdxs' or 'data'.<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     * */<a name="line.128"></a>
+<span class="sourceLineNo">129</span>    public CBlkRateDistStats() {<a name="line.129"></a>
+<span class="sourceLineNo">130</span>    }<a name="line.130"></a>
+<span class="sourceLineNo">131</span><a name="line.131"></a>
+<span class="sourceLineNo">132</span>    /**<a name="line.132"></a>
+<span class="sourceLineNo">133</span>     * Creates a new CBlkRateDistStats object and initializes the valid<a name="line.133"></a>
+<span class="sourceLineNo">134</span>     * truncation points, their rates and their slopes, from the 'rates' and<a name="line.134"></a>
+<span class="sourceLineNo">135</span>     * 'dist' arrays. The 'rates', 'dist' and 'termp' arrays must contain the<a name="line.135"></a>
+<span class="sourceLineNo">136</span>     * rate (in bytes), the reduction in distortion (from nothing coded) and<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     * the flag indicating if termination is used, respectively, for each<a name="line.137"></a>
+<span class="sourceLineNo">138</span>     * truncation point.<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     *<a name="line.139"></a>
+<span class="sourceLineNo">140</span>     * &lt;P&gt;The valid truncation points are selected by taking them as lying on<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     * a convex hull. This is done by calling the method selectConvexHull().<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     *<a name="line.142"></a>
+<span class="sourceLineNo">143</span>     * &lt;P&gt; Note that the arrays 'rates' and 'termp' are copied, not<a name="line.143"></a>
+<span class="sourceLineNo">144</span>     * referenced, so they can be modified after a call to this constructor.<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     *<a name="line.145"></a>
+<span class="sourceLineNo">146</span>     * @param m The horizontal index of the code-block, within the subband.<a name="line.146"></a>
+<span class="sourceLineNo">147</span>     *<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     * @param n The vertical index of the code-block, within the subband.<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     *<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     * @param skipMSBP The number of skipped most significant bit-planes for<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * this code-block.<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     *<a name="line.152"></a>
+<span class="sourceLineNo">153</span>     * @param data The compressed data. This array is referenced by this<a name="line.153"></a>
+<span class="sourceLineNo">154</span>     * object so it should not be modified after.<a name="line.154"></a>
+<span class="sourceLineNo">155</span>     *<a name="line.155"></a>
+<span class="sourceLineNo">156</span>     * @param rates The rates (in bytes) for each truncation point in the<a name="line.156"></a>
+<span class="sourceLineNo">157</span>     * compressed data. This array is modified by the method but no reference<a name="line.157"></a>
+<span class="sourceLineNo">158</span>     * is kept to it.<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     *<a name="line.159"></a>
+<span class="sourceLineNo">160</span>     * @param dists The reduction in distortion (with respect to no information<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     * coded) for each truncation point. This array is modified by the method<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     * but no reference is kept to it.<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     *<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     * @param termp An array of boolean flags indicating, for each pass, if a<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     * pass is terminated or not (true if terminated). If null then it is<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     * assumed that no pass is terminated except the last one which always is.<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     *<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     * @param np The number of truncation points contained in 'rates', 'dist'<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     * and 'termp'.<a name="line.169"></a>
+<span class="sourceLineNo">170</span>     *<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     * @param inclast If false the convex hull is constructed as for lossy<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     * coding. If true it is constructed as for lossless coding, in which case<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     * it is ensured that all bit-planes are sent (i.e. the last truncation<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     * point is always included).<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     * */<a name="line.175"></a>
+<span class="sourceLineNo">176</span>    public CBlkRateDistStats(int m, int n, int skipMSBP, byte data[],<a name="line.176"></a>
+<span class="sourceLineNo">177</span>                          int rates[], double dists[], boolean termp[],<a name="line.177"></a>
+<span class="sourceLineNo">178</span>                          int np, boolean inclast) {<a name="line.178"></a>
+<span class="sourceLineNo">179</span>        super(m,n,skipMSBP,data);<a name="line.179"></a>
+<span class="sourceLineNo">180</span>        selectConvexHull(rates,dists,termp,np,inclast);<a name="line.180"></a>
+<span class="sourceLineNo">181</span>    }<a name="line.181"></a>
+<span class="sourceLineNo">182</span><a name="line.182"></a>
+<span class="sourceLineNo">183</span>    /**<a name="line.183"></a>
+<span class="sourceLineNo">184</span>     * Compute the rate-distorsion slopes and selects those that lie in a<a name="line.184"></a>
+<span class="sourceLineNo">185</span>     * convex hull. It will compute the slopes, select the ones that form the<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     * convex hull and initialize the 'truncIdxs' and 'truncSlopes' arrays, as<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     * well as 'nVldTrunc', with the selected truncation points. It will also<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     * initialize 'truncRates' and 'isTermPass' arrays, as well as<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     * 'nTotTrunc', with all the truncation points (selected or not).<a name="line.189"></a>
+<span class="sourceLineNo">190</span>     *<a name="line.190"></a>
+<span class="sourceLineNo">191</span>     * &lt;P&gt; Note that the arrays 'rates' and 'termp' are copied, not<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     * referenced, so they can be modified after a call to this method.<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     *<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     * @param rates The rates (in bytes) for each truncation point in the<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     * compressed data. This array is modified by the method.<a name="line.195"></a>
+<span class="sourceLineNo">196</span>     *<a name="line.196"></a>
+<span class="sourceLineNo">197</span>     * @param dists The reduction in distortion (with respect to no<a name="line.197"></a>
+<span class="sourceLineNo">198</span>     * information coded) for each truncation point. This array is modified by<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     * the method.<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     *<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     * @param termp An array of boolean flags indicating, for each pass, if a<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     * pass is terminated or not (true if terminated). If null then it is<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     * assumed that no pass is terminated except the last one which always is.<a name="line.203"></a>
+<span class="sourceLineNo">204</span>     *<a name="line.204"></a>
+<span class="sourceLineNo">205</span>     * @param n The number of truncation points contained in 'rates', 'dist'<a name="line.205"></a>
+<span class="sourceLineNo">206</span>     * and 'termp'.<a name="line.206"></a>
+<span class="sourceLineNo">207</span>     *<a name="line.207"></a>
+<span class="sourceLineNo">208</span>     * @param inclast If false the convex hull is constructed as for lossy<a name="line.208"></a>
+<span class="sourceLineNo">209</span>     * coding. If true it is constructed as for lossless coding, in which case<a name="line.209"></a>
+<span class="sourceLineNo">210</span>     * it is ensured that all bit-planes are sent (i.e. the last truncation<a name="line.210"></a>
+<span class="sourceLineNo">211</span>     * point is always included).<a name="line.211"></a>
+<span class="sourceLineNo">212</span>     * */<a name="line.212"></a>
+<span class="sourceLineNo">213</span>    public void selectConvexHull(int rates[], double dists[], boolean termp[],<a name="line.213"></a>
+<span class="sourceLineNo">214</span>                                 int n, boolean inclast) {<a name="line.214"></a>
+<span class="sourceLineNo">215</span>        int first_pnt;    // The first point containing some coded data<a name="line.215"></a>
+<span class="sourceLineNo">216</span>        int p;            // last selected point<a name="line.216"></a>
+<span class="sourceLineNo">217</span>        int k;            // current point<a name="line.217"></a>
+<span class="sourceLineNo">218</span>        int i;            // current valid point<a name="line.218"></a>
+<span class="sourceLineNo">219</span>        int npnt;         // number of selected (i.e. valid) points<a name="line.219"></a>
+<span class="sourceLineNo">220</span>        int delta_rate;   // Rate difference<a name="line.220"></a>
+<span class="sourceLineNo">221</span>        double delta_dist; // Distortion difference<a name="line.221"></a>
+<span class="sourceLineNo">222</span>        float k_slope;    // R-D slope for the current point<a name="line.222"></a>
+<span class="sourceLineNo">223</span>        float p_slope;    // R-D slope for the last selected point<a name="line.223"></a>
+<span class="sourceLineNo">224</span>        int ll_rate;      // Rate for "lossless" coding (i.e. all coded info)<a name="line.224"></a>
+<span class="sourceLineNo">225</span><a name="line.225"></a>
+<span class="sourceLineNo">226</span>        // Convention: when a negative value is stored in 'rates' it meas an<a name="line.226"></a>
+<span class="sourceLineNo">227</span>        // invalid point. The absolute value is always the rate for that point.<a name="line.227"></a>
+<span class="sourceLineNo">228</span><a name="line.228"></a>
+<span class="sourceLineNo">229</span>        // Look for first point with some coded info (rate not 0)<a name="line.229"></a>
+<span class="sourceLineNo">230</span>        first_pnt = 0;<a name="line.230"></a>
+<span class="sourceLineNo">231</span>        while (first_pnt &lt; n &amp;&amp; rates[first_pnt] &lt;= 0) {<a name="line.231"></a>
+<span class="sourceLineNo">232</span>            first_pnt++;<a name="line.232"></a>
+<span class="sourceLineNo">233</span>        }<a name="line.233"></a>
+<span class="sourceLineNo">234</span><a name="line.234"></a>
+<span class="sourceLineNo">235</span>        // Select the valid points<a name="line.235"></a>
+<span class="sourceLineNo">236</span>        npnt = n-first_pnt;<a name="line.236"></a>
+<span class="sourceLineNo">237</span>        p_slope = 0f; // To keep compiler happy<a name="line.237"></a>
+<span class="sourceLineNo">238</span>ploop:<a name="line.238"></a>
+<span class="sourceLineNo">239</span>        do {<a name="line.239"></a>
+<span class="sourceLineNo">240</span>            p = -1;<a name="line.240"></a>
+<span class="sourceLineNo">241</span>            for (k=first_pnt; k&lt;n; k++) {<a name="line.241"></a>
+<span class="sourceLineNo">242</span>                if (rates[k] &lt; 0) { // Already invalidated point<a name="line.242"></a>
+<span class="sourceLineNo">243</span>                    continue;<a name="line.243"></a>
+<span class="sourceLineNo">244</span>                }<a name="line.244"></a>
+<span class="sourceLineNo">245</span>                // Calculate decrease in distortion and rate<a name="line.245"></a>
+<span class="sourceLineNo">246</span>                if (p &gt;= 0) {<a name="line.246"></a>
+<span class="sourceLineNo">247</span>                    delta_rate = rates[k]-rates[p];<a name="line.247"></a>
+<span class="sourceLineNo">248</span>                    delta_dist = dists[k]-dists[p];<a name="line.248"></a>
+<span class="sourceLineNo">249</span>                }<a name="line.249"></a>
+<span class="sourceLineNo">250</span>                else { // This is with respect to no info coded<a name="line.250"></a>
+<span class="sourceLineNo">251</span>                    delta_rate = rates[k];<a name="line.251"></a>
+<span class="sourceLineNo">252</span>                    delta_dist = dists[k];<a name="line.252"></a>
+<span class="sourceLineNo">253</span>                }<a name="line.253"></a>
+<span class="sourceLineNo">254</span>                // If exactly same distortion don't eliminate if the rates are<a name="line.254"></a>
+<span class="sourceLineNo">255</span>                // equal, otherwise it can lead to infinite slope in lossless<a name="line.255"></a>
+<span class="sourceLineNo">256</span>                // coding.<a name="line.256"></a>
+<span class="sourceLineNo">257</span>                if (delta_dist &lt; 0f || (delta_dist == 0f &amp;&amp; delta_rate &gt; 0)) {<a name="line.257"></a>
+<span class="sourceLineNo">258</span>                    // This point increases distortion =&gt; invalidate<a name="line.258"></a>
+<span class="sourceLineNo">259</span>                    rates[k] = -rates[k];<a name="line.259"></a>
+<span class="sourceLineNo">260</span>                    npnt--;<a name="line.260"></a>
+<span class="sourceLineNo">261</span>                    continue; // Goto next point<a name="line.261"></a>
+<span class="sourceLineNo">262</span>                }<a name="line.262"></a>
+<span class="sourceLineNo">263</span>                k_slope = (float)(delta_dist/delta_rate);<a name="line.263"></a>
+<span class="sourceLineNo">264</span>                // Check that there is a decrease in distortion, slope is not<a name="line.264"></a>
+<span class="sourceLineNo">265</span>                // infinite (i.e. delta_dist is not 0) and slope is<a name="line.265"></a>
+<span class="sourceLineNo">266</span>                // decreasing.<a name="line.266"></a>
+<span class="sourceLineNo">267</span>                if (p&gt;=0 &amp;&amp;<a name="line.267"></a>
+<span class="sourceLineNo">268</span>                    (delta_rate &lt;= 0 || k_slope &gt;= p_slope )) {<a name="line.268"></a>
+<span class="sourceLineNo">269</span>                    // Last point was not good<a name="line.269"></a>
+<span class="sourceLineNo">270</span>                    rates[p] = -rates[p]; // Remove p from valid points<a name="line.270"></a>
+<span class="sourceLineNo">271</span>                    npnt--;<a name="line.271"></a>
+<span class="sourceLineNo">272</span>                    continue ploop; // Restart from the first one<a name="line.272"></a>
+<span class="sourceLineNo">273</span>                }<a name="line.273"></a>
+<span class="sourceLineNo">274</span>                else {<a name="line.274"></a>
+<span class="sourceLineNo">275</span>                    p_slope = k_slope;<a name="line.275"></a>
+<span class="sourceLineNo">276</span>                    p = k;<a name="line.276"></a>
+<span class="sourceLineNo">277</span>                }<a name="line.277"></a>
+<span class="sourceLineNo">278</span>            }<a name="line.278"></a>
+<span class="sourceLineNo">279</span>            // If we get to last point we are done<a name="line.279"></a>
+<span class="sourceLineNo">280</span>            break;<a name="line.280"></a>
+<span class="sourceLineNo">281</span>        } while (true); // We end the loop with the break statement<a name="line.281"></a>
+<span class="sourceLineNo">282</span><a name="line.282"></a>
+<span class="sourceLineNo">283</span>        // If in lossless mode make sure we don't eliminate any last bit-planes<a name="line.283"></a>
+<span class="sourceLineNo">284</span>        // from being sent.<a name="line.284"></a>
+<span class="sourceLineNo">285</span>        if (inclast &amp;&amp; n &gt; 0 &amp;&amp; rates[n-1] &lt; 0) {<a name="line.285"></a>
+<span class="sourceLineNo">286</span>            rates[n-1] = -rates[n-1];<a name="line.286"></a>
+<span class="sourceLineNo">287</span>            // This rate can never be equal to any previous selected rate,<a name="line.287"></a>
+<span class="sourceLineNo">288</span>            // given the selection algorithm above, so no problem arises of<a name="line.288"></a>
+<span class="sourceLineNo">289</span>            // infinite slopes.<a name="line.289"></a>
+<span class="sourceLineNo">290</span>            npnt++;<a name="line.290"></a>
+<span class="sourceLineNo">291</span>        }<a name="line.291"></a>
+<span class="sourceLineNo">292</span><a name="line.292"></a>
+<span class="sourceLineNo">293</span>        // Initialize the arrays of this object<a name="line.293"></a>
+<span class="sourceLineNo">294</span>        nTotTrunc = n;<a name="line.294"></a>
+<span class="sourceLineNo">295</span>        nVldTrunc = npnt;<a name="line.295"></a>
+<span class="sourceLineNo">296</span>        truncRates = new int[n];<a name="line.296"></a>
+<span class="sourceLineNo">297</span>        truncDists = new double[n];<a name="line.297"></a>
+<span class="sourceLineNo">298</span>        truncSlopes = new float[npnt];<a name="line.298"></a>
+<span class="sourceLineNo">299</span>        truncIdxs = new int[npnt];<a name="line.299"></a>
+<span class="sourceLineNo">300</span>        if (termp != null) {<a name="line.300"></a>
+<span class="sourceLineNo">301</span>            isTermPass = new boolean[n];<a name="line.301"></a>
+<span class="sourceLineNo">302</span>            System.arraycopy(termp,0,isTermPass,0,n);<a name="line.302"></a>
+<span class="sourceLineNo">303</span>        }<a name="line.303"></a>
+<span class="sourceLineNo">304</span>        else {<a name="line.304"></a>
+<span class="sourceLineNo">305</span>            isTermPass = null;<a name="line.305"></a>
+<span class="sourceLineNo">306</span>        }<a name="line.306"></a>
+<span class="sourceLineNo">307</span>        System.arraycopy(rates,0,truncRates,0,n);<a name="line.307"></a>
+<span class="sourceLineNo">308</span>        for (k=first_pnt, p=-1, i=0; k&lt;n; k++) {<a name="line.308"></a>
+<span class="sourceLineNo">309</span>            if (rates[k]&gt;0) { // A valid point<a name="line.309"></a>
+<span class="sourceLineNo">310</span>                truncDists[k] = dists[k];<a name="line.310"></a>
+<span class="sourceLineNo">311</span>                if (p&lt;0) { // Only arrives at first valid point<a name="line.311"></a>
+<span class="sourceLineNo">312</span>                    truncSlopes[i] = (float)(dists[k]/rates[k]);<a name="line.312"></a>
+<span class="sourceLineNo">313</span>                }<a name="line.313"></a>
+<span class="sourceLineNo">314</span>                else {<a name="line.314"></a>
+<span class="sourceLineNo">315</span>                    truncSlopes[i] = (float)((dists[k]-dists[p])/<a name="line.315"></a>
+<span class="sourceLineNo">316</span>                                             (rates[k]-rates[p]));<a name="line.316"></a>
+<span class="sourceLineNo">317</span>                }<a name="line.317"></a>
+<span class="sourceLineNo">318</span>                truncIdxs[i] = k;<a name="line.318"></a>
+<span class="sourceLineNo">319</span>                i++;<a name="line.319"></a>
+<span class="sourceLineNo">320</span>                p = k;<a name="line.320"></a>
+<span class="sourceLineNo">321</span>            }<a name="line.321"></a>
+<span class="sourceLineNo">322</span>            else {<a name="line.322"></a>
+<span class="sourceLineNo">323</span>                truncDists[k] = -1;<a name="line.323"></a>
+<span class="sourceLineNo">324</span>                truncRates[k] = -truncRates[k];<a name="line.324"></a>
+<span class="sourceLineNo">325</span>            }<a name="line.325"></a>
+<span class="sourceLineNo">326</span>        }<a name="line.326"></a>
+<span class="sourceLineNo">327</span>    }<a name="line.327"></a>
+<span class="sourceLineNo">328</span><a name="line.328"></a>
+<span class="sourceLineNo">329</span>    /**<a name="line.329"></a>
+<span class="sourceLineNo">330</span>     * Returns the contents of the object in a string. This is used for<a name="line.330"></a>
+<span class="sourceLineNo">331</span>     * debugging.<a name="line.331"></a>
+<span class="sourceLineNo">332</span>     *<a name="line.332"></a>
+<span class="sourceLineNo">333</span>     * @return A string with the contents of the object<a name="line.333"></a>
+<span class="sourceLineNo">334</span>     * */<a name="line.334"></a>
+<span class="sourceLineNo">335</span>    public String toString() {<a name="line.335"></a>
+<span class="sourceLineNo">336</span>        return super.toString() +<a name="line.336"></a>
+<span class="sourceLineNo">337</span>            "\n nVldTrunc = "+nVldTrunc+", nTotTrunc="+nTotTrunc+", num. ROI"+<a name="line.337"></a>
+<span class="sourceLineNo">338</span>            " coeff="+nROIcoeff+", num. ROI coding passes="+nROIcp;<a name="line.338"></a>
+<span class="sourceLineNo">339</span>    }<a name="line.339"></a>
+<span class="sourceLineNo">340</span>}<a name="line.340"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

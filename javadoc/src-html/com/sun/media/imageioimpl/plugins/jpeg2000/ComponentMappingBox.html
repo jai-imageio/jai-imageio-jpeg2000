@@ -1,0 +1,253 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: ComponentMappingBox.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> *<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * <a name="line.4"></a>
+<span class="sourceLineNo">005</span> * Copyright (c) 2005 Sun Microsystems, Inc. All  Rights Reserved.<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * <a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Redistribution and use in source and binary forms, with or without<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * modification, are permitted provided that the following conditions<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * are met: <a name="line.9"></a>
+<span class="sourceLineNo">010</span> * <a name="line.10"></a>
+<span class="sourceLineNo">011</span> * - Redistribution of source code must retain the above copyright <a name="line.11"></a>
+<span class="sourceLineNo">012</span> *   notice, this  list of conditions and the following disclaimer.<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * <a name="line.13"></a>
+<span class="sourceLineNo">014</span> * - Redistribution in binary form must reproduce the above copyright<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *   notice, this list of conditions and the following disclaimer in <a name="line.15"></a>
+<span class="sourceLineNo">016</span> *   the documentation and/or other materials provided with the<a name="line.16"></a>
+<span class="sourceLineNo">017</span> *   distribution.<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * <a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Neither the name of Sun Microsystems, Inc. or the names of <a name="line.19"></a>
+<span class="sourceLineNo">020</span> * contributors may be used to endorse or promote products derived <a name="line.20"></a>
+<span class="sourceLineNo">021</span> * from this software without specific prior written permission.<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * <a name="line.22"></a>
+<span class="sourceLineNo">023</span> * This software is provided "AS IS," without a warranty of any <a name="line.23"></a>
+<span class="sourceLineNo">024</span> * kind. ALL EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND <a name="line.24"></a>
+<span class="sourceLineNo">025</span> * WARRANTIES, INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY, <a name="line.25"></a>
+<span class="sourceLineNo">026</span> * FITNESS FOR A PARTICULAR PURPOSE OR NON-INFRINGEMENT, ARE HEREBY<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * EXCLUDED. SUN MIDROSYSTEMS, INC. ("SUN") AND ITS LICENSORS SHALL <a name="line.27"></a>
+<span class="sourceLineNo">028</span> * NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF <a name="line.28"></a>
+<span class="sourceLineNo">029</span> * USING, MODIFYING OR DISTRIBUTING THIS SOFTWARE OR ITS<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * DERIVATIVES. IN NO EVENT WILL SUN OR ITS LICENSORS BE LIABLE FOR <a name="line.30"></a>
+<span class="sourceLineNo">031</span> * ANY LOST REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT, SPECIAL,<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF THE USE OF OR<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * INABILITY TO USE THIS SOFTWARE, EVEN IF SUN HAS BEEN ADVISED OF THE<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * POSSIBILITY OF SUCH DAMAGES. <a name="line.35"></a>
+<span class="sourceLineNo">036</span> * <a name="line.36"></a>
+<span class="sourceLineNo">037</span> * You acknowledge that this software is not designed or intended for <a name="line.37"></a>
+<span class="sourceLineNo">038</span> * use in the design, construction, operation or maintenance of any <a name="line.38"></a>
+<span class="sourceLineNo">039</span> * nuclear facility. <a name="line.39"></a>
+<span class="sourceLineNo">040</span> *<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * $Revision: 1.1 $<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * $Date: 2005/02/11 05:01:32 $<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * $State: Exp $<a name="line.43"></a>
+<span class="sourceLineNo">044</span> */<a name="line.44"></a>
+<span class="sourceLineNo">045</span>package com.sun.media.imageioimpl.plugins.jpeg2000;<a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>import javax.imageio.metadata.IIOInvalidTreeException;<a name="line.47"></a>
+<span class="sourceLineNo">048</span>import javax.imageio.metadata.IIOMetadataNode;<a name="line.48"></a>
+<span class="sourceLineNo">049</span>import org.w3c.dom.Node;<a name="line.49"></a>
+<span class="sourceLineNo">050</span>import org.w3c.dom.NodeList;<a name="line.50"></a>
+<span class="sourceLineNo">051</span><a name="line.51"></a>
+<span class="sourceLineNo">052</span>/** This class is defined to represent a Color Specification Box of JPEG JP2<a name="line.52"></a>
+<span class="sourceLineNo">053</span> *  file format.  A Channel Definition Box has a length, and a fixed type<a name="line.53"></a>
+<span class="sourceLineNo">054</span> *  of "cmap".  This box exists if and only is a PaletteBox exists.  Its<a name="line.54"></a>
+<span class="sourceLineNo">055</span> *  content defines the type LUT output components and their mapping to the<a name="line.55"></a>
+<span class="sourceLineNo">056</span> *  color component.<a name="line.56"></a>
+<span class="sourceLineNo">057</span> */<a name="line.57"></a>
+<span class="sourceLineNo">058</span>public class ComponentMappingBox extends Box {<a name="line.58"></a>
+<span class="sourceLineNo">059</span>    /** The data elements. */<a name="line.59"></a>
+<span class="sourceLineNo">060</span>    private short[] components;<a name="line.60"></a>
+<span class="sourceLineNo">061</span>    private byte[] type;<a name="line.61"></a>
+<span class="sourceLineNo">062</span>    private byte[] map;<a name="line.62"></a>
+<span class="sourceLineNo">063</span><a name="line.63"></a>
+<span class="sourceLineNo">064</span>    /** Constructs a &lt;code&gt;ComponentMappingBox&lt;/code&gt; from the provided<a name="line.64"></a>
+<span class="sourceLineNo">065</span>     *  content byte array.<a name="line.65"></a>
+<span class="sourceLineNo">066</span>     */<a name="line.66"></a>
+<span class="sourceLineNo">067</span>    public ComponentMappingBox(byte[] data) {<a name="line.67"></a>
+<span class="sourceLineNo">068</span>        super(8 + data.length, 0x636D6170, data);<a name="line.68"></a>
+<span class="sourceLineNo">069</span>    }<a name="line.69"></a>
+<span class="sourceLineNo">070</span><a name="line.70"></a>
+<span class="sourceLineNo">071</span>    /** Constructs a &lt;code&gt;ComponentMappingBox&lt;/code&gt; from the provided<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     *  component mapping.<a name="line.72"></a>
+<span class="sourceLineNo">073</span>     */<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    public ComponentMappingBox(short[] comp, byte[] t, byte[] m) {<a name="line.74"></a>
+<span class="sourceLineNo">075</span>        super(8 + (comp.length &lt;&lt; 2), 0x636D6170, null);<a name="line.75"></a>
+<span class="sourceLineNo">076</span>        this.components = comp;<a name="line.76"></a>
+<span class="sourceLineNo">077</span>        this.type = t;<a name="line.77"></a>
+<span class="sourceLineNo">078</span>        this.map = m;<a name="line.78"></a>
+<span class="sourceLineNo">079</span>    }<a name="line.79"></a>
+<span class="sourceLineNo">080</span><a name="line.80"></a>
+<span class="sourceLineNo">081</span>    /** Constructs a &lt;code&gt;ComponentMappingBox&lt;/code&gt; based on the provided<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     *  &lt;code&gt;org.w3c.dom.Node&lt;/code&gt;.<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     */<a name="line.83"></a>
+<span class="sourceLineNo">084</span>    public ComponentMappingBox(Node node) throws IIOInvalidTreeException {<a name="line.84"></a>
+<span class="sourceLineNo">085</span>        super(node);<a name="line.85"></a>
+<span class="sourceLineNo">086</span>        NodeList children = node.getChildNodes();<a name="line.86"></a>
+<span class="sourceLineNo">087</span>        int len = children.getLength() / 3;<a name="line.87"></a>
+<span class="sourceLineNo">088</span>        components = new short[len];<a name="line.88"></a>
+<span class="sourceLineNo">089</span>        type = new byte[len];<a name="line.89"></a>
+<span class="sourceLineNo">090</span>        map = new byte[len];<a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91"></a>
+<span class="sourceLineNo">092</span>        len *= 3;<a name="line.92"></a>
+<span class="sourceLineNo">093</span>        int index = 0;<a name="line.93"></a>
+<span class="sourceLineNo">094</span><a name="line.94"></a>
+<span class="sourceLineNo">095</span>        for (int i = 0; i &lt; len; i++) {<a name="line.95"></a>
+<span class="sourceLineNo">096</span>            Node child = children.item(i);<a name="line.96"></a>
+<span class="sourceLineNo">097</span>            String name = child.getNodeName();<a name="line.97"></a>
+<span class="sourceLineNo">098</span><a name="line.98"></a>
+<span class="sourceLineNo">099</span>            if ("Component".equals(name)) {<a name="line.99"></a>
+<span class="sourceLineNo">100</span>                components[index] = Box.getShortElementValue(child);<a name="line.100"></a>
+<span class="sourceLineNo">101</span>            }<a name="line.101"></a>
+<span class="sourceLineNo">102</span><a name="line.102"></a>
+<span class="sourceLineNo">103</span>            if ("ComponentType".equals(name)) {<a name="line.103"></a>
+<span class="sourceLineNo">104</span>                type[index] = Box.getByteElementValue(child);<a name="line.104"></a>
+<span class="sourceLineNo">105</span>            }<a name="line.105"></a>
+<span class="sourceLineNo">106</span><a name="line.106"></a>
+<span class="sourceLineNo">107</span>            if ("ComponentAssociation".equals(name)) {<a name="line.107"></a>
+<span class="sourceLineNo">108</span>                map[index++] = Box.getByteElementValue(child);<a name="line.108"></a>
+<span class="sourceLineNo">109</span>            }<a name="line.109"></a>
+<span class="sourceLineNo">110</span>        }<a name="line.110"></a>
+<span class="sourceLineNo">111</span>    }<a name="line.111"></a>
+<span class="sourceLineNo">112</span><a name="line.112"></a>
+<span class="sourceLineNo">113</span>    /** Parse the component mapping from the provided content data array. */<a name="line.113"></a>
+<span class="sourceLineNo">114</span>    protected void parse(byte[] data) {<a name="line.114"></a>
+<span class="sourceLineNo">115</span>        int len = data.length / 4;<a name="line.115"></a>
+<span class="sourceLineNo">116</span>        components = new short[len];<a name="line.116"></a>
+<span class="sourceLineNo">117</span>        type = new byte[len];<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        map = new byte[len];<a name="line.118"></a>
+<span class="sourceLineNo">119</span><a name="line.119"></a>
+<span class="sourceLineNo">120</span>        for (int i = 0, j = 0; i &lt; len; i++) {<a name="line.120"></a>
+<span class="sourceLineNo">121</span>            components[i] =<a name="line.121"></a>
+<span class="sourceLineNo">122</span>                (short)(((data[j++] &amp; 0xFF) &lt;&lt; 8) | (data[j++] &amp; 0xFF));<a name="line.122"></a>
+<span class="sourceLineNo">123</span>            type[i] = data[j++];<a name="line.123"></a>
+<span class="sourceLineNo">124</span>            map[i] = data[j++];<a name="line.124"></a>
+<span class="sourceLineNo">125</span>        }<a name="line.125"></a>
+<span class="sourceLineNo">126</span>    }<a name="line.126"></a>
+<span class="sourceLineNo">127</span><a name="line.127"></a>
+<span class="sourceLineNo">128</span>    /** Creates an &lt;code&gt;IIOMetadataNode&lt;/code&gt; from this component mapping<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     *  box.  The format of this node is defined in the XML dtd and xsd<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     *  for the JP2 image file.<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     */<a name="line.131"></a>
+<span class="sourceLineNo">132</span>    public IIOMetadataNode getNativeNode() {<a name="line.132"></a>
+<span class="sourceLineNo">133</span>        IIOMetadataNode node = new IIOMetadataNode(Box.getName(getType()));<a name="line.133"></a>
+<span class="sourceLineNo">134</span>        setDefaultAttributes(node);<a name="line.134"></a>
+<span class="sourceLineNo">135</span><a name="line.135"></a>
+<span class="sourceLineNo">136</span>        for (int i = 0; i &lt; components.length; i++) {<a name="line.136"></a>
+<span class="sourceLineNo">137</span>            IIOMetadataNode child = new IIOMetadataNode("Component");<a name="line.137"></a>
+<span class="sourceLineNo">138</span>            Short obj = new Short(components[i]);<a name="line.138"></a>
+<span class="sourceLineNo">139</span>            child.setUserObject(new Short(components[i]));<a name="line.139"></a>
+<span class="sourceLineNo">140</span>            child.setNodeValue("" + components[i]);<a name="line.140"></a>
+<span class="sourceLineNo">141</span>            node.appendChild(child);<a name="line.141"></a>
+<span class="sourceLineNo">142</span><a name="line.142"></a>
+<span class="sourceLineNo">143</span>            child = new IIOMetadataNode("ComponentType");<a name="line.143"></a>
+<span class="sourceLineNo">144</span>            child.setUserObject(new Byte(type[i]));<a name="line.144"></a>
+<span class="sourceLineNo">145</span>            child.setNodeValue("" + type[i]);<a name="line.145"></a>
+<span class="sourceLineNo">146</span>            node.appendChild(child);<a name="line.146"></a>
+<span class="sourceLineNo">147</span><a name="line.147"></a>
+<span class="sourceLineNo">148</span>            child = new IIOMetadataNode("ComponentAssociation");<a name="line.148"></a>
+<span class="sourceLineNo">149</span>            child.setUserObject(new Byte(map[i]));<a name="line.149"></a>
+<span class="sourceLineNo">150</span>            child.setNodeValue("" + map[i]);<a name="line.150"></a>
+<span class="sourceLineNo">151</span>            node.appendChild(child);<a name="line.151"></a>
+<span class="sourceLineNo">152</span>        }<a name="line.152"></a>
+<span class="sourceLineNo">153</span><a name="line.153"></a>
+<span class="sourceLineNo">154</span>        return node;<a name="line.154"></a>
+<span class="sourceLineNo">155</span>    }<a name="line.155"></a>
+<span class="sourceLineNo">156</span><a name="line.156"></a>
+<span class="sourceLineNo">157</span>    public short[] getComponent() {<a name="line.157"></a>
+<span class="sourceLineNo">158</span>        return components;<a name="line.158"></a>
+<span class="sourceLineNo">159</span>    }<a name="line.159"></a>
+<span class="sourceLineNo">160</span><a name="line.160"></a>
+<span class="sourceLineNo">161</span>    public byte[] getComponentType() {<a name="line.161"></a>
+<span class="sourceLineNo">162</span>        return type;<a name="line.162"></a>
+<span class="sourceLineNo">163</span>    }<a name="line.163"></a>
+<span class="sourceLineNo">164</span><a name="line.164"></a>
+<span class="sourceLineNo">165</span>    public byte[] getComponentAssociation() {<a name="line.165"></a>
+<span class="sourceLineNo">166</span>        return map;<a name="line.166"></a>
+<span class="sourceLineNo">167</span>    }<a name="line.167"></a>
+<span class="sourceLineNo">168</span><a name="line.168"></a>
+<span class="sourceLineNo">169</span>    protected void compose() {<a name="line.169"></a>
+<span class="sourceLineNo">170</span>        if (data != null)<a name="line.170"></a>
+<span class="sourceLineNo">171</span>            return;<a name="line.171"></a>
+<span class="sourceLineNo">172</span>        data = new byte[type.length &lt;&lt; 2];<a name="line.172"></a>
+<span class="sourceLineNo">173</span><a name="line.173"></a>
+<span class="sourceLineNo">174</span>        for (int i = 0, j = 0; i &lt; type.length; i++) {<a name="line.174"></a>
+<span class="sourceLineNo">175</span>            data[j++] = (byte)(components[i] &gt;&gt; 8);<a name="line.175"></a>
+<span class="sourceLineNo">176</span>            data[j++] = (byte)(components[i] &amp; 0xFF);<a name="line.176"></a>
+<span class="sourceLineNo">177</span>            data[j++] = type[i];<a name="line.177"></a>
+<span class="sourceLineNo">178</span>            data[j++] = map[i];<a name="line.178"></a>
+<span class="sourceLineNo">179</span>        }<a name="line.179"></a>
+<span class="sourceLineNo">180</span>    }<a name="line.180"></a>
+<span class="sourceLineNo">181</span>}<a name="line.181"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

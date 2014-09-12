@@ -1,0 +1,352 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: Quantizer.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:20 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Class:                   Quantizer<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:             An abstract class for quantizers<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * COPYRIGHT:<a name="line.13"></a>
+<span class="sourceLineNo">014</span> *<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * software module is an implementation of a part of the JPEG 2000<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * including other intellectual property rights, for this software module<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * or modifications thereof for use in hardware or software products<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * this software module in hardware or software products are advised that<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * their use may infringe existing patents. The original developers of<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * for use of this software module or modifications thereof. No license<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * software module for his/her own purpose, assign or donate this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module to any third party and to inhibit third parties from<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * products. This copyright notice must be included in all copies or<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * derivative works of this software module.<a name="line.40"></a>
+<span class="sourceLineNo">041</span> *<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.42"></a>
+<span class="sourceLineNo">043</span> *  */<a name="line.43"></a>
+<span class="sourceLineNo">044</span>package jj2000.j2k.quantization.quantizer;<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span>import jj2000.j2k.codestream.writer.*;<a name="line.46"></a>
+<span class="sourceLineNo">047</span>import jj2000.j2k.wavelet.analysis.*;<a name="line.47"></a>
+<span class="sourceLineNo">048</span>import jj2000.j2k.quantization.*;<a name="line.48"></a>
+<span class="sourceLineNo">049</span>import jj2000.j2k.wavelet.*;<a name="line.49"></a>
+<span class="sourceLineNo">050</span>//import jj2000.j2k.encoder.*;<a name="line.50"></a>
+<span class="sourceLineNo">051</span>import jj2000.j2k.image.*;<a name="line.51"></a>
+<span class="sourceLineNo">052</span>import jj2000.j2k.util.*;<a name="line.52"></a>
+<span class="sourceLineNo">053</span><a name="line.53"></a>
+<span class="sourceLineNo">054</span>import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriteParamJava;<a name="line.54"></a>
+<span class="sourceLineNo">055</span><a name="line.55"></a>
+<span class="sourceLineNo">056</span>/**<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * This abstract class provides the general interface for quantizers. The<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * input of a quantizer is the output of a wavelet transform. The output of<a name="line.58"></a>
+<span class="sourceLineNo">059</span> * the quantizer is the set of quantized wavelet coefficients represented in<a name="line.59"></a>
+<span class="sourceLineNo">060</span> * sign-magnitude notation (see below).<a name="line.60"></a>
+<span class="sourceLineNo">061</span> *<a name="line.61"></a>
+<span class="sourceLineNo">062</span> * &lt;p&gt;This class provides default implementation for most of the methods<a name="line.62"></a>
+<span class="sourceLineNo">063</span> * (wherever it makes sense), under the assumption that the image, component<a name="line.63"></a>
+<span class="sourceLineNo">064</span> * dimensions, and the tiles, are not modifed by the quantizer. If it is not<a name="line.64"></a>
+<span class="sourceLineNo">065</span> * the case for a particular implementation, then the methods should be<a name="line.65"></a>
+<span class="sourceLineNo">066</span> * overriden.&lt;/p&gt;<a name="line.66"></a>
+<span class="sourceLineNo">067</span> *<a name="line.67"></a>
+<span class="sourceLineNo">068</span> * &lt;p&gt;Sign magnitude representation is used (instead of two's complement) for<a name="line.68"></a>
+<span class="sourceLineNo">069</span> * the output data. The most significant bit is used for the sign (0 if<a name="line.69"></a>
+<span class="sourceLineNo">070</span> * positive, 1 if negative). Then the magnitude of the quantized coefficient<a name="line.70"></a>
+<span class="sourceLineNo">071</span> * is stored in the next M most significat bits. The rest of the bits (least<a name="line.71"></a>
+<span class="sourceLineNo">072</span> * significant bits) can contain a fractional value of the quantized<a name="line.72"></a>
+<span class="sourceLineNo">073</span> * coefficient. This fractional value is not to be coded by the entropy<a name="line.73"></a>
+<span class="sourceLineNo">074</span> * coder. However, it can be used to compute rate-distortion measures with<a name="line.74"></a>
+<span class="sourceLineNo">075</span> * greater precision.&lt;/p&gt;<a name="line.75"></a>
+<span class="sourceLineNo">076</span> *<a name="line.76"></a>
+<span class="sourceLineNo">077</span> * &lt;p&gt;The value of M is determined for each subband as the sum of the number<a name="line.77"></a>
+<span class="sourceLineNo">078</span> * of guard bits G and the nominal range of quantized wavelet coefficients in<a name="line.78"></a>
+<span class="sourceLineNo">079</span> * the corresponding subband (Rq), minus 1:&lt;/p&gt;<a name="line.79"></a>
+<span class="sourceLineNo">080</span> *<a name="line.80"></a>
+<span class="sourceLineNo">081</span> * &lt;p&gt;M = G + Rq -1&lt;/p&gt;<a name="line.81"></a>
+<span class="sourceLineNo">082</span> *<a name="line.82"></a>
+<span class="sourceLineNo">083</span> * &lt;p&gt;The value of G should be the same for all subbands. The value of Rq<a name="line.83"></a>
+<span class="sourceLineNo">084</span> * depends on the quantization step size, the nominal range of the component<a name="line.84"></a>
+<span class="sourceLineNo">085</span> * before the wavelet transform and the analysis gain of the subband (see<a name="line.85"></a>
+<span class="sourceLineNo">086</span> * Subband).&lt;/p&gt;<a name="line.86"></a>
+<span class="sourceLineNo">087</span> *<a name="line.87"></a>
+<span class="sourceLineNo">088</span> * &lt;p&gt;The blocks of data that are requested should not cross subband<a name="line.88"></a>
+<span class="sourceLineNo">089</span> * boundaries.&lt;/p&gt;<a name="line.89"></a>
+<span class="sourceLineNo">090</span> *<a name="line.90"></a>
+<span class="sourceLineNo">091</span> * &lt;p&gt;NOTE: At the moment only quantizers that implement the<a name="line.91"></a>
+<span class="sourceLineNo">092</span> * 'CBlkQuantDataSrcEnc' interface are supported.&lt;/p&gt;<a name="line.92"></a>
+<span class="sourceLineNo">093</span> *<a name="line.93"></a>
+<span class="sourceLineNo">094</span> * @see Subband<a name="line.94"></a>
+<span class="sourceLineNo">095</span> * */<a name="line.95"></a>
+<span class="sourceLineNo">096</span>public abstract class Quantizer extends ImgDataAdapter<a name="line.96"></a>
+<span class="sourceLineNo">097</span>    implements CBlkQuantDataSrcEnc {<a name="line.97"></a>
+<span class="sourceLineNo">098</span><a name="line.98"></a>
+<span class="sourceLineNo">099</span>    /** The prefix for quantizer options: 'Q' */<a name="line.99"></a>
+<span class="sourceLineNo">100</span>    public final static char OPT_PREFIX = 'Q';<a name="line.100"></a>
+<span class="sourceLineNo">101</span><a name="line.101"></a>
+<span class="sourceLineNo">102</span>    /** The list of parameters that is accepted for quantization. Options <a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * for quantization start with 'Q'. */<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    private final static String [][] pinfo = {<a name="line.104"></a>
+<span class="sourceLineNo">105</span>        { "Qtype", "[&lt;tile-component idx&gt;] &lt;id&gt; "+<a name="line.105"></a>
+<span class="sourceLineNo">106</span>          "[ [&lt;tile-component idx&gt;] &lt;id&gt; ...]",<a name="line.106"></a>
+<span class="sourceLineNo">107</span>          "Specifies which quantization type to use for specified "+<a name="line.107"></a>
+<span class="sourceLineNo">108</span>          "tile-component. The default type is either 'reversible' or "+<a name="line.108"></a>
+<span class="sourceLineNo">109</span>          "'expounded' depending on whether or not the '-lossless' option "+<a name="line.109"></a>
+<span class="sourceLineNo">110</span>          " is specified.\n"+<a name="line.110"></a>
+<span class="sourceLineNo">111</span>          "&lt;tile-component idx&gt; : see general note.\n"+<a name="line.111"></a>
+<span class="sourceLineNo">112</span>          "&lt;id&gt;: Supported quantization types specification are : "+<a name="line.112"></a>
+<span class="sourceLineNo">113</span>          "'reversible' "+<a name="line.113"></a>
+<span class="sourceLineNo">114</span>          "(no quantization), 'derived' (derived quantization step size) and "+<a name="line.114"></a>
+<span class="sourceLineNo">115</span>          "'expounded'.\n"+<a name="line.115"></a>
+<span class="sourceLineNo">116</span>          "Example: -Qtype reversible or -Qtype t2,4-8 c2 reversible t9 "+<a name="line.116"></a>
+<span class="sourceLineNo">117</span>          "derived.",null},<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        { "Qstep", "[&lt;tile-component idx&gt;] &lt;bnss&gt; "+<a name="line.118"></a>
+<span class="sourceLineNo">119</span>          "[ [&lt;tile-component idx&gt;] &lt;bnss&gt; ...]",<a name="line.119"></a>
+<span class="sourceLineNo">120</span>          "This option specifies the base normalized quantization step "+<a name="line.120"></a>
+<span class="sourceLineNo">121</span>          "size (bnss) for tile-components. It is normalized to a "+<a name="line.121"></a>
+<span class="sourceLineNo">122</span>          "dynamic range of 1 in the image domain. This parameter is "+<a name="line.122"></a>
+<span class="sourceLineNo">123</span>          "ignored in reversible coding. The default value is '1/128'"+<a name="line.123"></a>
+<span class="sourceLineNo">124</span>          " (i.e. 0.0078125).",<a name="line.124"></a>
+<span class="sourceLineNo">125</span>          "0.0078125"},<a name="line.125"></a>
+<span class="sourceLineNo">126</span>        { "Qguard_bits", "[&lt;tile-component idx&gt;] &lt;gb&gt; "+<a name="line.126"></a>
+<span class="sourceLineNo">127</span>          "[ [&lt;tile-component idx&gt;] &lt;gb&gt; ...]",<a name="line.127"></a>
+<span class="sourceLineNo">128</span>          "The number of bits used for each tile-component in the quantizer"+<a name="line.128"></a>
+<span class="sourceLineNo">129</span>          " to avoid overflow (gb).","2"},<a name="line.129"></a>
+<span class="sourceLineNo">130</span>    };<a name="line.130"></a>
+<span class="sourceLineNo">131</span><a name="line.131"></a>
+<span class="sourceLineNo">132</span>    /** The source of wavelet transform coefficients */<a name="line.132"></a>
+<span class="sourceLineNo">133</span>    protected CBlkWTDataSrc src;<a name="line.133"></a>
+<span class="sourceLineNo">134</span><a name="line.134"></a>
+<span class="sourceLineNo">135</span>    /**<a name="line.135"></a>
+<span class="sourceLineNo">136</span>     * Initializes the source of wavelet transform coefficients.<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     *<a name="line.137"></a>
+<span class="sourceLineNo">138</span>     * @param src The source of wavelet transform coefficients.<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     * */<a name="line.139"></a>
+<span class="sourceLineNo">140</span>    public Quantizer(CBlkWTDataSrc src) {<a name="line.140"></a>
+<span class="sourceLineNo">141</span>        super(src);<a name="line.141"></a>
+<span class="sourceLineNo">142</span>        this.src = src;<a name="line.142"></a>
+<span class="sourceLineNo">143</span>    }<a name="line.143"></a>
+<span class="sourceLineNo">144</span><a name="line.144"></a>
+<span class="sourceLineNo">145</span>    /**<a name="line.145"></a>
+<span class="sourceLineNo">146</span>     * Returns the number of guard bits used by this quantizer in the<a name="line.146"></a>
+<span class="sourceLineNo">147</span>     * given tile-component.<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     *<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * @param t Tile index<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     *<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * @param c Component index<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     *<a name="line.152"></a>
+<span class="sourceLineNo">153</span>     * @return The number of guard bits<a name="line.153"></a>
+<span class="sourceLineNo">154</span>     * */<a name="line.154"></a>
+<span class="sourceLineNo">155</span>    public abstract int getNumGuardBits(int t,int c);<a name="line.155"></a>
+<span class="sourceLineNo">156</span><a name="line.156"></a>
+<span class="sourceLineNo">157</span>    /**<a name="line.157"></a>
+<span class="sourceLineNo">158</span>     * Returns true if the quantizer of given tile-component uses derived<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     * quantization step sizes.<a name="line.159"></a>
+<span class="sourceLineNo">160</span>     *<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     * @param t Tile index<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     *<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     * @param c Component index<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     *<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     * @return True if derived quantization is used.<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     * */<a name="line.166"></a>
+<span class="sourceLineNo">167</span>    public abstract boolean isDerived(int t,int c);<a name="line.167"></a>
+<span class="sourceLineNo">168</span><a name="line.168"></a>
+<span class="sourceLineNo">169</span>    /**<a name="line.169"></a>
+<span class="sourceLineNo">170</span>     * Calculates the parameters of the SubbandAn objects that depend on the<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     * Quantizer. The 'stepWMSE' field is calculated for each subband which is<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     * a leaf in the tree rooted at 'sb', for the specified component. The<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     * subband tree 'sb' must be the one for the component 'n'.<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     *<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     * @param sb The root of the subband tree.<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     *<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     * @param n The component index.<a name="line.177"></a>
+<span class="sourceLineNo">178</span>     *<a name="line.178"></a>
+<span class="sourceLineNo">179</span>     * @see SubbandAn#stepWMSE<a name="line.179"></a>
+<span class="sourceLineNo">180</span>     * */<a name="line.180"></a>
+<span class="sourceLineNo">181</span>    protected abstract void calcSbParams(SubbandAn sb, int n);<a name="line.181"></a>
+<span class="sourceLineNo">182</span><a name="line.182"></a>
+<span class="sourceLineNo">183</span>    /**<a name="line.183"></a>
+<span class="sourceLineNo">184</span>     * Returns a reference to the subband tree structure representing the<a name="line.184"></a>
+<span class="sourceLineNo">185</span>     * subband decomposition for the specified tile-component.<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     *<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     * &lt;P&gt;This method gets the subband tree from the source and then<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     * calculates the magnitude bits for each leaf using the method<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     * calcSbParams().<a name="line.189"></a>
+<span class="sourceLineNo">190</span>     *<a name="line.190"></a>
+<span class="sourceLineNo">191</span>     * @param t The index of the tile.<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     *<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     * @param c The index of the component.<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     *<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     * @return The subband tree structure, see SubbandAn.<a name="line.195"></a>
+<span class="sourceLineNo">196</span>     *<a name="line.196"></a>
+<span class="sourceLineNo">197</span>     * @see SubbandAn<a name="line.197"></a>
+<span class="sourceLineNo">198</span>     *<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     * @see Subband<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     *<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     * @see #calcSbParams<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     * */<a name="line.202"></a>
+<span class="sourceLineNo">203</span>    public SubbandAn getAnSubbandTree(int t,int c) {<a name="line.203"></a>
+<span class="sourceLineNo">204</span>        SubbandAn sbba;<a name="line.204"></a>
+<span class="sourceLineNo">205</span><a name="line.205"></a>
+<span class="sourceLineNo">206</span>        // Ask for the wavelet tree of the source<a name="line.206"></a>
+<span class="sourceLineNo">207</span>        sbba = src.getAnSubbandTree(t,c);<a name="line.207"></a>
+<span class="sourceLineNo">208</span>        // Calculate the stepWMSE<a name="line.208"></a>
+<span class="sourceLineNo">209</span>        calcSbParams(sbba,c);<a name="line.209"></a>
+<span class="sourceLineNo">210</span>        return sbba;<a name="line.210"></a>
+<span class="sourceLineNo">211</span>    }<a name="line.211"></a>
+<span class="sourceLineNo">212</span><a name="line.212"></a>
+<span class="sourceLineNo">213</span>    /**<a name="line.213"></a>
+<span class="sourceLineNo">214</span>     * Returns the horizontal offset of the code-block partition. Allowable<a name="line.214"></a>
+<span class="sourceLineNo">215</span>     * values are 0 and 1, nothing else.<a name="line.215"></a>
+<span class="sourceLineNo">216</span>     * */<a name="line.216"></a>
+<span class="sourceLineNo">217</span>    public int getCbULX() {<a name="line.217"></a>
+<span class="sourceLineNo">218</span>        return src.getCbULX();<a name="line.218"></a>
+<span class="sourceLineNo">219</span>    }<a name="line.219"></a>
+<span class="sourceLineNo">220</span><a name="line.220"></a>
+<span class="sourceLineNo">221</span>    /**<a name="line.221"></a>
+<span class="sourceLineNo">222</span>     * Returns the vertical offset of the code-block partition. Allowable<a name="line.222"></a>
+<span class="sourceLineNo">223</span>     * values are 0 and 1, nothing else.<a name="line.223"></a>
+<span class="sourceLineNo">224</span>     * */<a name="line.224"></a>
+<span class="sourceLineNo">225</span>    public int getCbULY() {<a name="line.225"></a>
+<span class="sourceLineNo">226</span>        return src.getCbULY();<a name="line.226"></a>
+<span class="sourceLineNo">227</span>    }<a name="line.227"></a>
+<span class="sourceLineNo">228</span><a name="line.228"></a>
+<span class="sourceLineNo">229</span>    /**<a name="line.229"></a>
+<span class="sourceLineNo">230</span>     * Returns the parameters that are used in this class and implementing<a name="line.230"></a>
+<span class="sourceLineNo">231</span>     * classes. It returns a 2D String array. Each of the 1D arrays is for a<a name="line.231"></a>
+<span class="sourceLineNo">232</span>     * different option, and they have 3 elements. The first element is the<a name="line.232"></a>
+<span class="sourceLineNo">233</span>     * option name, the second one is the synopsis, the third one is a long<a name="line.233"></a>
+<span class="sourceLineNo">234</span>     * description of what the parameter is and the fourth is its default<a name="line.234"></a>
+<span class="sourceLineNo">235</span>     * value. The synopsis or description may be 'null', in which case it is<a name="line.235"></a>
+<span class="sourceLineNo">236</span>     * assumed that there is no synopsis or description of the option,<a name="line.236"></a>
+<span class="sourceLineNo">237</span>     * respectively. Null may be returned if no options are supported.<a name="line.237"></a>
+<span class="sourceLineNo">238</span>     *<a name="line.238"></a>
+<span class="sourceLineNo">239</span>     * @return the options name, their synopsis and their explanation, <a name="line.239"></a>
+<span class="sourceLineNo">240</span>     * or null if no options are supported.<a name="line.240"></a>
+<span class="sourceLineNo">241</span>     * */<a name="line.241"></a>
+<span class="sourceLineNo">242</span>    public static String[][] getParameterInfo() {<a name="line.242"></a>
+<span class="sourceLineNo">243</span>        return pinfo;<a name="line.243"></a>
+<span class="sourceLineNo">244</span>    }<a name="line.244"></a>
+<span class="sourceLineNo">245</span><a name="line.245"></a>
+<span class="sourceLineNo">246</span>    /**<a name="line.246"></a>
+<span class="sourceLineNo">247</span>     * Creates a Quantizer object for the appropriate type of quantization<a name="line.247"></a>
+<span class="sourceLineNo">248</span>     * specified in the options in the parameter list 'pl', and having 'src'<a name="line.248"></a>
+<span class="sourceLineNo">249</span>     * as the source of data to be quantized. The 'rev' flag indicates if the<a name="line.249"></a>
+<span class="sourceLineNo">250</span>     * quantization should be reversible.<a name="line.250"></a>
+<span class="sourceLineNo">251</span>     *<a name="line.251"></a>
+<span class="sourceLineNo">252</span>     * NOTE: At the moment only sources of wavelet data that implement the<a name="line.252"></a>
+<span class="sourceLineNo">253</span>     * 'CBlkWTDataSrc' interface are supported.<a name="line.253"></a>
+<span class="sourceLineNo">254</span>     *<a name="line.254"></a>
+<span class="sourceLineNo">255</span>     * @param src The source of data to be quantized<a name="line.255"></a>
+<span class="sourceLineNo">256</span>     *<a name="line.256"></a>
+<span class="sourceLineNo">257</span>     * @param encSpec Encoder specifications<a name="line.257"></a>
+<span class="sourceLineNo">258</span>     *<a name="line.258"></a>
+<span class="sourceLineNo">259</span>     * @exception IllegalArgumentException If an error occurs while parsing<a name="line.259"></a>
+<span class="sourceLineNo">260</span>     * the options in 'pl'<a name="line.260"></a>
+<span class="sourceLineNo">261</span>     * */<a name="line.261"></a>
+<span class="sourceLineNo">262</span>    public static Quantizer createInstance(CBlkWTDataSrc src,<a name="line.262"></a>
+<span class="sourceLineNo">263</span>                                           J2KImageWriteParamJava wp) {<a name="line.263"></a>
+<span class="sourceLineNo">264</span>        // Instantiate quantizer<a name="line.264"></a>
+<span class="sourceLineNo">265</span>        return new StdQuantizer(src,wp);<a name="line.265"></a>
+<span class="sourceLineNo">266</span>    }<a name="line.266"></a>
+<span class="sourceLineNo">267</span><a name="line.267"></a>
+<span class="sourceLineNo">268</span>    /** <a name="line.268"></a>
+<span class="sourceLineNo">269</span>     * Returns the maximum number of magnitude bits in any subband in the<a name="line.269"></a>
+<span class="sourceLineNo">270</span>     * current tile.<a name="line.270"></a>
+<span class="sourceLineNo">271</span>     *<a name="line.271"></a>
+<span class="sourceLineNo">272</span>     * @param c the component number<a name="line.272"></a>
+<span class="sourceLineNo">273</span>     *<a name="line.273"></a>
+<span class="sourceLineNo">274</span>     * @return The maximum number of magnitude bits in all subbands of the<a name="line.274"></a>
+<span class="sourceLineNo">275</span>     * current tile.<a name="line.275"></a>
+<span class="sourceLineNo">276</span>     * */<a name="line.276"></a>
+<span class="sourceLineNo">277</span>    public abstract int getMaxMagBits(int c);<a name="line.277"></a>
+<span class="sourceLineNo">278</span> <a name="line.278"></a>
+<span class="sourceLineNo">279</span>}<a name="line.279"></a>
+<span class="sourceLineNo">280</span><a name="line.280"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * $RCSfile: LayersInfo.java,v $<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * $Revision: 1.1 $<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * $Date: 2005/02/11 05:02:08 $<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * $State: Exp $<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Class:                   LayersInfo<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Description:             Specification of a layer<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * COPYRIGHT:<a name="line.13"></a>
+<span class="sourceLineNo">014</span> *<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * This software module was originally developed by Rapha?l Grosbois and<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * Diego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Askel?f (Ericsson Radio Systems AB); and Bertrand Berthelot, David<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Bouchard, F?lix Henry, Gerard Mozelle and Patrice Onno (Canon Research<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Centre France S.A) in the course of development of the JPEG2000<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * standard as specified by ISO/IEC 15444 (JPEG 2000 Standard). This<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * software module is an implementation of a part of the JPEG 2000<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * Standard. Swiss Federal Institute of Technology-EPFL, Ericsson Radio<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Systems AB and Canon Research Centre France S.A (collectively JJ2000<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * Partners) agree not to assert against ISO/IEC and users of the JPEG<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * 2000 Standard (Users) any of their rights under the copyright, not<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * including other intellectual property rights, for this software module<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * with respect to the usage by ISO/IEC and Users of this software module<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * or modifications thereof for use in hardware or software products<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * claiming conformance to the JPEG 2000 Standard. Those intending to use<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * this software module in hardware or software products are advised that<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * their use may infringe existing patents. The original developers of<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * this software module, JJ2000 Partners and ISO/IEC assume no liability<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * for use of this software module or modifications thereof. No license<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * or right to this software module is granted for non JPEG 2000 Standard<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * conforming products. JJ2000 Partners have full right to use this<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * software module for his/her own purpose, assign or donate this<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * software module to any third party and to inhibit third parties from<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * using this software module for non JPEG 2000 Standard conforming<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * products. This copyright notice must be included in all copies or<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * derivative works of this software module.<a name="line.40"></a>
+<span class="sourceLineNo">041</span> *<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * Copyright (c) 1999/2000 JJ2000 Partners.<a name="line.42"></a>
+<span class="sourceLineNo">043</span> *<a name="line.43"></a>
+<span class="sourceLineNo">044</span> *<a name="line.44"></a>
+<span class="sourceLineNo">045</span> *<a name="line.45"></a>
+<span class="sourceLineNo">046</span> */<a name="line.46"></a>
+<span class="sourceLineNo">047</span><a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>package jj2000.j2k.entropy.encoder;<a name="line.49"></a>
+<span class="sourceLineNo">050</span><a name="line.50"></a>
+<span class="sourceLineNo">051</span>/**<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * This class stores the specification of a layer distribution in the<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * bit stream. The specification is made of optimization points and a number of<a name="line.53"></a>
+<span class="sourceLineNo">054</span> * extra layers to add between the optimization points. Each optimization<a name="line.54"></a>
+<span class="sourceLineNo">055</span> * point creates a layer which is optimized by the rate allocator to the<a name="line.55"></a>
+<span class="sourceLineNo">056</span> * specified target bitrate. The extra layers are added by the rate allocator<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * between the optimized layers, with the difference that they are not<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * optimized (i.e. they have no precise target bitrate).<a name="line.58"></a>
+<span class="sourceLineNo">059</span> *<a name="line.59"></a>
+<span class="sourceLineNo">060</span> * &lt;P&gt;The overall target bitrate for the bit stream is always added as the last<a name="line.60"></a>
+<span class="sourceLineNo">061</span> * optimization point without any extra layers after it. If there are some<a name="line.61"></a>
+<span class="sourceLineNo">062</span> * optimization points whose target bitrate is larger than the overall target<a name="line.62"></a>
+<span class="sourceLineNo">063</span> * bitrate, the overall target bitrate will still appear as the last<a name="line.63"></a>
+<span class="sourceLineNo">064</span> * optimization point, even though it does not follow the increasing target<a name="line.64"></a>
+<span class="sourceLineNo">065</span> * bitrate order of the other optimization points. The rate allocator is<a name="line.65"></a>
+<span class="sourceLineNo">066</span> * responsible for eliminating layers that have target bitrates larger than<a name="line.66"></a>
+<span class="sourceLineNo">067</span> * the overall target bitrate.<a name="line.67"></a>
+<span class="sourceLineNo">068</span> *<a name="line.68"></a>
+<span class="sourceLineNo">069</span> * &lt;P&gt;Optimization points can be added with the addOptPoint() method. It takes<a name="line.69"></a>
+<span class="sourceLineNo">070</span> * the target bitrate for the optimized layer and the number of extra layers<a name="line.70"></a>
+<span class="sourceLineNo">071</span> * to add after it.<a name="line.71"></a>
+<span class="sourceLineNo">072</span> *<a name="line.72"></a>
+<span class="sourceLineNo">073</span> * &lt;P&gt;Information about the total number of layers, total number of<a name="line.73"></a>
+<span class="sourceLineNo">074</span> * optimization points, target bitrates, etc. can be obtained with the other<a name="line.74"></a>
+<span class="sourceLineNo">075</span> * methods.<a name="line.75"></a>
+<span class="sourceLineNo">076</span> * */<a name="line.76"></a>
+<span class="sourceLineNo">077</span>public class LayersInfo {<a name="line.77"></a>
+<span class="sourceLineNo">078</span><a name="line.78"></a>
+<span class="sourceLineNo">079</span>    /** The initial size for the arrays: 10 */<a name="line.79"></a>
+<span class="sourceLineNo">080</span>    private final static int SZ_INIT = 10;<a name="line.80"></a>
+<span class="sourceLineNo">081</span><a name="line.81"></a>
+<span class="sourceLineNo">082</span>    /** The size increment for the arrays */<a name="line.82"></a>
+<span class="sourceLineNo">083</span>    private final static int SZ_INCR = 5;<a name="line.83"></a>
+<span class="sourceLineNo">084</span><a name="line.84"></a>
+<span class="sourceLineNo">085</span>    /** The total number of layers */<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    // Starts at 1: overall target bitrate is always an extra optimized layer<a name="line.86"></a>
+<span class="sourceLineNo">087</span>    int totlyrs = 1;<a name="line.87"></a>
+<span class="sourceLineNo">088</span><a name="line.88"></a>
+<span class="sourceLineNo">089</span>    /** The overall target bitrate, for the whole bit stream */<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    float totbrate;<a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91"></a>
+<span class="sourceLineNo">092</span>    /** The number of optimized layers, or optimization points, without<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     * counting the extra one coming from the overall target bitrate */<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    int nopt;<a name="line.94"></a>
+<span class="sourceLineNo">095</span><a name="line.95"></a>
+<span class="sourceLineNo">096</span>    /** The target bitrate to which specified layers should be optimized. */<a name="line.96"></a>
+<span class="sourceLineNo">097</span>    float optbrate[] = new float[SZ_INIT];<a name="line.97"></a>
+<span class="sourceLineNo">098</span><a name="line.98"></a>
+<span class="sourceLineNo">099</span>    /** The number of extra layers to be added after an optimized layer. After<a name="line.99"></a>
+<span class="sourceLineNo">100</span>     * the layer that is optimized to optbrate[i], extralyrs[i] extra layers<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     * should be added. These layers are allocated between the bitrate<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     * optbrate[i] and the next optimized bitrate optbrate[i+1] or, if it does<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * not exist, the overall target bitrate. */<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    int extralyrs[] = new int[SZ_INIT];<a name="line.104"></a>
+<span class="sourceLineNo">105</span><a name="line.105"></a>
+<span class="sourceLineNo">106</span>    /**<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     * Creates a new LayersInfo object. The overall target bitrate 'brate' is<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     * always an extra optimization point, with no extra layers are after<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     * it. Note that any optimization points that are added with addOptPoint()<a name="line.109"></a>
+<span class="sourceLineNo">110</span>     * are always added before the overall target bitrate.<a name="line.110"></a>
+<span class="sourceLineNo">111</span>     *<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     * @param brate The overall target bitrate for the bit stream<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     *<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     *<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     * */<a name="line.115"></a>
+<span class="sourceLineNo">116</span>    public LayersInfo(float brate) {<a name="line.116"></a>
+<span class="sourceLineNo">117</span>        if (brate &lt;= 0) {<a name="line.117"></a>
+<span class="sourceLineNo">118</span>            throw new IllegalArgumentException("Overall target bitrate must "+<a name="line.118"></a>
+<span class="sourceLineNo">119</span>                                               "be a positive number");<a name="line.119"></a>
+<span class="sourceLineNo">120</span>        }<a name="line.120"></a>
+<span class="sourceLineNo">121</span>        totbrate = brate;<a name="line.121"></a>
+<span class="sourceLineNo">122</span>    }<a name="line.122"></a>
+<span class="sourceLineNo">123</span><a name="line.123"></a>
+<span class="sourceLineNo">124</span>    /**<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * Returns the overall target bitrate for the entire bit stream.<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     *<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     * @return The overall target bitrate<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     *<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     *<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     * */<a name="line.130"></a>
+<span class="sourceLineNo">131</span>    public float getTotBitrate() {<a name="line.131"></a>
+<span class="sourceLineNo">132</span>        return totbrate;<a name="line.132"></a>
+<span class="sourceLineNo">133</span>    }<a name="line.133"></a>
+<span class="sourceLineNo">134</span><a name="line.134"></a>
+<span class="sourceLineNo">135</span>    /**<a name="line.135"></a>
+<span class="sourceLineNo">136</span>     * Returns the total number of layers, according to the layer<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     * specification of this object and the overall target bitrate.<a name="line.137"></a>
+<span class="sourceLineNo">138</span>     *<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     * @return The total number of layers, according to the layer spec.<a name="line.139"></a>
+<span class="sourceLineNo">140</span>     *<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     *<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     * */<a name="line.142"></a>
+<span class="sourceLineNo">143</span>    public int getTotNumLayers() {<a name="line.143"></a>
+<span class="sourceLineNo">144</span>        return totlyrs;<a name="line.144"></a>
+<span class="sourceLineNo">145</span>    }<a name="line.145"></a>
+<span class="sourceLineNo">146</span><a name="line.146"></a>
+<span class="sourceLineNo">147</span>    /**<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     * Returns the number of layers to optimize, or optimization points, as<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * specified by this object.<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     *<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * @return The number of optimization points<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     *<a name="line.152"></a>
+<span class="sourceLineNo">153</span>     *<a name="line.153"></a>
+<span class="sourceLineNo">154</span>     * */<a name="line.154"></a>
+<span class="sourceLineNo">155</span>    public int getNOptPoints() {<a name="line.155"></a>
+<span class="sourceLineNo">156</span>        // overall target bitrate is counted as extra<a name="line.156"></a>
+<span class="sourceLineNo">157</span>        return nopt+1;<a name="line.157"></a>
+<span class="sourceLineNo">158</span>    }<a name="line.158"></a>
+<span class="sourceLineNo">159</span><a name="line.159"></a>
+<span class="sourceLineNo">160</span>    /**<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     * Returns the target bitrate of the optmimization point 'n'.<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     *<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     * @param n The optimization point index (starts at 0).<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     *<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     * @return The target bitrate (in bpp) for the optimization point 'n'.<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     *<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     *<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     * */<a name="line.168"></a>
+<span class="sourceLineNo">169</span>    public float getTargetBitrate(int n) {<a name="line.169"></a>
+<span class="sourceLineNo">170</span>        // overall target bitrate is counted as extra<a name="line.170"></a>
+<span class="sourceLineNo">171</span>        return (n &lt; nopt) ? optbrate[n] : totbrate;<a name="line.171"></a>
+<span class="sourceLineNo">172</span>    }<a name="line.172"></a>
+<span class="sourceLineNo">173</span><a name="line.173"></a>
+<span class="sourceLineNo">174</span>    /**<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     * Returns the number of extra layers to add after the optimization point<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     * 'n', but before optimization point 'n+1'. If there is no optimization<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     * point 'n+1' then they should be added before the overall target bitrate.<a name="line.177"></a>
+<span class="sourceLineNo">178</span>     *<a name="line.178"></a>
+<span class="sourceLineNo">179</span>     * @param n The optimization point index (starts at 0).<a name="line.179"></a>
+<span class="sourceLineNo">180</span>     *<a name="line.180"></a>
+<span class="sourceLineNo">181</span>     * @return The number of extra (unoptimized) layers to add after the<a name="line.181"></a>
+<span class="sourceLineNo">182</span>     * optimization point 'n'<a name="line.182"></a>
+<span class="sourceLineNo">183</span>     *<a name="line.183"></a>
+<span class="sourceLineNo">184</span>     *<a name="line.184"></a>
+<span class="sourceLineNo">185</span>     * */<a name="line.185"></a>
+<span class="sourceLineNo">186</span>    public int getExtraLayers(int n) {<a name="line.186"></a>
+<span class="sourceLineNo">187</span>        // overall target bitrate is counted as extra<a name="line.187"></a>
+<span class="sourceLineNo">188</span>        return (n &lt; nopt) ? extralyrs[n] : 0;<a name="line.188"></a>
+<span class="sourceLineNo">189</span>    }<a name="line.189"></a>
+<span class="sourceLineNo">190</span><a name="line.190"></a>
+<span class="sourceLineNo">191</span>    /**<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     * Adds a new optimization point, with target bitrate 'brate' and with<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     * 'elyrs' (unoptimized) extra layers after it. The target bitrate 'brate'<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     * must be larger than the previous optimization point. The arguments are<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     * checked and IllegalArgumentException is thrown if they are not correct.<a name="line.195"></a>
+<span class="sourceLineNo">196</span>     *<a name="line.196"></a>
+<span class="sourceLineNo">197</span>     * @param brate The target bitrate for the optimized layer.<a name="line.197"></a>
+<span class="sourceLineNo">198</span>     *<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     * @param elyrs The number of extra (unoptimized) layers to add after the<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     * optimized layer.<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     *<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     *<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     * */<a name="line.203"></a>
+<span class="sourceLineNo">204</span>    public void addOptPoint(float brate, int elyrs) {<a name="line.204"></a>
+<span class="sourceLineNo">205</span>        // Check validity of arguments<a name="line.205"></a>
+<span class="sourceLineNo">206</span>        if (brate &lt;= 0) {<a name="line.206"></a>
+<span class="sourceLineNo">207</span>            throw new<a name="line.207"></a>
+<span class="sourceLineNo">208</span>                IllegalArgumentException("Target bitrate must be positive");<a name="line.208"></a>
+<span class="sourceLineNo">209</span>        }<a name="line.209"></a>
+<span class="sourceLineNo">210</span>        if (elyrs &lt; 0) {<a name="line.210"></a>
+<span class="sourceLineNo">211</span>            throw new IllegalArgumentException("The number of extra layers "+<a name="line.211"></a>
+<span class="sourceLineNo">212</span>                                               "must be 0 or more");<a name="line.212"></a>
+<span class="sourceLineNo">213</span>        }<a name="line.213"></a>
+<span class="sourceLineNo">214</span>        if (nopt &gt; 0 &amp;&amp; optbrate[nopt-1]&gt;=brate) {<a name="line.214"></a>
+<span class="sourceLineNo">215</span>            throw new<a name="line.215"></a>
+<span class="sourceLineNo">216</span>                IllegalArgumentException("New optimization point must have "+<a name="line.216"></a>
+<span class="sourceLineNo">217</span>                                         "a target bitrate higher than the "+<a name="line.217"></a>
+<span class="sourceLineNo">218</span>                                         "preceding one");<a name="line.218"></a>
+<span class="sourceLineNo">219</span>        }<a name="line.219"></a>
+<span class="sourceLineNo">220</span>        // Check room for new optimization point<a name="line.220"></a>
+<span class="sourceLineNo">221</span>        if (optbrate.length == nopt) { // Need more room<a name="line.221"></a>
+<span class="sourceLineNo">222</span>            float tbr[] = optbrate;<a name="line.222"></a>
+<span class="sourceLineNo">223</span>            int tel[] = extralyrs;<a name="line.223"></a>
+<span class="sourceLineNo">224</span>            // both arrays always have same size<a name="line.224"></a>
+<span class="sourceLineNo">225</span>            optbrate = new float[optbrate.length+SZ_INCR];<a name="line.225"></a>
+<span class="sourceLineNo">226</span>            extralyrs = new int[extralyrs.length+SZ_INCR];<a name="line.226"></a>
+<span class="sourceLineNo">227</span>            System.arraycopy(tbr,0,optbrate,0,nopt);<a name="line.227"></a>
+<span class="sourceLineNo">228</span>            System.arraycopy(tel,0,extralyrs,0,nopt);<a name="line.228"></a>
+<span class="sourceLineNo">229</span>        }<a name="line.229"></a>
+<span class="sourceLineNo">230</span>        // Add new optimization point<a name="line.230"></a>
+<span class="sourceLineNo">231</span>        optbrate[nopt] = brate;<a name="line.231"></a>
+<span class="sourceLineNo">232</span>        extralyrs[nopt] = elyrs;<a name="line.232"></a>
+<span class="sourceLineNo">233</span>        nopt++;<a name="line.233"></a>
+<span class="sourceLineNo">234</span>        // Update total number of layers<a name="line.234"></a>
+<span class="sourceLineNo">235</span>        totlyrs += 1+elyrs;<a name="line.235"></a>
+<span class="sourceLineNo">236</span>    }<a name="line.236"></a>
+<span class="sourceLineNo">237</span>}<a name="line.237"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

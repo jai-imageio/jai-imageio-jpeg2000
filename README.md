@@ -1,5 +1,5 @@
-jai-imageio-core-jpeg2000
-=========================
+jai-imageio-jpeg2000
+====================
 
 [![Build Status](https://travis-ci.org/stain/jai-imageio-jpeg2000.svg)](https://travis-ci.org/stain/jai-imageio-jpeg2000)
 
@@ -41,7 +41,7 @@ To use jai-imageio-core-jpeg2000 from a Maven project, add:
 
     <dependency>
         <groupId>net.java.dev.jai-imageio</groupId>
-        <artifactId>jai-imageio-core-jpeg2000</artifactId>
+        <artifactId>jai-imageio-jpeg2000</artifactId>
         <version>1.2-pre-dr-b04-2014-09-12</version>
     </dependency>
 

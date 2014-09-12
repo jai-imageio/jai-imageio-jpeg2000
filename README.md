@@ -62,8 +62,21 @@ and:
 This repository includes source JARs and javadoc, which should be picked
 up for instance by the Eclipse Maven support.
 
+
+Download
+--------
+
+To download the binary JARs, browse the 
+[Maven repository](http://www.mygrid.org.uk/maven/repository/net/java/dev/jai-imageio/jai-imageio-core-jpeg2000/).
+
+
+Javadoc
+-------
+
 Standalone [Javadoc for jai-imageio-core](http://stain.github.io/jai-imageio-core/javadoc/) is
 provided separately.
+
+
 
 
 Copyright and licenses

@@ -83,8 +83,8 @@ are [BSD 3-clause](http://opensource.org/licenses/BSD-3-Clause),
 see [LICENSE-Sun.txt](LICENSE-Sun.txt)
 
 The [jj2000](src/main/java/jj2000) package in this module is licensed under the
-[JJ2000 license](LICENSE-JJ2000.txt) which is *not compatible*
-with the GNU Public License (GPL).
+[JJ2000 license](LICENSE-JJ2000.txt) which is **not compatible
+with the GNU Public License (GPL)**.
 
 
 Changelog

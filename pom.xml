@@ -10,7 +10,7 @@
 	<description>
 		JPEG2000 support for Java Advanced Imaging Image I/O Tools API core.
     This module is licensed under the [JJ2000 license](LICENSE.txt) and
-    is therefore NOT compatible with the GPL 3 license. It should be 
+    is therefore NOT compatible with the GPL 3 license. It should be
     compatible with the LGPL 2.1 license.
 	</description>
 	<licenses>
@@ -32,7 +32,7 @@
 	<url>https://github.com/stain/jai-imageio-jpeg2000</url>
 	<build>
 		<plugins>
-		
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -50,7 +50,7 @@
 					<execution>
 						<goals>
 							<goal>jar</goal>
-							<!--  
+							<!--
 						<goal>test-jar</goal>
 						-->
 						</goals>
@@ -170,7 +170,6 @@
 	<scm>
 		<connection>scm:git:git://github.com/stain/jai-imageio-jpeg2000.git</connection>
 		<developerConnection>scm:git:git@github.com:stain/jai-imageio-jpeg2000.git</developerConnection>
-		<url>http://github.com/stain/jai-imageio-jpeg2000</url>
+		<url>https://github.com/stain/jai-imageio-jpeg2000</url>
 	</scm>
 </project>
-  

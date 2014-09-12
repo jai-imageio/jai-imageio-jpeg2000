@@ -3,17 +3,22 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.java.dev.jai-imageio</groupId>
-	<artifactId>jai-imageio-core-standalone</artifactId>
+	<artifactId>jai-imageio-jpeg2000</artifactId>
 	<version>1.2-pre-dr-b04-2014-09-12</version>
 	<packaging>jar</packaging>
-	<name>Java Advanced Imaging Image I/O Tools API core (standalone)</name>
+	<name>JPEG2000 support for Java Advanced Imaging Image I/O Tools API</name>
 	<description>
-		Java Advanced Imaging Image I/O Tools API core, but without the classes 
-		involved with javax.media.jai dependencies and codecLibJIIO, meaning that
-		this library can be distributed under the modified BSD license and should be
-		GPL compatible.
+		JPEG2000 support for Java Advanced Imaging Image I/O Tools API core.
+    This module is licensed under the [JJ2000 license](LICENSE.txt) and
+    is therefore NOT compatible with the GPL 3 license. It should be 
+    compatible with the LGPL 2.1 license.
 	</description>
 	<licenses>
+		<license>
+			<name>JJ2000</name>
+			<url>LICENSE.txt</url>
+			<distribution>repo</distribution>
+		</license>
 		<license>
 			<name>BSD 3-clause License</name>
 			<url>http://opensource.org/licenses/BSD-3-Clause</url>
@@ -24,7 +29,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
-	<url>https://github.com/stain/jai-imageio-core</url>
+	<url>https://github.com/stain/jai-imageio-jpeg2000</url>
 	<build>
 		<plugins>
 		
@@ -121,6 +126,11 @@
 
 	<dependencies>
 		<dependency>
+      <groupId>net.java.dev.jai-imageio</groupId>
+      <artifactId>jai-imageio-core-standalone</artifactId>
+      <version>1.2-pre-dr-b04-2014-09-12</version>
+    </dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
@@ -158,23 +168,9 @@
 		</plugins>
 	</reporting>
 	<scm>
-		<connection>scm:git:git://github.com/stain/jai-imageio-core.git</connection>
-		<developerConnection>scm:git:git@github.com:stain/jai-imageio-core.git</developerConnection>
-		<url>http://github.com/stain/jai-imageio-core</url>
+		<connection>scm:git:git://github.com/stain/jai-imageio-jpeg2000.git</connection>
+		<developerConnection>scm:git:git@github.com:stain/jai-imageio-jpeg2000.git</developerConnection>
+		<url>http://github.com/stain/jai-imageio-jpeg2000</url>
 	</scm>
-	<distributionManagement>
-		<repository>
-			<id>mygrid-repository</id>
-			<name>myGrid Repository</name>
-			<!--  on rosalind.cs.man.ac.uk (www.mygrid.org.uk) -->
-			<url>file:///local/www/mygrid/maven/repository</url>
-		</repository>
-		<snapshotRepository>
-			<id>mygrid-snapshot-repository</id>
-			<name>myGrid Snapshot Repository</name>
-			<!--  on rosalind.cs.man.ac.uk (www.mygrid.org.uk) -->
-			<url>file:///local/www/mygrid/maven/snapshot-repository</url>
-		</snapshotRepository>
-	</distributionManagement>
 </project>
   

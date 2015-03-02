@@ -80,8 +80,8 @@ import jj2000.j2k.roi.encoder.ROIScaler;
 import jj2000.j2k.util.CodestreamManipulator;
 import jj2000.j2k.wavelet.analysis.ForwardWT;
 
+import com.github.jaiimageio.impl.common.ImageUtil;
 import com.github.jaiimageio.jpeg2000.J2KImageWriteParam;
-import com.sun.media.imageioimpl.common.ImageUtil;
 
 /**
  * The Java Image IO plugin writer for encoding a RenderedImage into

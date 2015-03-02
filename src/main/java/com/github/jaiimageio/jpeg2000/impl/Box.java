@@ -63,7 +63,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.sun.media.imageioimpl.common.ImageUtil;
+import com.github.jaiimageio.impl.common.ImageUtil;
 
 /**
  * This class is defined to create the box of JP2 file format.  A box has

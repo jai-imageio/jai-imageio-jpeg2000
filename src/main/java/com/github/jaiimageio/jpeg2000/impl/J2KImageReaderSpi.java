@@ -53,7 +53,7 @@ import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.spi.ServiceRegistry;
 import javax.imageio.stream.ImageInputStream;
 
-import com.sun.media.imageioimpl.common.PackageUtil;
+import com.github.jaiimageio.impl.common.PackageUtil;
 
 public class J2KImageReaderSpi extends ImageReaderSpi {
 

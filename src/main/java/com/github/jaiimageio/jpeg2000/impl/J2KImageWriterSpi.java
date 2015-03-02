@@ -54,7 +54,7 @@ import javax.imageio.ImageWriter;
 import javax.imageio.spi.ImageWriterSpi;
 import javax.imageio.spi.ServiceRegistry;
 
-import com.sun.media.imageioimpl.common.PackageUtil;
+import com.github.jaiimageio.impl.common.PackageUtil;
 
 public class J2KImageWriterSpi extends ImageWriterSpi {
     private static String [] readerSpiNames =

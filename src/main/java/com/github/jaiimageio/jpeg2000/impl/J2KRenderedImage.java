@@ -54,7 +54,7 @@ import javax.imageio.stream.ImageInputStream;
 
 import jj2000.j2k.codestream.reader.HeaderDecoder;
 
-import com.sun.media.imageioimpl.common.SimpleRenderedImage;
+import com.github.jaiimageio.impl.common.SimpleRenderedImage;
 
 public class J2KRenderedImage extends SimpleRenderedImage {
     private Raster currentTile;

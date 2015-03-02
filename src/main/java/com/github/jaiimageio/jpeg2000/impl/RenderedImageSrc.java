@@ -59,7 +59,7 @@ import jj2000.j2k.image.DataBlk;
 import jj2000.j2k.image.DataBlkInt;
 import jj2000.j2k.image.ImgData;
 
-import com.sun.media.imageioimpl.common.ImageUtil;
+import com.github.jaiimageio.impl.common.ImageUtil;
 
 public class RenderedImageSrc implements BlkImgDataSrc {
     /** The width of the image */

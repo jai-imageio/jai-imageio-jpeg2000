@@ -49,7 +49,7 @@ import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 
-import com.sun.media.imageioimpl.common.ImageUtil;
+import com.github.jaiimageio.impl.common.ImageUtil;
 /**
  *  An adapter class for presenting image data in a mediaLibImage
  *  format, even if the data isn't stored that way.  MediaLibAccessor

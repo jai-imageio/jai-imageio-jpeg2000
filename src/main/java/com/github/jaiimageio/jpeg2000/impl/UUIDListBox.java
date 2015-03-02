@@ -50,7 +50,7 @@ import javax.imageio.metadata.IIOMetadataNode;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.sun.media.imageioimpl.common.ImageUtil;
+import com.github.jaiimageio.impl.common.ImageUtil;
 
 /** This class is defined to represent a UUID list Box of JPEG JP2
  *  file format.  This type of box has a length, a type of "ulst".  Its

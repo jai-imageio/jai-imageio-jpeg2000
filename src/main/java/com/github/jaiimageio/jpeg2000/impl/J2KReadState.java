@@ -78,7 +78,7 @@ import jj2000.j2k.quantization.dequantizer.Dequantizer;
 import jj2000.j2k.roi.ROIDeScaler;
 import jj2000.j2k.wavelet.synthesis.InverseWT;
 
-import com.sun.media.imageioimpl.common.ImageUtil;
+import com.github.jaiimageio.impl.common.ImageUtil;
 
 public class J2KReadState {
     /** The input stream we read from */

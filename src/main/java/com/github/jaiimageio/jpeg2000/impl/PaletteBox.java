@@ -52,7 +52,7 @@ import javax.imageio.metadata.IIOMetadataNode;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.sun.media.imageioimpl.common.ImageUtil;
+import com.github.jaiimageio.impl.common.ImageUtil;
 
 /** This class is designed to represent a palette box for JPEG 2000 JP2 file
  *  format.  A palette box has a length, and a fixed type of "pclr".

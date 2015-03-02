@@ -44,7 +44,7 @@
  */
 package com.github.jaiimageio.jpeg2000.impl;
 
-import com.sun.media.imageioimpl.common.I18NImpl;
+import com.github.jaiimageio.impl.common.I18NImpl;
 
 final class I18N extends I18NImpl {
     static String getString(String key) {

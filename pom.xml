@@ -6,7 +6,7 @@
   </prerequisites>
   <groupId>com.github.jai-imageio</groupId>  
 	<artifactId>jai-imageio-jpeg2000</artifactId>
-	<version>1.3.0</version>
+	<version>1.3.1-SNAPSHOT</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -272,7 +272,7 @@
 		<connection>scm:git:git://github.com/jai-imageio/jai-imageio-jpeg2000.git</connection>
 		<developerConnection>scm:git:git@github.com:jai-imageio/jai-imageio-jpeg2000.git</developerConnection>
 		<url>https://github.com/stain/jai-imageio-jpeg2000</url>
-	  <tag>jai-imageio-jpeg2000-1.3.0</tag>
+	  <tag>HEAD</tag>
   </scm>
 	<developers>
     <developer>

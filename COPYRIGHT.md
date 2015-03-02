@@ -1,6 +1,6 @@
 # Build modifications
 
-(c) 2010-2014 University of Manchester <soiland-reyes@cs.manchester.ac.uk>
+(c) 2010-2015 University of Manchester <soiland-reyes@cs.manchester.ac.uk>
 (c) 2014-2015 Stian Soiland-Reyes <stian@soiland-reyes.com>
 
 

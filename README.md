@@ -62,6 +62,23 @@ To use jai-imageio-core-jpeg2000 from a Maven project, add:
         <version>1.3.0-SNAPSHOT</version>
     </dependency>
 
+jai-imageio-jpeg2000 is mirrored to Maven Central. Alternatively you can use
+this explicit repository:
+
+    <repositories>
+      <repository>
+        <id>bintray-jai-imageio</id>
+        <name>jai-imageio at bintray</name>
+        <url>http://dl.bintray.com/jai-imageio/maven/</url>
+        <snapshots>
+          <enabled>false</enabled>
+        </snapshots>
+      </repository>
+    </repositories>
+
+The Maven repository include additional artifact types such as `javadoc` and `sources`
+which should be picked up by your IDE's Maven integration.
+
 
 Download
 --------

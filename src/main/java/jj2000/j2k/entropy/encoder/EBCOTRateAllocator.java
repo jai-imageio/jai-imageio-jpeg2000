@@ -56,7 +56,7 @@ import jj2000.j2k.util.*;
 import java.util.Vector;
 import java.io.*;
 
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriteParamJava;
+import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 /**
  * This implements the EBCOT post compression rate allocation algorithm. This
  * algorithm finds the most suitable truncation points for the set of

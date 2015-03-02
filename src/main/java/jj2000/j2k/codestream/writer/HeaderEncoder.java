@@ -61,7 +61,7 @@ import jj2000.j2k.*;
 import java.util.*;
 import java.io.*;
 
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriteParamJava;
+import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 /**
  * This class writes almost of the markers and marker segments in main header
  * and in tile-part headers. It is created by the run() method of the Encoder

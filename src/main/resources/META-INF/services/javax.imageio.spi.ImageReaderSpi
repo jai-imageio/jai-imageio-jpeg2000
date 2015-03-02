@@ -44,5 +44,5 @@
 #
 # --- JAI-Image I/O ImageReader plug-ins ---
 #
-com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageReaderSpi
-#com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageReaderCodecLibSpi
+com.github.jaiimageio.jpeg2000.impl.J2KImageReaderSpi
+#com.github.jaiimageio.jpeg2000.impl.J2KImageReaderCodecLibSpi

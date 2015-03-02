@@ -51,7 +51,7 @@ import jj2000.j2k.wavelet.*;
 import jj2000.j2k.image.*;
 import jj2000.j2k.util.*;
 
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriteParamJava;
+import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 
 /**
  * This abstract class provides the general interface for quantizers. The

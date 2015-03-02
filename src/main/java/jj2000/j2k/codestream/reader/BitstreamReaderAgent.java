@@ -58,7 +58,7 @@ import jj2000.j2k.*;
 
 import java.io.*;
 
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageReadParamJava;
+import com.github.jaiimageio.jpeg2000.impl.J2KImageReadParamJava;
 
 /**
  * This is the generic interface for bit stream reader agents. A bit stream

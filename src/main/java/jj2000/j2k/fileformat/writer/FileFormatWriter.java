@@ -56,10 +56,12 @@ import java.io.*;
 
 import javax.imageio.stream.ImageOutputStream;
 import javax.imageio.metadata.IIOMetadataNode;
+
 import org.w3c.dom.NodeList;
-import com.sun.media.imageioimpl.plugins.jpeg2000.Box;
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KMetadata;
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KMetadataFormat;
+
+import com.github.jaiimageio.jpeg2000.impl.Box;
+import com.github.jaiimageio.jpeg2000.impl.J2KMetadata;
+import com.github.jaiimageio.jpeg2000.impl.J2KMetadataFormat;
 
 /**
  * This class writes the file format wrapper that may or may not exist around

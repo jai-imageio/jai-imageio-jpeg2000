@@ -56,7 +56,7 @@ import jj2000.j2k.*;
 import java.util.*;
 import java.io.*;
 
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriteParamJava;
+import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 /**
  * This abstract class provides the general interface for block-based entropy
  * encoders. The input to the entropy coder is the quantized wavelet

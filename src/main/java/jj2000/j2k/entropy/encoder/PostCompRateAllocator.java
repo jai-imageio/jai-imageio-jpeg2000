@@ -54,7 +54,7 @@ import jj2000.j2k.*;
 
 import java.io.*;
 
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriteParamJava;
+import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 /**
  * This is the abstract class from which post-compression rate allocators
  * which generate layers should inherit. The source of data is a

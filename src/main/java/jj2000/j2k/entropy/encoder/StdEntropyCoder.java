@@ -55,7 +55,8 @@ import jj2000.j2k.io.*;
 import jj2000.j2k.*;
 
 import java.util.*;
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriteParamJava;
+
+import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 
 /**
  * This class implements the JPEG 2000 entropy coder, which codes stripes in

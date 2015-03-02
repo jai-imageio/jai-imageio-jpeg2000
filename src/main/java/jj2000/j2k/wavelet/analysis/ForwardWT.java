@@ -54,7 +54,7 @@ import jj2000.j2k.*;
 import java.io.*;
 import java.util.*;
 
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriteParamJava;
+import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 /**
  * This abstract class represents the forward wavelet transform functional
  * block. The functional block may actually be comprised of several classes

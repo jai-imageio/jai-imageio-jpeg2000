@@ -57,7 +57,7 @@ import jj2000.j2k.*;
 
 import java.io.*;
 
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageReadParamJava;
+import com.github.jaiimageio.jpeg2000.impl.J2KImageReadParamJava;
 
 /**
  * This class takes care of the de-scaling of ROI coefficients. The de-scaler

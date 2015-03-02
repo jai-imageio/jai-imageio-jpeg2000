@@ -56,21 +56,22 @@ import jj2000.j2k.io.*;
 
 import java.util.*;
 import java.io.*;
-import com.sun.media.imageioimpl.plugins.jpeg2000.Box;
-import com.sun.media.imageioimpl.plugins.jpeg2000.BitsPerComponentBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.ChannelDefinitionBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.ColorSpecificationBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.ComponentMappingBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.DataEntryURLBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.FileTypeBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.HeaderBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KMetadata;
-import com.sun.media.imageioimpl.plugins.jpeg2000.ResolutionBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.PaletteBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.UUIDBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.UUIDListBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.XMLBox;
-import com.sun.media.imageioimpl.plugins.jpeg2000.SignatureBox;
+
+import com.github.jaiimageio.jpeg2000.impl.BitsPerComponentBox;
+import com.github.jaiimageio.jpeg2000.impl.Box;
+import com.github.jaiimageio.jpeg2000.impl.ChannelDefinitionBox;
+import com.github.jaiimageio.jpeg2000.impl.ColorSpecificationBox;
+import com.github.jaiimageio.jpeg2000.impl.ComponentMappingBox;
+import com.github.jaiimageio.jpeg2000.impl.DataEntryURLBox;
+import com.github.jaiimageio.jpeg2000.impl.FileTypeBox;
+import com.github.jaiimageio.jpeg2000.impl.HeaderBox;
+import com.github.jaiimageio.jpeg2000.impl.J2KMetadata;
+import com.github.jaiimageio.jpeg2000.impl.PaletteBox;
+import com.github.jaiimageio.jpeg2000.impl.ResolutionBox;
+import com.github.jaiimageio.jpeg2000.impl.SignatureBox;
+import com.github.jaiimageio.jpeg2000.impl.UUIDBox;
+import com.github.jaiimageio.jpeg2000.impl.UUIDListBox;
+import com.github.jaiimageio.jpeg2000.impl.XMLBox;
 
 /**
  * This class reads the file format wrapper that may or may not exist around a

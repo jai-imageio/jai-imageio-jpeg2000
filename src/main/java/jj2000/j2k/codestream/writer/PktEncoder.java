@@ -55,7 +55,8 @@ import jj2000.j2k.util.*;
 import jj2000.j2k.*;
 
 import java.util.Vector;
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriteParamJava;
+
+import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 /**
  * This class builds packets and keeps the state information of packet
  * interdependencies. It also supports saving the state and reverting

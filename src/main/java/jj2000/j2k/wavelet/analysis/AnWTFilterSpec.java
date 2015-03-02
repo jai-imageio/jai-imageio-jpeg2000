@@ -49,7 +49,7 @@ import jj2000.j2k.*;
 
 import java.util.*;
 
-import com.sun.media.imageioimpl.plugins.jpeg2000.J2KImageWriteParamJava;
+import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 
 /**
  * This class extends ModuleSpec class for analysis filters specification

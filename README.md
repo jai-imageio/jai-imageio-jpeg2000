@@ -10,17 +10,19 @@ The `jj2000` package in this module is licensed under the
 [JJ2000 license](LICENSE-JJ2000.txt) and is therefore
 [not compatible with the GPL 3 license](https://github.com/stain/jai-imageio-core/issues/4).
 It should however still be compatible with licenses that allow
-replacable binary dependencies, like Apache, BSD and LGPL.
+replaceable binary dependencies, like Apache, BSD and LGPL.
 
 NOTE: This is a module extracted from the
 [java.net project jai-imageio-core](https://java.net/projects/jai-imageio-core/).
-It depends on the [jai-imageio-core](https://github.com/stain/jai-imageio-core)
+It depends on the [jai-imageio-core](https://github.com/jai-imageio/jai-imageio-core)
 module.
 
 There is **NO FURTHER DEVELOPMENT** in this repository; any commits here are
 just to keep the build working with recent versions of Maven/Java - the
 date in the version number indicates the time of such modifications
 and should not have any effect on functionality.
+
+You are however welcome to raise Github pull requests for any improvements.
 
 If you are not concerned about GPL compatibility or source code
 availability, you might instead want to use

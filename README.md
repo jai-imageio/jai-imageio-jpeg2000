@@ -62,6 +62,10 @@ To use jai-imageio-core-jpeg2000 from a Maven project, add:
         <version>1.3.0</version>
     </dependency>
 
+To find the latest `<version>` above, see
+[jai-imageio-jpeg2000 at BinTray](https://bintray.com/jai-imageio/maven/jai-imageio-jpeg2000)
+
+
 jai-imageio-jpeg2000 is mirrored to Maven Central. Alternatively you can use
 this explicit repository:
 

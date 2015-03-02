@@ -9,20 +9,24 @@ JPEG2000 support for Java Advanced Imaging Image I/O Tools API core
 The `jj2000` package in this module is licensed under the
 [JJ2000 license](LICENSE-JJ2000.txt) and is therefore
 [not compatible with the GPL 3 license](https://github.com/jai-imageio/jai-imageio-core/issues/4).
-It should however still be compatible with licenses that allow
-replaceable binary dependencies, like Apache, BSD and LGPL.
 
-NOTE: This is a module extracted from the
+**WARNING** - from the [JJ2000 license](LICENSE-JJ2000.txt):
+
+> Those intending to use
+> this software module in hardware or software products are advised that
+> their use may infringe existing patents. The original developers of
+> this software module, JJ2000 Partners and ISO/IEC assume no liability
+> for use of this software module or modifications thereof. No license
+> or right to this software module is granted for non JPEG 2000 Standard
+> conforming products.
+
+**NOTE**: This is a module extracted from the
 [java.net project jai-imageio-core](https://java.net/projects/jai-imageio-core/).
 It depends on the [jai-imageio-core](https://github.com/jai-imageio/jai-imageio-core)
 module.
 
 There is **NO FURTHER DEVELOPMENT** in this repository; any commits here are
-just to keep the build working with recent versions of Maven/Java - the
-date in the version number indicates the time of such modifications
-and should not have any effect on functionality.
-
-You are however welcome to raise Github pull requests for any improvements.
+just to keep the build working with recent versions of Maven/Java.
 
 If you are not concerned about GPL compatibility or source code
 availability, you might instead want to use
@@ -32,46 +36,38 @@ but depends on the
 [binary distribution of jai_core](http://download.osgeo.org/webdav/geotools/javax/media/jai_core/1.1.3/).
 
 
+## Contribute
+
+You are welcome to raise 
+[Github pull requests](https://github.com/jai-imageio/jai-imageio-jpeg2000/pulls) for any improvements,
+or to create [GitHub issues](https://github.com/jai-imageio/jai-imageio-jpeg2000/issues) for any bugs 
+discovered.
+
+This project is maintained fully on GitHub by its community - to follow the project, simply
+[watch this project on GitHub](https://github.com/jai-imageio/jai-imageio-jpeg2000/subscription).
+
+
 Usage
 -----
 
-To build this project, use Apache Maven 2.0.9 or newer and run:
+To build this project, use Apache Maven 2.2.1 or newer and run:
 
     mvn clean install
-
-(If you are using JDK8, uncomment the `-Xdoclint:none` line in `pom.xml`)
 
 To use jai-imageio-core-jpeg2000 from a Maven project, add:
 
     <dependency>
-        <groupId>net.java.dev.jai-imageio</groupId>
+        <groupId>com.github.jai-imageio</groupId>
         <artifactId>jai-imageio-jpeg2000</artifactId>
-        <version>1.2-pre-dr-b04-2014-09-13</version>
+        <version>1.3.0-SNAPSHOT</version>
     </dependency>
-
-and:
-
-    <repositories>
-        <repository>
-            <releases />
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>mygrid-repository</id>
-            <name>myGrid Repository</name>
-            <url>http://www.mygrid.org.uk/maven/repository</url>
-        </repository>
-    </repositories>
-
-This repository includes source JARs and javadoc, which should be picked
-up for instance by the Eclipse Maven support.
 
 
 Download
 --------
 
-To download the binary JARs, browse the 
-[Maven repository](http://www.mygrid.org.uk/maven/repository/net/java/dev/jai-imageio/jai-imageio-core-jpeg2000/).
+To download the binary JARs, browse the
+[Downloads at BinTray](https://bintray.com/jai-imageio/maven/jai-imageio-jpeg2000).
 
 
 Javadoc
@@ -88,16 +84,17 @@ Copyright and licenses
 
 * Copyright © 1999/2000 JJ2000 Partners
 * Copyright © 2005 Sun Microsystems
-* Copyright © 2010-2014 University of Manchester
+* Copyright © 2010-2015 University of Manchester
+* Copyright © 2014-2015 Stian Soiland-Reyes
 
 The complete copyright notice for this project is in
 [COPYRIGHT.md](COPYRIGHT.md)
 
 The source code license for the
-[com.sun.media](src/main/java/com/sun/media) package
-and the build modifications (e.g. `pom.xml`)
-are [BSD 3-clause](http://opensource.org/licenses/BSD-3-Clause),
-see [LICENSE-Sun.txt](LICENSE-Sun.txt)
+[com.github.jaiimageio.jpeg2000](src/main/java/com/github/jaiimageio/jpeg2000) package
+and the build modifications (e.g. `pom.xml` and [tests](src/test))
+are licensed under a **BSD 3-Clause license** with an additional
+nuclear disclaimer, see [LICENSE-Sun.txt](LICENSE-Sun.txt)
 
 The [jj2000](src/main/java/jj2000) package in this module is licensed under the
 [JJ2000 license](LICENSE-JJ2000.txt) which is **not compatible

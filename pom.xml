@@ -33,11 +33,11 @@
 			<url>LICENSE-JJ2000.txt</url>
 			<distribution>repo</distribution>
 		</license>
-		<license>
-			<name>BSD 3-clause License</name>
-			<url>LICENSE-Sun.txt</url>
-			<distribution>repo</distribution>
-		</license>
+    <license>
+      <name>BSD 3-clause License w/nuclear disclaimer</name>
+      <url>LICENSE-Sun.txt</url>
+      <distribution>repo</distribution>
+    </license>
 	</licenses>
   <build>
     <plugins>

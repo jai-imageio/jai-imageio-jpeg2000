@@ -92,7 +92,7 @@ The complete copyright notice for this project is in
 The source code license for the
 [com.github.jaiimageio.jpeg2000](src/main/java/com/github/jaiimageio/jpeg2000) package
 and the build modifications (e.g. `pom.xml` and [tests](src/test))
-are licensed under [BSD 3-clause](http://opensource.org/licenses/BSD-3-Clause) with an additional
+are licensed under a **BSD 3-Clause license** with an additional
 nuclear disclaimer, see [LICENSE-Sun.txt](LICENSE-Sun.txt)
 
 The [jj2000](src/main/java/jj2000) package in this module is licensed under the

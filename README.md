@@ -1,14 +1,14 @@
 jai-imageio-jpeg2000
 ====================
 
-[![Build Status](https://travis-ci.org/stain/jai-imageio-jpeg2000.svg)](https://travis-ci.org/stain/jai-imageio-jpeg2000)
+[![Build Status](https://travis-ci.org/jai-imageio/jai-imageio-jpeg2000.svg)](https://travis-ci.org/jai-imageio/jai-imageio-jpeg2000)
 
 JPEG2000 support for Java Advanced Imaging Image I/O Tools API core
-[jai-imagecore-core](https://github.com/stain/jai-imageio-core).
+[jai-imagecore-core](https://github.com/jai-imageio/jai-imageio-core).
 
 The `jj2000` package in this module is licensed under the
 [JJ2000 license](LICENSE-JJ2000.txt) and is therefore
-[not compatible with the GPL 3 license](https://github.com/stain/jai-imageio-core/issues/4).
+[not compatible with the GPL 3 license](https://github.com/jai-imageio/jai-imageio-core/issues/4).
 It should however still be compatible with licenses that allow
 replaceable binary dependencies, like Apache, BSD and LGPL.
 
@@ -77,8 +77,8 @@ To download the binary JARs, browse the
 Javadoc
 -------
 
-* [Javadoc for jai-imageio-jpeg2000](http://stain.github.io/jai-imageio-jpeg2000/javadoc/)
-* [Javadoc for jai-imageio-core](http://stain.github.io/jai-imageio-core/javadoc/)
+* [Javadoc for jai-imageio-jpeg2000](http://jai-imageio.github.io/jai-imageio-jpeg2000/javadoc/)
+* [Javadoc for jai-imageio-core](http://jai-imageio.github.io/jai-imageio-core/javadoc/)
 
 
 
@@ -107,9 +107,9 @@ with the GNU Public License (GPL)**.
 Changelog
 ---------
 
-* 2014-09-12 -  Separated out [JPEG 2000](https://github.com/stain/jai-imageio-core/issues/4)
-      support from [jai-imageio-core](http://github.com/stain/jai-imageio-core)
-      for [licensing reasons](https://github.com/stain/jai-imageio-core/issues/4)
+* 2014-09-12 -  Separated out [JPEG 2000](https://github.com/jai-imageio/jai-imageio-core/issues/4)
+      support from [jai-imageio-core](http://github.com/jai-imageio/jai-imageio-core)
+      for [licensing reasons](https://github.com/jai-imageio/jai-imageio-core/issues/4)
 * 2014-09-13 - Include jpeg2000 plugin that was remaining in jai-imageio-core. 
       Improved javadoc.
 
@@ -117,9 +117,9 @@ Changelog
 More info
 ---------
 
-* https://github.com/stain/jai-imageio-jpeg2000
-* https://github.com/stain/jai-imageio-core
-* http://stain.github.io/jai-imageio-core/javadoc/
+* https://github.com/jai-imageio/jai-imageio-jpeg2000
+* https://github.com/jai-imageio/jai-imageio-core
+* http://jai-imageio.github.io/jai-imageio-core/javadoc/
 * https://java.net/projects/jai-imageio-core/
 * http://www.oracle.com/technetwork/java/current-142188.html
 * http://download.java.net/media/jai/builds/release/1_1_3/

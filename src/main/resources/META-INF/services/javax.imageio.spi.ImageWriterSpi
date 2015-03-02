@@ -45,4 +45,3 @@
 # --- JAI-Image I/O ImageWriter plug-ins ---
 #
 com.github.jaiimageio.jpeg2000.impl.J2KImageWriterSpi
-#com.github.jaiimageio.jpeg2000.impl.J2KImageWriterCodecLibSpi

@@ -47,22 +47,26 @@ package com.github.jaiimageio.jpeg2000.impl;
 import java.awt.Rectangle;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
-import java.util.Collections;
 import java.util.Locale;
-import java.util.Iterator;
+
 import javax.imageio.IIOImage;
 import javax.imageio.ImageWriteParam;
-import jj2000.j2k.*;
-import jj2000.j2k.roi.*;
-import jj2000.j2k.quantization.*;
-import jj2000.j2k.wavelet.analysis.AnWTFilterSpec;
-import jj2000.j2k.image.forwcomptransf.ForwCompTransfSpec;
+
+import jj2000.j2k.IntegerSpec;
+import jj2000.j2k.ModuleSpec;
+import jj2000.j2k.StringSpec;
 import jj2000.j2k.entropy.CBlkSizeSpec;
 import jj2000.j2k.entropy.PrecinctSizeSpec;
 import jj2000.j2k.entropy.ProgressionSpec;
-import jj2000.j2k.image.BlkImgDataSrc;
 import jj2000.j2k.entropy.encoder.LayersInfo;
-import com.sun.media.imageio.plugins.jpeg2000.J2KImageWriteParam;
+import jj2000.j2k.image.forwcomptransf.ForwCompTransfSpec;
+import jj2000.j2k.quantization.GuardBitsSpec;
+import jj2000.j2k.quantization.QuantStepSizeSpec;
+import jj2000.j2k.quantization.QuantTypeSpec;
+import jj2000.j2k.roi.MaxShiftSpec;
+import jj2000.j2k.wavelet.analysis.AnWTFilterSpec;
+
+import com.github.jaiimageio.jpeg2000.J2KImageWriteParam;
 
 /**
  * A subclass of <code>ImageWriteParam</code> for writing images in

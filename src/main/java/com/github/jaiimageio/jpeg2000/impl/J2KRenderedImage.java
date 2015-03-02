@@ -48,9 +48,11 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
-import java.io.*;
+import java.io.IOException;
+
 import javax.imageio.stream.ImageInputStream;
-import jj2000.j2k.codestream.reader.*;
+
+import jj2000.j2k.codestream.reader.HeaderDecoder;
 
 import com.sun.media.imageioimpl.common.SimpleRenderedImage;
 

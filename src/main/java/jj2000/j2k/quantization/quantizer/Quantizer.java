@@ -43,13 +43,11 @@
  *  */
 package jj2000.j2k.quantization.quantizer;
 
-import jj2000.j2k.codestream.writer.*;
-import jj2000.j2k.wavelet.analysis.*;
-import jj2000.j2k.quantization.*;
-import jj2000.j2k.wavelet.*;
 //import jj2000.j2k.encoder.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
+import jj2000.j2k.image.ImgDataAdapter;
+import jj2000.j2k.wavelet.Subband;
+import jj2000.j2k.wavelet.analysis.CBlkWTDataSrc;
+import jj2000.j2k.wavelet.analysis.SubbandAn;
 
 import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 

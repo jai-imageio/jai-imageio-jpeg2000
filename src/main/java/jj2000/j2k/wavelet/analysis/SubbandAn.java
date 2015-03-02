@@ -49,7 +49,8 @@
 
 package jj2000.j2k.wavelet.analysis;
 
-import jj2000.j2k.wavelet.*;
+import jj2000.j2k.wavelet.Subband;
+import jj2000.j2k.wavelet.WaveletFilter;
 
 /**
  * This class represents a subband in a bidirectional tree structure

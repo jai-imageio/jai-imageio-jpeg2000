@@ -43,13 +43,12 @@
  *  */
 package jj2000.j2k.image.forwcomptransf;
 
-import jj2000.j2k.wavelet.analysis.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.*;
+import java.util.StringTokenizer;
 
-import java.util.*;
+import jj2000.j2k.image.CompTransfSpec;
+import jj2000.j2k.wavelet.FilterTypes;
+import jj2000.j2k.wavelet.analysis.AnWTFilter;
+import jj2000.j2k.wavelet.analysis.AnWTFilterSpec;
 
 import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 /**

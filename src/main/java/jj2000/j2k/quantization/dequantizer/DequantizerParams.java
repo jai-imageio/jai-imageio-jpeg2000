@@ -46,8 +46,6 @@
 
 package jj2000.j2k.quantization.dequantizer;
 
-import jj2000.j2k.entropy.decoder.*;
-import jj2000.j2k.util.*;
 
 /**
  * This is the generic ineterface for dequantization parameters. Generally,

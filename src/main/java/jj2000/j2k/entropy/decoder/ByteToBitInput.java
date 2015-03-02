@@ -44,7 +44,6 @@
  * */
 package jj2000.j2k.entropy.decoder;
 
-import jj2000.j2k.io.*;
 
 /**
  * This class provides an adapter to perform bit based input on byte based

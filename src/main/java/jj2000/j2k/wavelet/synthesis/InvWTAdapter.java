@@ -48,8 +48,7 @@ package jj2000.j2k.wavelet.synthesis;
 
 import java.awt.Point;
 
-import jj2000.j2k.decoder.*;
-import jj2000.j2k.image.*;
+import jj2000.j2k.decoder.DecoderSpecs;
 
 /**
  * This class provides default implementation of the methods in the 'InvWT'

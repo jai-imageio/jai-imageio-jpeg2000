@@ -43,15 +43,16 @@
  *  */
 package jj2000.j2k.decoder;
 
-import jj2000.j2k.codestream.reader.*;
-import jj2000.j2k.wavelet.synthesis.*;
-import jj2000.j2k.quantization.*;
-import jj2000.j2k.entropy.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.roi.*;
-import jj2000.j2k.*;
+import jj2000.j2k.IntegerSpec;
+import jj2000.j2k.ModuleSpec;
+import jj2000.j2k.entropy.CBlkSizeSpec;
+import jj2000.j2k.entropy.PrecinctSizeSpec;
+import jj2000.j2k.image.CompTransfSpec;
+import jj2000.j2k.quantization.GuardBitsSpec;
+import jj2000.j2k.quantization.QuantStepSizeSpec;
+import jj2000.j2k.quantization.QuantTypeSpec;
+import jj2000.j2k.roi.MaxShiftSpec;
+import jj2000.j2k.wavelet.synthesis.SynWTFilterSpec;
 
 /**
  * This class holds references to each module specifications used in the

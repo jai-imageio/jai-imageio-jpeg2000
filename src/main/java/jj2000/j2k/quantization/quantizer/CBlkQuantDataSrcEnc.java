@@ -47,10 +47,10 @@
 
 package jj2000.j2k.quantization.quantizer;
 
-import jj2000.j2k.wavelet.analysis.*;
-import jj2000.j2k.entropy.encoder.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
+import jj2000.j2k.entropy.encoder.EntropyCoder;
+import jj2000.j2k.wavelet.analysis.CBlkWTData;
+import jj2000.j2k.wavelet.analysis.CBlkWTDataSrc;
+import jj2000.j2k.wavelet.analysis.ForwWTDataProps;
 
 /**
  * This interface defines a source of quantized wavelet coefficients and

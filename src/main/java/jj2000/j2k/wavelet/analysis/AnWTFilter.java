@@ -46,13 +46,8 @@
  */
 package jj2000.j2k.wavelet.analysis;
 
-import jj2000.j2k.codestream.writer.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-
-import java.util.*;
-import java.io.*;
+import jj2000.j2k.wavelet.FilterTypes;
+import jj2000.j2k.wavelet.WaveletFilter;
 
 /**
  * This abstract class defines the methods of all analysis wavelet

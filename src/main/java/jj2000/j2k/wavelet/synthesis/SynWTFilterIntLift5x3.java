@@ -44,9 +44,6 @@
  *  */
 package jj2000.j2k.wavelet.synthesis;
 
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.*;
 
 /**
  * This class inherits from the synthesis wavelet filter definition for int

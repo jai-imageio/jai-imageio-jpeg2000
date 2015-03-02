@@ -43,8 +43,7 @@
  */
 package jj2000.j2k.roi;
 
-import java.util.*;
-import jj2000.j2k.*;
+import jj2000.j2k.ModuleSpec;
 
 /**
  * This class contains the maxshift scaling value for each tile-component.

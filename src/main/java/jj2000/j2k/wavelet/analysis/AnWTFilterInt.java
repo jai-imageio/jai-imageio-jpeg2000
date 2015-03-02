@@ -49,8 +49,7 @@
 
 package jj2000.j2k.wavelet.analysis;
 
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
+import jj2000.j2k.image.DataBlk;
 
 /**
  * This extends the analysis wavelet filter general definitions of

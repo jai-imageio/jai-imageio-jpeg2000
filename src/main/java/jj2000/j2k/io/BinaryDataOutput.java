@@ -48,7 +48,7 @@
 
 package jj2000.j2k.io;
 
-import java.io.*;
+import java.io.IOException;
 
 /**
  * This interface defines the output of binary data to streams and/or files.

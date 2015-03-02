@@ -45,8 +45,9 @@
 package jj2000.j2k.image;
 import java.awt.Point;
 
-import jj2000.j2k.util.*;
-import jj2000.j2k.*;
+import jj2000.j2k.NoNextElementException;
+import jj2000.j2k.util.FacilityManager;
+import jj2000.j2k.util.MsgLogger;
 
 /**
  * This class places an image in the canvas coordinate system, tiles it, if so

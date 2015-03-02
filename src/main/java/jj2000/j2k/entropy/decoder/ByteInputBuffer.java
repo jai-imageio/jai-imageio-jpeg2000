@@ -51,7 +51,9 @@
 
 package jj2000.j2k.entropy.decoder;
 
-import java.io.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * This class provides a byte input facility from byte buffers. It is similar

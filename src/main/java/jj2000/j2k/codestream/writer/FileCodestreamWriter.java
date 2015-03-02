@@ -43,9 +43,13 @@
  * */
 package jj2000.j2k.codestream.writer;
 
-import jj2000.j2k.codestream.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
-import java.io.*;
+import jj2000.j2k.codestream.Markers;
 
 /**
  * This class implements a CodestreamWriter for Java streams. The streams can

@@ -43,11 +43,15 @@
  * */
 package jj2000.j2k.image.forwcomptransf;
 
-import jj2000.j2k.wavelet.analysis.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.*;
+import jj2000.j2k.ModuleSpec;
+import jj2000.j2k.image.BlkImgDataSrc;
+import jj2000.j2k.image.CompTransfSpec;
+import jj2000.j2k.image.DataBlk;
+import jj2000.j2k.image.DataBlkFloat;
+import jj2000.j2k.image.DataBlkInt;
+import jj2000.j2k.image.ImgDataAdapter;
+import jj2000.j2k.util.MathUtil;
+import jj2000.j2k.wavelet.analysis.AnWTFilterSpec;
 
 import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 /**

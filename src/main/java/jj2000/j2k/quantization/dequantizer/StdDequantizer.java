@@ -47,16 +47,14 @@
  * */
 package jj2000.j2k.quantization.dequantizer;
 
-import jj2000.j2k.wavelet.synthesis.*;
-import jj2000.j2k.entropy.decoder.*;
-import jj2000.j2k.quantization.*;
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.entropy.*;
-import jj2000.j2k.decoder.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.io.*;
-
-import java.io.*;
+import jj2000.j2k.decoder.DecoderSpecs;
+import jj2000.j2k.image.DataBlk;
+import jj2000.j2k.image.DataBlkFloat;
+import jj2000.j2k.image.DataBlkInt;
+import jj2000.j2k.quantization.GuardBitsSpec;
+import jj2000.j2k.quantization.QuantStepSizeSpec;
+import jj2000.j2k.quantization.QuantTypeSpec;
+import jj2000.j2k.wavelet.synthesis.SubbandSyn;
 
 /**
  * This class implements a scalar dequantizer with deadzone. The output can be

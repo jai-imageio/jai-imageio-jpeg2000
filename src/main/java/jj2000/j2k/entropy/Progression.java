@@ -47,7 +47,7 @@
  */
 package jj2000.j2k.entropy;
 
-import jj2000.j2k.codestream.*;
+import jj2000.j2k.codestream.ProgressionType;
 
 /**
  * This class holds one of the different progression orders defined in

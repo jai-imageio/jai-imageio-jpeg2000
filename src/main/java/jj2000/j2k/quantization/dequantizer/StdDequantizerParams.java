@@ -43,16 +43,8 @@
  */
 package jj2000.j2k.quantization.dequantizer;
 
-import jj2000.j2k.io.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.quantization.*;
-import jj2000.j2k.entropy.decoder.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.codestream.reader.*;
-
-import java.io.*;
+import jj2000.j2k.quantization.QuantizationType;
+import jj2000.j2k.wavelet.Subband;
 
 /**
  * This class holds the parameters for the scalar deadzone dequantizer

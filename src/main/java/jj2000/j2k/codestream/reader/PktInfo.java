@@ -43,7 +43,6 @@
  * */
 package jj2000.j2k.codestream.reader;
 
-import java.util.*;
 
 /**
  * This class defines an object used to countain informations about a packet

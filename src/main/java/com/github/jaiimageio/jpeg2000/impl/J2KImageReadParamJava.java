@@ -45,7 +45,8 @@
 package com.github.jaiimageio.jpeg2000.impl;
 
 import javax.imageio.ImageReadParam;
-import com.sun.media.imageio.plugins.jpeg2000.J2KImageReadParam;
+
+import com.github.jaiimageio.jpeg2000.J2KImageReadParam;
 /**
  * A subclass of <code>ImageReadParam</code> for reading images in
  * the JPEG 2000 format.

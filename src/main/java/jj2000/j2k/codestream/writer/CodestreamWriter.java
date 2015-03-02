@@ -43,7 +43,7 @@
  * */
 package jj2000.j2k.codestream.writer;
 
-import java.io.*;
+import java.io.IOException;
 
 /**
  * This is the abstract class for writing to a bit stream. Data is

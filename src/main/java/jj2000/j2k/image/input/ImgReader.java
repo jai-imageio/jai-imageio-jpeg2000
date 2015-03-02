@@ -44,11 +44,11 @@
  */
 package jj2000.j2k.image.input;
 
-import jj2000.j2k.image.*;
-import jj2000.j2k.*;
-import java.io.*;
-
 import java.awt.Point;
+import java.io.IOException;
+
+import jj2000.j2k.NoNextElementException;
+import jj2000.j2k.image.BlkImgDataSrc;
 
 /**
  * This is the generic interface to be implemented by all image file (or other

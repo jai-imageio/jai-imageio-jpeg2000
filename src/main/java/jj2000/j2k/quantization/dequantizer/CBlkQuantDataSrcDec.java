@@ -45,9 +45,11 @@
  * */
 package jj2000.j2k.quantization.dequantizer;
 
-import jj2000.j2k.wavelet.synthesis.*;
-import jj2000.j2k.entropy.decoder.*;
-import jj2000.j2k.image.*;
+import jj2000.j2k.entropy.decoder.EntropyDecoder;
+import jj2000.j2k.image.DataBlk;
+import jj2000.j2k.wavelet.synthesis.CBlkWTDataSrcDec;
+import jj2000.j2k.wavelet.synthesis.InvWTData;
+import jj2000.j2k.wavelet.synthesis.SubbandSyn;
 
 /**
  * This interface defines a source of quantized wavelet coefficients and

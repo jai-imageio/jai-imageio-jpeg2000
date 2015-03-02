@@ -47,12 +47,8 @@
  */
 package jj2000.j2k.wavelet.synthesis;
 
-import jj2000.j2k.quantization.dequantizer.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.decoder.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.*;
+import jj2000.j2k.decoder.DecoderSpecs;
+import jj2000.j2k.image.BlkImgDataSrc;
 
 /**
  * This abstract class extends the WaveletTransform one with the specifics of

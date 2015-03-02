@@ -44,10 +44,7 @@
  * */
 package jj2000.j2k.wavelet.analysis;
 
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.*;
-import jj2000.j2k.codestream.writer.*;
+import jj2000.j2k.wavelet.FilterTypes;
 
 /**
  * This class inherits from the analysis wavelet filter definition

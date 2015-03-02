@@ -44,7 +44,10 @@
 
 package jj2000.j2k.io;
 
-import java.io.*;
+import java.io.EOFException;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
 /**
  * This class defines a Buffered Random Access File.  It implements the

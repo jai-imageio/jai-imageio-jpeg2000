@@ -48,8 +48,11 @@
 
 package jj2000.j2k.codestream.reader;
 
-import jj2000.j2k.io.*;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+
+import jj2000.j2k.io.RandomAccessIO;
 
 /**
  * This class provides a bit based reading facility from a byte based one,

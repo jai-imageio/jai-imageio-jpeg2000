@@ -51,7 +51,6 @@
 
 package jj2000.j2k.entropy.encoder;
 
-import java.io.*;
 
 /**
  * This class provides a buffering output stream similar to

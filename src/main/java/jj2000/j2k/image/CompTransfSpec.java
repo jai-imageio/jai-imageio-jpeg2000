@@ -46,12 +46,8 @@
  */
 package jj2000.j2k.image;
 
-import jj2000.j2k.image.invcomptransf.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.*;
-
-import java.util.*;
+import jj2000.j2k.ModuleSpec;
+import jj2000.j2k.image.invcomptransf.InvCompTransf;
 
 /**
  * This class extends ModuleSpec class in order to hold tile

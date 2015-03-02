@@ -44,9 +44,8 @@
  * */
 package jj2000.j2k.entropy.encoder;
 
-import jj2000.j2k.entropy.*;
-import jj2000.j2k.wavelet.analysis.*;
-import java.io.*;
+import jj2000.j2k.entropy.CodedCBlk;
+import jj2000.j2k.wavelet.analysis.SubbandAn;
 
 /**
  * This class stores coded (compressed) code-blocks with their associated

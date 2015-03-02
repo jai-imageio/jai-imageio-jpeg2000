@@ -46,7 +46,9 @@ package com.github.jaiimageio.jpeg2000.impl;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
+
 import javax.imageio.stream.ImageInputStream;
+
 import jj2000.j2k.io.EndianType;
 import jj2000.j2k.io.RandomAccessIO;
 

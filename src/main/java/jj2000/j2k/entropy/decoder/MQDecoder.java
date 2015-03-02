@@ -47,11 +47,7 @@
  */
 package jj2000.j2k.entropy.decoder;
 
-import jj2000.j2k.entropy.decoder.*;
-import jj2000.j2k.entropy.*;
-import jj2000.j2k.io.*;
-import jj2000.j2k.util.*;
-import java.io.*;
+import jj2000.j2k.util.ArrayUtil;
 
 /**
  * This class implements the MQ arithmetic decoder. It is implemented using

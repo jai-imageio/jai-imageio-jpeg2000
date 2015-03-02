@@ -43,20 +43,21 @@
  * */
 package jj2000.j2k.entropy.encoder;
 import java.awt.Point;
+import java.util.Enumeration;
+import java.util.Stack;
 
-import jj2000.j2k.quantization.quantizer.*;
-import jj2000.j2k.wavelet.analysis.*;
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.entropy.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.io.*;
-import jj2000.j2k.*;
-
-import java.util.*;
-
-import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
+import jj2000.j2k.ModuleSpec;
+import jj2000.j2k.StringSpec;
+import jj2000.j2k.entropy.CBlkSizeSpec;
+import jj2000.j2k.entropy.PrecinctSizeSpec;
+import jj2000.j2k.entropy.StdEntropyCoderOptions;
+import jj2000.j2k.quantization.quantizer.CBlkQuantDataSrcEnc;
+import jj2000.j2k.util.ArrayUtil;
+import jj2000.j2k.util.FacilityManager;
+import jj2000.j2k.util.MsgLogger;
+import jj2000.j2k.util.ThreadPool;
+import jj2000.j2k.wavelet.Subband;
+import jj2000.j2k.wavelet.analysis.CBlkWTData;
 
 /**
  * This class implements the JPEG 2000 entropy coder, which codes stripes in

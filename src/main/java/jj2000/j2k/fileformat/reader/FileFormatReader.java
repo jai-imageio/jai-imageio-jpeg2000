@@ -42,20 +42,20 @@
 package jj2000.j2k.fileformat.reader;
 
 import java.awt.Transparency;
-import java.awt.color.ICC_Profile;
 import java.awt.color.ColorSpace;
 import java.awt.color.ICC_ColorSpace;
+import java.awt.color.ICC_Profile;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.IndexColorModel;
+import java.io.EOFException;
+import java.io.IOException;
+import java.util.Vector;
 
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.fileformat.*;
-import jj2000.j2k.io.*;
-
-import java.util.*;
-import java.io.*;
+import jj2000.j2k.codestream.Markers;
+import jj2000.j2k.fileformat.FileFormatBoxes;
+import jj2000.j2k.io.RandomAccessIO;
 
 import com.github.jaiimageio.jpeg2000.impl.BitsPerComponentBox;
 import com.github.jaiimageio.jpeg2000.impl.Box;

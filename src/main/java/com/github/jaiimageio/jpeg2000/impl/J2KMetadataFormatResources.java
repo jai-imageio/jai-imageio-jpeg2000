@@ -44,7 +44,7 @@
  */
 package com.github.jaiimageio.jpeg2000.impl;
 
-import java.util.*;
+import java.util.ListResourceBundle;
 
 public class J2KMetadataFormatResources extends ListResourceBundle {
     static final Object[][] contents = {

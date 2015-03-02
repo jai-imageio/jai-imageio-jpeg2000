@@ -50,7 +50,7 @@
 
 package jj2000.j2k.wavelet;
 
-import jj2000.j2k.image.*;
+import jj2000.j2k.image.ImgData;
 
 /**
  * This interface defines how a forward or inverse wavelet transform

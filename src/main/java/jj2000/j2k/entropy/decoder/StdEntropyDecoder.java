@@ -42,16 +42,15 @@
  * Copyright (c) 1999/2000 JJ2000 Partners.
  * */
 package jj2000.j2k.entropy.decoder;
-import java.awt.Point;
-
-import jj2000.j2k.wavelet.synthesis.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.entropy.*;
-import jj2000.j2k.decoder.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.io.*;
-import jj2000.j2k.*;
+import jj2000.j2k.decoder.DecoderSpecs;
+import jj2000.j2k.entropy.StdEntropyCoderOptions;
+import jj2000.j2k.image.DataBlk;
+import jj2000.j2k.image.DataBlkInt;
+import jj2000.j2k.util.ArrayUtil;
+import jj2000.j2k.util.FacilityManager;
+import jj2000.j2k.util.MsgLogger;
+import jj2000.j2k.wavelet.Subband;
+import jj2000.j2k.wavelet.synthesis.SubbandSyn;
 
 /**
  * This class implements the JPEG 2000 entropy decoder, which codes stripes in

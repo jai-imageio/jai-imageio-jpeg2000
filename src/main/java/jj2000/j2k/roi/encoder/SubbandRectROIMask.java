@@ -43,13 +43,8 @@
  * */
 package jj2000.j2k.roi.encoder;
 
-import jj2000.j2k.codestream.writer.*;
-import jj2000.j2k.wavelet.analysis.*;
-import jj2000.j2k.quantization.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.roi.*;
+import jj2000.j2k.wavelet.Subband;
+import jj2000.j2k.wavelet.WaveletFilter;
 
 /**
  * This class describes the ROI mask for a single subband. Each object of the

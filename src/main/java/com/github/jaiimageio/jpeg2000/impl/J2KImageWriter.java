@@ -46,31 +46,27 @@ package com.github.jaiimageio.jpeg2000.impl;
 
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferByte;
 import java.awt.image.IndexColorModel;
 import java.awt.image.MultiPixelPackedSampleModel;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
-
 import java.io.File;
 import java.io.IOException;
-
 import java.util.Arrays;
 import java.util.List;
 
-import javax.imageio.IIOImage;
 import javax.imageio.IIOException;
+import javax.imageio.IIOImage;
 import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
+import javax.imageio.metadata.IIOInvalidTreeException;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataFormatImpl;
-import javax.imageio.metadata.IIOInvalidTreeException;
 import javax.imageio.spi.ImageWriterSpi;
 import javax.imageio.stream.ImageOutputStream;
 
-import jj2000.j2k.codestream.writer.CodestreamWriter;
 import jj2000.j2k.codestream.writer.FileCodestreamWriter;
 import jj2000.j2k.codestream.writer.HeaderEncoder;
 import jj2000.j2k.entropy.encoder.EntropyCoder;
@@ -84,9 +80,8 @@ import jj2000.j2k.roi.encoder.ROIScaler;
 import jj2000.j2k.util.CodestreamManipulator;
 import jj2000.j2k.wavelet.analysis.ForwardWT;
 
+import com.github.jaiimageio.jpeg2000.J2KImageWriteParam;
 import com.sun.media.imageioimpl.common.ImageUtil;
-import com.sun.media.imageio.plugins.jpeg2000.J2KImageWriteParam;
-import org.w3c.dom.Node;
 
 /**
  * The Java Image IO plugin writer for encoding a RenderedImage into

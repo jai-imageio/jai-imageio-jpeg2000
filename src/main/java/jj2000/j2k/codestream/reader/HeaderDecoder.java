@@ -43,23 +43,38 @@
  * */
 package jj2000.j2k.codestream.reader;
 import java.awt.Point;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.util.Hashtable;
+import java.util.Vector;
 
-import jj2000.j2k.quantization.dequantizer.*;
-import jj2000.j2k.wavelet.synthesis.*;
-import jj2000.j2k.entropy.decoder.*;
-import jj2000.j2k.quantization.*;
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.entropy.*;
-import jj2000.j2k.decoder.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.roi.*;
-import jj2000.j2k.io.*;
-import jj2000.j2k.*;
-
-import java.io.*;
-import java.util.*;
+import jj2000.j2k.ModuleSpec;
+import jj2000.j2k.NotImplementedError;
+import jj2000.j2k.codestream.CorruptedCodestreamException;
+import jj2000.j2k.codestream.HeaderInfo;
+import jj2000.j2k.codestream.Markers;
+import jj2000.j2k.codestream.ProgressionType;
+import jj2000.j2k.decoder.DecoderSpecs;
+import jj2000.j2k.entropy.StdEntropyCoderOptions;
+import jj2000.j2k.entropy.decoder.CodedCBlkDataSrcDec;
+import jj2000.j2k.entropy.decoder.EntropyDecoder;
+import jj2000.j2k.entropy.decoder.StdEntropyDecoder;
+import jj2000.j2k.io.RandomAccessIO;
+import jj2000.j2k.quantization.dequantizer.CBlkQuantDataSrcDec;
+import jj2000.j2k.quantization.dequantizer.Dequantizer;
+import jj2000.j2k.quantization.dequantizer.StdDequantizer;
+import jj2000.j2k.quantization.dequantizer.StdDequantizerParams;
+import jj2000.j2k.roi.MaxShiftSpec;
+import jj2000.j2k.roi.ROIDeScaler;
+import jj2000.j2k.util.FacilityManager;
+import jj2000.j2k.util.MsgLogger;
+import jj2000.j2k.wavelet.FilterTypes;
+import jj2000.j2k.wavelet.synthesis.SynWTFilter;
+import jj2000.j2k.wavelet.synthesis.SynWTFilterFloatLift9x7;
+import jj2000.j2k.wavelet.synthesis.SynWTFilterIntLift5x3;
 
 import com.github.jaiimageio.jpeg2000.impl.J2KImageReadParamJava;
 

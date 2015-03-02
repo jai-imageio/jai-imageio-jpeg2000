@@ -44,17 +44,20 @@
  * */
 package jj2000.j2k.entropy.encoder;
 import java.awt.Point;
+import java.io.IOException;
 
-import jj2000.j2k.codestream.writer.*;
-import jj2000.j2k.wavelet.analysis.*;
-import jj2000.j2k.entropy.encoder.*;
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.entropy.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-
-import java.util.Vector;
-import java.io.*;
+import jj2000.j2k.codestream.Markers;
+import jj2000.j2k.codestream.PrecInfo;
+import jj2000.j2k.codestream.ProgressionType;
+import jj2000.j2k.codestream.writer.BitOutputBuffer;
+import jj2000.j2k.codestream.writer.CodestreamWriter;
+import jj2000.j2k.codestream.writer.PktEncoder;
+import jj2000.j2k.entropy.Progression;
+import jj2000.j2k.util.FacilityManager;
+import jj2000.j2k.util.MathUtil;
+import jj2000.j2k.util.MsgLogger;
+import jj2000.j2k.util.ProgressWatch;
+import jj2000.j2k.wavelet.analysis.SubbandAn;
 
 import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 /**

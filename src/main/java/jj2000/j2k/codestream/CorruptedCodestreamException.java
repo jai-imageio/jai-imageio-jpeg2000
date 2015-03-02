@@ -49,7 +49,7 @@
 
 package jj2000.j2k.codestream;
 
-import java.io.*;
+import java.io.IOException;
 
 /**
  * Thsi exception is thrown whenever an illegal value is read from a

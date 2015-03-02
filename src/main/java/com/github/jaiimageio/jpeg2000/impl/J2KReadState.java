@@ -44,53 +44,39 @@
  */
 package com.github.jaiimageio.jpeg2000.impl;
 
-import javax.imageio.IIOException;
-import javax.imageio.ImageReader;
-import javax.imageio.ImageReadParam;
-import javax.imageio.ImageTypeSpecifier;
-import javax.imageio.metadata.IIOMetadata;
-import javax.imageio.spi.ImageReaderSpi;
-import javax.imageio.stream.ImageInputStream;
-
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferByte;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
-import java.awt.image.ComponentSampleModel;
-import java.awt.image.DirectColorModel;
-import java.awt.image.IndexColorModel;
+import java.awt.image.DataBuffer;
 import java.awt.image.MultiPixelPackedSampleModel;
 import java.awt.image.PixelInterleavedSampleModel;
 import java.awt.image.Raster;
-import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
-import java.awt.image.SinglePixelPackedSampleModel;
 import java.awt.image.WritableRaster;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.EOFException;
+import java.io.IOException;
 import java.util.Hashtable;
-import java.util.Iterator;
 
-import jj2000.j2k.quantization.dequantizer.*;
-import jj2000.j2k.wavelet.synthesis.*;
-import jj2000.j2k.image.invcomptransf.*;
-import jj2000.j2k.fileformat.reader.*;
-import jj2000.j2k.codestream.reader.*;
-import jj2000.j2k.entropy.decoder.*;
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.decoder.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.roi.*;
-import jj2000.j2k.io.*;
-import jj2000.j2k.*;
+import javax.imageio.ImageTypeSpecifier;
+import javax.imageio.stream.ImageInputStream;
+
+import jj2000.j2k.codestream.HeaderInfo;
+import jj2000.j2k.codestream.reader.BitstreamReaderAgent;
+import jj2000.j2k.codestream.reader.HeaderDecoder;
+import jj2000.j2k.decoder.DecoderSpecs;
+import jj2000.j2k.entropy.decoder.EntropyDecoder;
+import jj2000.j2k.fileformat.reader.FileFormatReader;
+import jj2000.j2k.image.DataBlkInt;
+import jj2000.j2k.image.ImgDataConverter;
+import jj2000.j2k.image.invcomptransf.InvCompTransf;
+import jj2000.j2k.io.RandomAccessIO;
+import jj2000.j2k.quantization.dequantizer.Dequantizer;
+import jj2000.j2k.roi.ROIDeScaler;
+import jj2000.j2k.wavelet.synthesis.InverseWT;
 
 import com.sun.media.imageioimpl.common.ImageUtil;
 

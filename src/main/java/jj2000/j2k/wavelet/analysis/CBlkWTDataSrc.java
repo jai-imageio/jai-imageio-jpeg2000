@@ -49,8 +49,7 @@
 
 package jj2000.j2k.wavelet.analysis;
 
-import jj2000.j2k.image.*;
-import jj2000.j2k.wavelet.*;
+import jj2000.j2k.wavelet.WaveletTransform;
 
 /**
  * This abstract class defines methods to transfer wavelet data in a

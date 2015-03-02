@@ -48,7 +48,9 @@
 
 package jj2000.j2k.util;
 
-import java.io.*;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.Writer;
 
 /**
  * This class implements the MsgLogger interface for streams. Streams can

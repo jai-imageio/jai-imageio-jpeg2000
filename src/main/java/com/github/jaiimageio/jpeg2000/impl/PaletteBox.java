@@ -45,8 +45,10 @@
 package com.github.jaiimageio.jpeg2000.impl;
 
 import java.awt.image.IndexColorModel;
+
 import javax.imageio.metadata.IIOInvalidTreeException;
 import javax.imageio.metadata.IIOMetadataNode;
+
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 

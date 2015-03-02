@@ -43,13 +43,11 @@
  * */
 package jj2000.j2k.entropy;
 
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.*;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 
-import java.util.*;
+import jj2000.j2k.ModuleSpec;
+import jj2000.j2k.util.MathUtil;
 
 import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 /**

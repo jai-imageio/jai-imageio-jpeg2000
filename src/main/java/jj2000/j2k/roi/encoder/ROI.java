@@ -43,14 +43,7 @@
  */
 package jj2000.j2k.roi.encoder;
 
-import jj2000.j2k.codestream.writer.*;
-import jj2000.j2k.wavelet.analysis.*;
-import jj2000.j2k.quantization.*;
-import jj2000.j2k.image.input.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.roi.*;
+import jj2000.j2k.image.input.ImgReaderPGM;
 
 /**
  * This class contains the shape of a single ROI. In the current

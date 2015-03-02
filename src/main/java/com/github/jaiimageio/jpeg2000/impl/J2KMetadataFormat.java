@@ -46,16 +46,14 @@ package com.github.jaiimageio.jpeg2000.impl;
 
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
-
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
-import javax.imageio.metadata.*;
+
 import javax.imageio.ImageTypeSpecifier;
+import javax.imageio.metadata.IIOMetadataFormatImpl;
 
 public class J2KMetadataFormat extends IIOMetadataFormatImpl {
     /** The table to link the child to its parent.

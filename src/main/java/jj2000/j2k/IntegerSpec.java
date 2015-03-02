@@ -46,10 +46,7 @@
  */
 package jj2000.j2k;
 
-import jj2000.j2k.util.*;
-import jj2000.j2k.*;
-
-import java.util.*;
+import java.util.StringTokenizer;
 
 import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 

@@ -43,9 +43,10 @@
  * $State: Exp $
  */
 package com.github.jaiimageio.jpeg2000.impl;
-import org.w3c.dom.Node;
 import javax.imageio.metadata.IIOInvalidTreeException;
 import javax.imageio.metadata.IIOMetadataNode;
+
+import org.w3c.dom.Node;
 
 /** This class is defined to represent a Signature Box of JPEG JP2
  *  file format.  This type of box has a fixed length of 12, a type of "jP  "

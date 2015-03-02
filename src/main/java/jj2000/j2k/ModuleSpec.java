@@ -44,7 +44,8 @@
 package jj2000.j2k;
 
 import java.awt.Point;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 /**
  * This generic class is used to handle values to be used by a module for each

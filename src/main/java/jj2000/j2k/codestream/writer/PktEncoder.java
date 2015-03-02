@@ -45,16 +45,15 @@
 
 package jj2000.j2k.codestream.writer;
 import java.awt.Point;
-
-import jj2000.j2k.wavelet.analysis.*;
-import jj2000.j2k.entropy.encoder.*;
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.*;
-
 import java.util.Vector;
+
+import jj2000.j2k.codestream.CBlkCoordInfo;
+import jj2000.j2k.codestream.PrecInfo;
+import jj2000.j2k.entropy.encoder.CBlkRateDistStats;
+import jj2000.j2k.entropy.encoder.CodedCBlkDataSrcEnc;
+import jj2000.j2k.util.ArrayUtil;
+import jj2000.j2k.util.MathUtil;
+import jj2000.j2k.wavelet.analysis.SubbandAn;
 
 import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 /**

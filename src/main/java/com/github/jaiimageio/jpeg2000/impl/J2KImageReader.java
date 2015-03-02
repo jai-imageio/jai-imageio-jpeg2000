@@ -44,40 +44,27 @@
  */
 package com.github.jaiimageio.jpeg2000.impl;
 
-import java.awt.Rectangle;
 import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.awt.image.Raster;
+import java.awt.image.RenderedImage;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 
-import javax.imageio.IIOException;
-import javax.imageio.ImageReader;
 import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
 import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.stream.ImageInputStream;
-import com.sun.media.imageio.plugins.jpeg2000.J2KImageReadParam;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.Raster;
-import java.awt.image.RenderedImage;
+import jj2000.j2k.codestream.reader.HeaderDecoder;
+import jj2000.j2k.util.FacilityManager;
+import jj2000.j2k.util.MsgLogger;
 
-import java.io.*;
-import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
-
-import jj2000.j2k.quantization.dequantizer.*;
-import jj2000.j2k.wavelet.synthesis.*;
-import jj2000.j2k.image.invcomptransf.*;
-import jj2000.j2k.fileformat.reader.*;
-import jj2000.j2k.codestream.reader.*;
-import jj2000.j2k.entropy.decoder.*;
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.decoder.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.roi.*;
-import jj2000.j2k.io.*;
-import jj2000.j2k.*;
+import com.github.jaiimageio.jpeg2000.J2KImageReadParam;
 
 /** This class is the Java Image IO plugin reader for JPEG 2000 JP2 image file
  *  format.  It has the capability to load the compressed bilevel images,

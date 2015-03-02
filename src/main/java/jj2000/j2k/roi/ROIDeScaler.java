@@ -44,18 +44,11 @@
  * */
 package jj2000.j2k.roi;
 
-import jj2000.j2k.quantization.dequantizer.*;
-import jj2000.j2k.codestream.reader.*;
-import jj2000.j2k.wavelet.synthesis.*;
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.entropy.*;
-import jj2000.j2k.decoder.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.util.*;
-import jj2000.j2k.io.*;
-import jj2000.j2k.*;
-
-import java.io.*;
+import jj2000.j2k.decoder.DecoderSpecs;
+import jj2000.j2k.image.DataBlk;
+import jj2000.j2k.quantization.dequantizer.CBlkQuantDataSrcDec;
+import jj2000.j2k.wavelet.synthesis.MultiResImgDataAdapter;
+import jj2000.j2k.wavelet.synthesis.SubbandSyn;
 
 import com.github.jaiimageio.jpeg2000.impl.J2KImageReadParamJava;
 

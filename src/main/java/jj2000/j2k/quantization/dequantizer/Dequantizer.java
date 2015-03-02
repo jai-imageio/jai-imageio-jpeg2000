@@ -42,18 +42,14 @@
  * Copyright (c) 1999/2000 JJ2000 Partners.
  */
 package jj2000.j2k.quantization.dequantizer;
-import jj2000.j2k.image.invcomptransf.*;
-import jj2000.j2k.wavelet.synthesis.*;
-import jj2000.j2k.entropy.decoder.*;
-import jj2000.j2k.codestream.*;
-import jj2000.j2k.entropy.*;
-import jj2000.j2k.decoder.*;
-import jj2000.j2k.wavelet.*;
-import jj2000.j2k.image.*;
-import jj2000.j2k.io.*;
-import jj2000.j2k.*;
-
-import java.io.*;
+import jj2000.j2k.decoder.DecoderSpecs;
+import jj2000.j2k.image.CompTransfSpec;
+import jj2000.j2k.image.invcomptransf.InvCompTransf;
+import jj2000.j2k.wavelet.Subband;
+import jj2000.j2k.wavelet.synthesis.CBlkWTDataSrcDec;
+import jj2000.j2k.wavelet.synthesis.MultiResImgDataAdapter;
+import jj2000.j2k.wavelet.synthesis.SubbandSyn;
+import jj2000.j2k.wavelet.synthesis.SynWTFilterSpec;
 
 /**
  * This is the abstract class from which all dequantizers must inherit. This

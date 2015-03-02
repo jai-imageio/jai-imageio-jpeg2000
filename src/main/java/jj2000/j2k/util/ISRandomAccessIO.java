@@ -47,8 +47,12 @@
  */
 package jj2000.j2k.util;
 
-import java.io.*;
-import jj2000.j2k.io.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+
+import jj2000.j2k.io.EndianType;
+import jj2000.j2k.io.RandomAccessIO;
 
 /**
  * This class implements a wrapper to turn an InputStream into a

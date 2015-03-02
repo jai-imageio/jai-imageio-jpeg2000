@@ -49,7 +49,7 @@
 
 package jj2000.j2k.entropy.decoder;
 
-import jj2000.j2k.entropy.*;
+import jj2000.j2k.entropy.CodedCBlk;
 
 /**
  * This class stores coded (compressed) code-blocks that are organized

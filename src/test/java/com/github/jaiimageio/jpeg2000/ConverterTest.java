@@ -1,4 +1,4 @@
-package com.sun.media.imageio;
+package com.github.jaiimageio.jpeg2000;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

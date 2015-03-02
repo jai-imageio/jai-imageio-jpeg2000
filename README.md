@@ -59,7 +59,7 @@ To use jai-imageio-core-jpeg2000 from a Maven project, add:
     <dependency>
         <groupId>com.github.jai-imageio</groupId>
         <artifactId>jai-imageio-jpeg2000</artifactId>
-        <version>1.3.0-SNAPSHOT</version>
+        <version>1.3.0</version>
     </dependency>
 
 jai-imageio-jpeg2000 is mirrored to Maven Central. Alternatively you can use

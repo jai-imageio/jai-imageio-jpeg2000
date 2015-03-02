@@ -107,11 +107,13 @@ with the GNU Public License (GPL)**.
 Changelog
 ---------
 
-* 2014-09-12 -  Separated out [JPEG 2000](https://github.com/jai-imageio/jai-imageio-core/issues/4)
+* 1.3.0 - Changed package name to org.github.imageio.plugins.jpeg2000.
+      Added JPEG2000 test. Java 8-workaround in test.
+* 1.2-pre-dr-b04-2014-09-13 - Include jpeg2000 plugin that was remaining in jai-imageio-core. 
+      Improved javadoc.
+* 1.2-pre-dr-b04-2014-09-12  Separated out [JPEG 2000](https://github.com/jai-imageio/jai-imageio-core/issues/4)
       support from [jai-imageio-core](http://github.com/jai-imageio/jai-imageio-core)
       for [licensing reasons](https://github.com/jai-imageio/jai-imageio-core/issues/4)
-* 2014-09-13 - Include jpeg2000 plugin that was remaining in jai-imageio-core. 
-      Improved javadoc.
 
 
 More info

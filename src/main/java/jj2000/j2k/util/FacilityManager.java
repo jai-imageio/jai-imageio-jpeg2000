@@ -48,7 +48,9 @@
 
 package jj2000.j2k.util;
 
-import java.util.Hashtable;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * This class manages common facilities for mutithreading environments, It can
@@ -74,21 +76,37 @@ import java.util.Hashtable;
  * */
 public class FacilityManager {
 
-    /** The loggers associated to different threads */
-    private final static Hashtable loggerList = new Hashtable();
+    private static final StreamMsgLogger DEFAULT_LOGGER = new StreamMsgLogger(System.out,System.err,78);
+
+	/** The loggers associated to different threads */
+    private final static Map<Thread, MsgLogger> loggerList = 
+    		Collections.synchronizedMap(new WeakHashMap<Thread, MsgLogger>());
 
     /** The default logger, for threads that have none associated with them */
-    private static MsgLogger defMsgLogger =
-        new StreamMsgLogger(System.out,System.err,78);
+    private static volatile MsgLogger defMsgLogger = DEFAULT_LOGGER;
 
     /** The ProgressWatch instance associated to different threads */
-    private final static Hashtable watchProgList = new Hashtable();
+    private final static Map<Thread, ProgressWatch> watchProgList = 
+    		Collections.synchronizedMap(new WeakHashMap<Thread, ProgressWatch>());
 
     /** The default ProgressWatch for threads that have none
      * associated with them. */
-    private static ProgressWatch defWatchProg = null;
+    private static volatile ProgressWatch defWatchProg = null;
 
-    /** */
+    /** 
+     * Register the ProgressWatch for the given thread.
+     * <p>
+     * If any other logging facility was registered with the
+     * given thread, it is overridden. If the Thread  is null then 'ml' is taken
+     * as the default message logger that is used for threads that have no
+     * ProgressWatch registered.
+     * <p>
+     * To unregister, use {@link #unregisterProgressWatch(Thread)}
+     * 
+     * @param t The thread to associate with progress watcher
+     * @param pw The ProgressWatch to associate with thread
+     * 
+     */
     public static void registerProgressWatch(Thread t,ProgressWatch pw) {
        if(pw==null) {
             throw new NullPointerException();
@@ -101,10 +119,30 @@ public class FacilityManager {
         }
     }
 
+	/**
+	 * Unregister the ProgressWatch previously registered for the given thread.
+	 * <p>
+	 * If t is null, the default progress watch is unregistered.
+	 * 
+	 * @see #registerProgressWatch(Thread, ProgressWatch)
+	 * @param t
+	 *            Thread to unregister progress watch for, or <code>null</code>
+	 *            to unregister the default progress watch.
+	 */
+	public static void unregisterProgressWatch(Thread t) {
+		if (t == null) {
+			defWatchProg = null;
+		} else {
+			watchProgList.remove(t);
+		}
+	}
+
     /** 
-     * Returns the ProgressWatch instance registered with the current
+     * Return the ProgressWatch instance registered with the current
      * thread (the thread that calls this method). If the current
      * thread has no registered ProgressWatch, then the default one is used. 
+     * 
+     * @see #registerProgressWatch(Thread, ProgressWatch)
      * */
     public static ProgressWatch getProgressWatch() {
         ProgressWatch pw = (ProgressWatch)
@@ -112,17 +150,20 @@ public class FacilityManager {
         return (pw==null) ? defWatchProg : pw;
     }
 
-    /**
-     * Registers the MsgLogger 'ml' as the logging facility of the
-     * thread 't'. If any other logging facility was registered with the
-     * thread 't' it is overriden by 'ml'. If 't' is null then 'ml' is taken
-     * as the default message logger that is used for threads that have no
-     * MsgLogger registered.
-     *
-     * @param t The thread to associate with 'ml'
-     *
-     * @param ml The MsgLogger to associate with therad ml
-     * */
+	/**
+	 * Register MsgLogger 'ml' as the logging facility of the given thread.
+	 * <p>
+	 * If any other logging facility was registered with the thread, it is
+	 * overriden. If the Thread is <code>null</code>, then the given message
+	 * logger will be set as the default for threads that have no MsgLogger
+	 * registered.
+	 * 
+	 * @see #unregisterMsgLogger(Thread)
+	 * @param t
+	 *            The thread to associate a MsgLogger for
+	 * @param ml
+	 *            The MsgLogger to associate
+	 * */
     public static void registerMsgLogger(Thread t, MsgLogger ml) {
         if (ml == null) {
             throw new NullPointerException();
@@ -136,15 +177,39 @@ public class FacilityManager {
     }
 
     /**
-     * Returns the MsgLogger registered with the current thread (the
-     * thread that calls this method). If the current thread has no registered
-     * MsgLogger then the default message logger is returned.
-     *
-     * @return The MsgLogger registerd for the current thread, or the
-     * default one if there is none registered for it.
-     *
-     *
-     * */
+	 * Unregister the MsgLogger previously registered for the given thread.
+	 * <p>
+	 * If the Thread is <code>null</code>, then the default logger is reset to a
+	 * {@link StreamMsgLogger} using {@link System#out} and {@link System#err}.
+	 * 
+	 * @see #registerMsgLogger(Thread, MsgLogger)
+	 * 
+	 * @param t
+	 *            The thread to remove the MsgLogger for, or <code>null</code>
+	 *            to reset the default message logger.
+	 */
+    public static void unregisterMsgLogger(Thread t) {
+    	if (t == null) {
+    		defMsgLogger = DEFAULT_LOGGER;
+    	} else {
+    		loggerList.remove(t);
+    	}
+    }
+    
+    /**
+	 * Return the MsgLogger registered with the current thread (the thread that
+	 * calls this method).
+	 * <p>
+	 * If the current thread has no registered {@link MsgLogger} then the default
+	 * message logger is returned.
+	 *
+	 * @see #registerMsgLogger(Thread, MsgLogger)
+	 * @see #getMsgLogger(Thread)
+	 * @return The MsgLogger registered for the current thread, or the default
+	 *         one if there is none registered for it.
+	 *
+	 *
+	 * */
     public static MsgLogger getMsgLogger() {
         MsgLogger ml =
             (MsgLogger) loggerList.get(Thread.currentThread());
@@ -152,17 +217,16 @@ public class FacilityManager {
     }
 
     /**
-     * Returns the MsgLogger registered with the thread 't' (the thread
-     * that calls this method). If the thread 't' has no registered
-     * MsgLogger then the default message logger is returned.
-     *
-     * @param t The thread for which to return the MsgLogger
-     *
-     * @return The MsgLogger registerd for the current thread, or the
-     * default one if there is none registered for it.
-     *
-     *
-     * */
+	 * Return the MsgLogger registered with the thread 't'.
+	 * <p>
+	 * If the thread 't' has no registered {@link MsgLogger}, then the default
+	 * message logger is returned.
+	 *
+	 * @param t
+	 *            The thread for which to return the MsgLogger
+	 * @return The MsgLogger registered for the current thread, or the default
+	 *         one if there is none registered for it.
+	 */
     public static MsgLogger getMsgLogger(Thread t) {
         MsgLogger ml =
             (MsgLogger) loggerList.get(t);

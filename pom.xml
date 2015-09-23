@@ -1,43 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
   <prerequisites>
     <maven>2.2.1</maven>
   </prerequisites>
   <groupId>com.github.jai-imageio</groupId>  
-	<artifactId>jai-imageio-jpeg2000</artifactId>
-	<version>1.3.1-SNAPSHOT</version>
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <artifactId>jai-imageio-jpeg2000</artifactId>
+    <version>1.3.1-SNAPSHOT</version>
+ <packaging>bundle</packaging>
+    <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <jaiimageio.core.version>1.3.0</jaiimageio.core.version>
-	</properties>
+    </properties>
 
-	<packaging>jar</packaging>
-	<name>JPEG2000 support for Java Advanced Imaging Image I/O Tools API</name>
-	<description>
-		JPEG2000 support for Java Advanced Imaging Image I/O Tools API core.
+    <packaging>jar</packaging>
+    <name>JPEG2000 support for Java Advanced Imaging Image I/O Tools API</name>
+    <description>
+      JPEG2000 support for Java Advanced Imaging Image I/O Tools API core.
     This module is licensed under the [JJ2000 license](LICENSE.txt) and
     is therefore NOT compatible with the GPL 3 license. It should be
     compatible with the LGPL 2.1 license.
-	</description>
-	<url>https://github.com/jai-imageio/jai-imageio-jpeg2000</url>
+    </description>
+    <url>https://github.com/jai-imageio/jai-imageio-jpeg2000</url>
   <organization>
     <name>jai-imageio GitHub group</name>
     <url>https://github.com/jai-imageio/</url>
   </organization>
-	<licenses>
-		<license>
-			<name>JJ2000</name>
-			<url>LICENSE-JJ2000.txt</url>
-			<distribution>repo</distribution>
-		</license>
+    <licenses>
+      <license>
+        <name>JJ2000</name>
+        <url>LICENSE-JJ2000.txt</url>
+        <distribution>repo</distribution>
+      </license>
     <license>
       <name>BSD 3-clause License w/nuclear disclaimer</name>
       <url>LICENSE-Sun.txt</url>
       <distribution>repo</distribution>
     </license>
-	</licenses>
+    </licenses>
   <build>
     <plugins>
       <plugin>
@@ -226,55 +227,55 @@
     </profile>
   </profiles>
 
-	<dependencies>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>jai-imageio-core</artifactId>
+    <dependencies>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>jai-imageio-core</artifactId>
       <version>${jaiimageio.core.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.12</version>
-			<type>jar</type>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>2.8</version>
-				<reportSets>
-					<reportSet>
-						<reports>
-							<report>project-team</report>
-							<report>mailing-list</report>
-							<report>cim</report>
-							<report>issue-tracking</report>
-							<report>license</report>
-							<report>scm</report>
-						</reports>
-					</reportSet>
-				</reportSets>
-			</plugin>
-			<plugin>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<configuration>
-					<linksource>true</linksource>
-					<protected>true</protected>
-				</configuration>
-			</plugin>
-		</plugins>
-	</reporting>
-	<scm>
-		<connection>scm:git:git://github.com/jai-imageio/jai-imageio-jpeg2000.git</connection>
-		<developerConnection>scm:git:git@github.com:jai-imageio/jai-imageio-jpeg2000.git</developerConnection>
-		<url>https://github.com/stain/jai-imageio-jpeg2000</url>
-	  <tag>HEAD</tag>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.12</version>
+        <type>jar</type>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+    <reporting>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <version>2.8</version>
+          <reportSets>
+            <reportSet>
+              <reports>
+                <report>project-team</report>
+                <report>mailing-list</report>
+                <report>cim</report>
+                <report>issue-tracking</report>
+                <report>license</report>
+                <report>scm</report>
+              </reports>
+            </reportSet>
+          </reportSets>
+        </plugin>
+        <plugin>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <configuration>
+            <linksource>true</linksource>
+            <protected>true</protected>
+          </configuration>
+        </plugin>
+      </plugins>
+    </reporting>
+    <scm>
+      <connection>scm:git:git://github.com/jai-imageio/jai-imageio-jpeg2000.git</connection>
+      <developerConnection>scm:git:git@github.com:jai-imageio/jai-imageio-jpeg2000.git</developerConnection>
+      <url>https://github.com/stain/jai-imageio-jpeg2000</url>
+      <tag>HEAD</tag>
   </scm>
-	<developers>
+    <developers>
     <developer>
       <name>Stian Soiland-Reyes</name>
       <email>stian@s11.no</email>
@@ -286,7 +287,7 @@
         <role>release manager</role>
       </roles>
     </developer>
-	</developers>
+    </developers>
   <contributors>
     <contributor>
       <name>John Hewson</name>
@@ -305,18 +306,18 @@
     </contributor>
   </contributors>
 
-	<issueManagement>
-		<system>GitHub</system>
-		<url>https://github.com/jai-imageio/jai-imageio-jpeg2000/issues</url>
-	</issueManagement>
+    <issueManagement>
+      <system>GitHub</system>
+      <url>https://github.com/jai-imageio/jai-imageio-jpeg2000/issues</url>
+    </issueManagement>
 
-	<distributionManagement>
-		<repository>
-			<id>bintray-jai-imageio-maven-jai-imageio-jpeg2000</id>
-			<name>jai-imageio-maven-jai-imageio-jpeg2000</name>
-			<url>https://api.bintray.com/maven/jai-imageio/maven/jai-imageio-jpeg2000</url>
-		</repository>
-	</distributionManagement>
+    <distributionManagement>
+      <repository>
+        <id>bintray-jai-imageio-maven-jai-imageio-jpeg2000</id>
+        <name>jai-imageio-maven-jai-imageio-jpeg2000</name>
+        <url>https://api.bintray.com/maven/jai-imageio/maven/jai-imageio-jpeg2000</url>
+      </repository>
+    </distributionManagement>
   <repositories>
     <repository>
       <id>bintray-jai-imageio</id>

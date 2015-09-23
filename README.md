@@ -107,6 +107,7 @@ Copyright and licenses
 * Copyright © 2005 Sun Microsystems
 * Copyright © 2010-2015 University of Manchester
 * Copyright © 2014-2015 Stian Soiland-Reyes
+* Copyright © 2015 Yannick De Turck
 
 The complete copyright notice for this project is in
 [COPYRIGHT.md](COPYRIGHT.md)
@@ -119,12 +120,14 @@ nuclear disclaimer, see [LICENSE-Sun.txt](LICENSE-Sun.txt)
 
 The [jj2000](src/main/java/jj2000) package in this module is licensed under the
 [JJ2000 license](LICENSE-JJ2000.txt) which is **not compatible
-with the GNU Public License (GPL)**.
+with the GNU Public License (GPL)**. It is unknown what is the compatibility
+of the JJ2000 license with other open source licenses.
 
 
 Changelog
 ---------
 
+* 1.3.1 - Now an OSGi bundle
 * 1.3.0 - Changed package name to org.github.imageio.plugins.jpeg2000.
       Added JPEG2000 test. Java 8-workaround in test.
 * 1.2-pre-dr-b04-2014-09-13 - Include jpeg2000 plugin that was remaining in jai-imageio-core. 

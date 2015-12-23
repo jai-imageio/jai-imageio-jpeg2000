@@ -379,7 +379,7 @@ public class J2KReadState {
 
         if (image == null) {
             raster = Raster.createWritableRaster(
-                sampleModel.createCompatibleSampleModel(destinationRegion.x +
+                getSampleModel().createCompatibleSampleModel(destinationRegion.x +
                                                         destinationRegion.width,
                                                         destinationRegion.y +
                                                         destinationRegion.height),

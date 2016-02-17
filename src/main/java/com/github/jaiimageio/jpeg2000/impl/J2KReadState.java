@@ -360,11 +360,14 @@ public class J2KReadState {
                                                         destinationRegion.y +
                                                         destinationRegion.height),
                 new Point(0, 0));
-            image = new BufferedImage(colorModel, raster,
-                                      colorModel.isAlphaPremultiplied(),
-                                      new Hashtable());
-        } else
+            if (colorModel != null) {
+                image = new BufferedImage(colorModel, raster, colorModel.isAlphaPremultiplied(), new Hashtable());
+            }
+        }
+
+        if (image != null) {
             raster = image.getWritableTile(0, 0);
+        }
 
         destImage = image;
         readSubsampledRaster(raster);

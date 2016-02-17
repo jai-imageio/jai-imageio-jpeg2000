@@ -52,6 +52,8 @@ import java.util.Vector;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
 
+import com.github.jaiimageio.jpeg2000.impl.J2KImageReadParamJava;
+
 import jj2000.j2k.JJ2KExceptionHandler;
 import jj2000.j2k.NoNextElementException;
 import jj2000.j2k.NotImplementedError;
@@ -70,8 +72,6 @@ import jj2000.j2k.util.FacilityManager;
 import jj2000.j2k.util.MathUtil;
 import jj2000.j2k.util.MsgLogger;
 import jj2000.j2k.wavelet.synthesis.SubbandSyn;
-
-import com.github.jaiimageio.jpeg2000.impl.J2KImageReadParamJava;
 
 /**
  * This class reads the bit stream (with the help of HeaderDecoder for tile
@@ -130,7 +130,7 @@ public class FileBitstreamReaderAgent extends BitstreamReaderAgent
     private int[] nBytes;
 
     /** Whether or not to print information found in codestream */
-    private boolean printInfo = false;
+    private boolean printInfo = true;
 
     /**
      * Backup of the number of bytes allocated to each tile. This array is

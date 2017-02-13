@@ -330,6 +330,13 @@
         <role>developer</role>
       </roles>
     </contributor>
+    <contributor>
+      <name>Glen Hein</name>
+      <url>https://github.com/glenhein</url>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </contributor>
   </contributors>
 
     <issueManagement>

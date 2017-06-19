@@ -96,8 +96,6 @@ public abstract class WTFilterSpec {
      *
      * @param nc The number of components
      *
-     * @param nt The number of tiles
-     *
      *
      * */
     protected WTFilterSpec(int nc) {
@@ -125,8 +123,6 @@ public abstract class WTFilterSpec {
      * <P>NOTE: The tile specific things are not supported yet
      *
      * @param n The component index
-     *
-     * @param t The tile index, in raster scan order.
      *
      * @return The specification type for component 'n' and tile 't'.
      *

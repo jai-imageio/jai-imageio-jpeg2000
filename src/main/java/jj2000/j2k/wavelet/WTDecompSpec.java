@@ -125,8 +125,6 @@ public class WTDecompSpec {
      *
      * @param nc The number of components
      *
-     * @param nt The number of tiles
-     *
      * @param dec The main default decomposition type
      *
      * @param lev The main default number of decomposition levels
@@ -184,8 +182,6 @@ public class WTDecompSpec {
      *
      * @param n The component index
      *
-     * @param t The tile index, in raster scan order.
-     *
      * @return The specification type for component 'n' and tile 't'.
      *
      *
@@ -224,8 +220,6 @@ public class WTDecompSpec {
      *
      * @param n The component index.
      *
-     * @param t The tile index, in raster scan order
-     *
      * @return The decomposition type to be used.
      *
      *
@@ -252,8 +246,6 @@ public class WTDecompSpec {
      * <P>NOTE: The tile specific things are not supported yet
      *
      * @param n The component index.
-     *
-     * @param t The tile index, in raster scan order
      *
      * @return The decomposition number of levels.
      *

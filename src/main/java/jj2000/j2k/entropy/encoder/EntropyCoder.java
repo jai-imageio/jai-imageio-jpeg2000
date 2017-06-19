@@ -286,7 +286,7 @@ public abstract class EntropyCoder extends ImgDataAdapter
      *
      * @param wp The parameter list (or options).
      *
-     * @param cbks Code-block size specifications
+     * @param cblks Code-block size specifications
      *
      * @param pss Precinct partition specifications
      *

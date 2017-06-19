@@ -84,8 +84,6 @@ public class HeaderInfo implements Markers,ProgressionType,FilterTypes,
         /** 
          * Width of the specified tile-component
          *
-         * @param t Tile index
-         *
          * @param c Component index
          * */
         public int getCompImgWidth(int c) {
@@ -745,7 +743,7 @@ public class HeaderInfo implements Markers,ProgressionType,FilterTypes,
      *
      * @param t index of the tile
      *
-     * @param tp Number of tile-parts
+     * @param ntp Number of tile-parts
      * */
     public String toStringTileHeader(int t, int ntp) {
         int nc = siz.csiz;
@@ -794,7 +792,7 @@ public class HeaderInfo implements Markers,ProgressionType,FilterTypes,
      *
      * @param t index of the tile
      *
-     * @param tp Number of tile-parts
+     * @param ntp Number of tile-parts
      * */
     public String toStringThNoSOT(int t, int ntp) {
         int nc = siz.csiz;

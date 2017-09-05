@@ -114,7 +114,7 @@ import javax.imageio.ImageWriteParam;
  *    <td>progressionType</td>
  *    <td> Specifies which type of progression should be used when generating
  *    the codestream.
- *    <p> The format is ont of the progression types defined below:
+ *    <p> The format is one of the progression types defined below:
  *
  *    <p> res : Resolution-Layer-Component-Position
  *    <p> layer: Layer-Resolution-Component-Position
@@ -236,6 +236,7 @@ public class J2KImageWriteParam extends ImageWriteParam {
         canOffsetTiles = true;
         compressionTypes = new String[] {"JPEG2000"};
         canWriteCompressed = true;
+        canWriteProgressive= true;
         tilingMode = MODE_EXPLICIT;
     }
 

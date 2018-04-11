@@ -802,18 +802,117 @@ public class J2KReadState {
                 x1 += offx;
                 y1 += offy;
 
+                // check to see if we have YCbCr data
+                boolean ycbcr = false;
+
+                for (int i=0; i<numBands; i++) {
+                  DataBlkInt db = dataBlocks[i];
+                  db.ulx = tx;
+                  db.uly = ty + cTileHeight - 1;
+                  db.w = cTileWidth;
+                  db.h = 1;
+
+                  try {
+                    ictransf.getInternCompData(db, channelMap[sourceBands[i]]);
+                  }
+                  catch (ArrayIndexOutOfBoundsException e) {
+                    ycbcr = true;
+                    break;
+                  }
+                }
+
                 // Deliver in lines to reduce memory usage
                 for (int l = ty, m = y1;
                      l < ty + cTileHeight;
                      l += scaleY, m++) {
                     if (reader.getAbortRequest())
                         break;
+
+
+                    if (ycbcr) {
+                      DataBlkInt lum = dataBlocks[0];
+                      DataBlkInt cb = dataBlocks[1];
+                      DataBlkInt cr = dataBlocks[2];
+
+                      lum.ulx = tx;
+                      lum.uly = l;
+                      lum.w = cTileWidth;
+                      lum.h = 1;
+                      ictransf.getInternCompData(lum, channelMap[sourceBands[0]]);
+                      prog = prog || lum.progressive;
+
+                      cb.ulx = tx;
+                      cb.uly = l;
+                      cb.w = cTileWidth / 2;
+                      cb.h = 1;
+                      ictransf.getInternCompData(cb, channelMap[sourceBands[1]]);
+                      prog = prog || cb.progressive;
+
+                      cr.ulx = tx;
+                      cr.uly = l;
+                      cr.w = cTileWidth / 2;
+                      cr.h = 1;
+                      ictransf.getInternCompData(cr, channelMap[sourceBands[2]]);
+                      prog = prog || cr.progressive;
+
+                      int[] lumdata = lum.data;
+                      int[] cbdata = cb.data;
+                      int[] crdata = cr.data;
+
+                      int k1 = lum.offset + x2;
+
+                      int fracBit = fracBits[0];
+                      int lS = levelShift[0];
+                      int min = minValues[0];
+                      int max = maxValues[0];
+
+                      int[][] pix = new int[3][lineLength];
+
+                      for (int j = lineLength - 1; j >= 0; j--, k1-=scaleX) {
+                        int red = (lumdata[k1] >> fracBit) + lS;
+                        red = (red < min) ? min : ((red > max) ? max : red);
+
+                        int cIndex = k1 / 2;
+
+                        int chrom1 = cbdata[cIndex];
+                        int chrom2 = crdata[cIndex];
+                        int lumval = red;
+
+                        red = (int) (chrom2 * 1.542 + lumval);
+                        int blue = (int) (lumval + 1.772 * chrom1 - 0.886);
+                        int green = (int) (lumval - 0.34413 * chrom1 - 0.71414 *
+                          chrom2 - 0.1228785);
+
+                        if (red > 255) red = 255;
+                        if (green > 255) green = 255;
+                        if (blue > 255) blue = 255;
+
+                        if (red < 0) red = 0;
+                        if (green < 0) green = 0;
+                        if (blue < 0) blue = 0;
+
+                        pix[0][j] = red;
+                        pix[1][j] = green;
+                        pix[2][j] = blue;
+                      }
+
+
+                      raster.setSamples(x1, m, lineLength, 1,
+                        destinationBands[0], pix[0]);
+                      raster.setSamples(x1, m, lineLength, 1,
+                        destinationBands[1], pix[1]);
+                      raster.setSamples(x1, m, lineLength, 1,
+                        destinationBands[2], pix[2]);
+
+                      continue;
+                    }
+
                     // Request line data
                     for (int i = 0; i < numBands; i++) {
                         DataBlkInt db = dataBlocks[i];
                         db.ulx = tx;
                         db.uly = l;
-                        db.w = cTileWidth;
+                        db.w = ycbcr && i > 0 ? cTileWidth / 2 : cTileWidth;
                         db.h = 1;
                         ictransf.getInternCompData(db, channelMap[sourceBands[i]]);
                         prog = prog || db.progressive;
@@ -890,36 +989,39 @@ public class J2KReadState {
         if (sampleModel != null)
             return sampleModel;
 
+        int realWidth = (int) Math.min(tileWidth, width);
+        int realHeight = (int) Math.min(tileHeight, height);
+
         if (nComp == 1 && (maxDepth == 1 || maxDepth == 2 || maxDepth == 4))
             sampleModel =
                 new MultiPixelPackedSampleModel(DataBuffer.TYPE_BYTE,
-                                                tileWidth,
-                                                tileHeight,
+                                                realWidth,
+                                                realHeight,
                                                 maxDepth);
         else if (maxDepth <= 8)
             sampleModel =
                 new PixelInterleavedSampleModel(DataBuffer.TYPE_BYTE,
-                                                tileWidth,
-                                                tileHeight,
+                                                realWidth,
+                                                realHeight,
                                                 nComp,
-                                                tileWidth * nComp,
+                                                realWidth * nComp,
                                                 bandOffsets);
         else if (maxDepth <=16)
             sampleModel =
                 new PixelInterleavedSampleModel(isSigned ?
                                                 DataBuffer.TYPE_SHORT :
                                                 DataBuffer.TYPE_USHORT,
-                                                tileWidth, tileHeight,
+                                                realWidth, realHeight,
                                                 nComp,
-                                                tileWidth * nComp,
+                                                realWidth * nComp,
                                                 bandOffsets);
         else if (maxDepth <= 32)
             sampleModel =
                 new PixelInterleavedSampleModel(DataBuffer.TYPE_INT,
-                                                tileWidth,
-                                                tileHeight,
+                                                realWidth,
+                                                realHeight,
                                                 nComp,
-                                                tileWidth * nComp,
+                                                realWidth * nComp,
                                                 bandOffsets);
         else
             throw new IllegalArgumentException(I18N.getString("J2KReadState11") + " " +

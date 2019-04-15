@@ -1997,7 +1997,7 @@ public class StdEntropyDecoder extends EntropyDecoder
         sscanw = cblk.w+2;
         jstep = sscanw*STRIPE_HEIGHT/2-cblk.w;
         kstep = dscanw*STRIPE_HEIGHT-cblk.w;
-        setmask = (3<<bp)>>1;
+        setmask = 3<<(bp-1);
         data = (int[]) cblk.getData();
         nstripes = (cblk.h+STRIPE_HEIGHT-1)/STRIPE_HEIGHT;
         causal = (options & OPT_VERT_STR_CAUSAL) != 0;

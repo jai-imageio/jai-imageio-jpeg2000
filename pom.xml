@@ -6,12 +6,12 @@
   </prerequisites>
   <groupId>com.github.jai-imageio</groupId>  
     <artifactId>jai-imageio-jpeg2000</artifactId>
-    <version>1.3.1-SNAPSHOT</version>
+    <version>1.4.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-      <jaiimageio.core.version>1.3.1</jaiimageio.core.version>
+      <jaiimageio.core.version>1.4.0</jaiimageio.core.version>
     </properties>
 
     <name>JPEG2000 support for Java Advanced Imaging Image I/O Tools API</name>
@@ -203,7 +203,7 @@
     <profile>
       <id>java8-and-higher</id>
       <activation>
-        <jdk>[1.8,</jdk>
+        <jdk>[1.8,)</jdk>
       </activation>
       <build>
         <plugins>

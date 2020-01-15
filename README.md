@@ -35,6 +35,7 @@ maintained and extends the original imageio with many useful features,
 but depends on the
 [binary distribution of jai_core](http://download.osgeo.org/webdav/geotools/javax/media/jai_core/1.1.3/).
 
+[![xkcd 2254](https://imgs.xkcd.com/comics/jpeg2000.png)](https://xkcd.com/2254/)
 
 ## Contribute
 

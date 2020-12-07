@@ -88,7 +88,11 @@ import com.github.jaiimageio.jpeg2000.impl.J2KImageWriteParamJava;
 public class EBCOTRateAllocator extends PostCompRateAllocator {
 
     /** Whether to collect timing information or not: false. Used as a compile
-     * time directive. */
+     * time directive.
+     * 
+     * WARNING: This does not currently work in OpenJDK 11, 
+     * also uncomment corresponding UNCOMMENT block inline.
+     */
     private final static boolean DO_TIMING = false;
 
     /** The wall time for the initialization. */
@@ -221,9 +225,13 @@ public class EBCOTRateAllocator extends PostCompRateAllocator {
         Point ncblks = null;
 
         // If we do timing create necessary structures
+        /* UNCOMMENT AT COMPILE TIME
         if (DO_TIMING) {
             // If we are timing make sure that 'finalize' gets called.
             System.runFinalizersOnExit(true);
+            // NOTE: deprecated method runFinalizersOnExit removed in JDK 11+
+            // use OpenJDK 8 to test
+
             // The System.runFinalizersOnExit() method is deprecated in Java
             // 1.2 since it can cause a deadlock in some cases. However, here
             // we use it only for profiling purposes and is disabled in
@@ -232,6 +240,7 @@ public class EBCOTRateAllocator extends PostCompRateAllocator {
             buildTime = 0L;
             writeTime = 0L;
         }
+        */
 
         // Save the layer specs
         lyrSpec = lyrs;

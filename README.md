@@ -114,6 +114,8 @@ Copyright and licenses
 * Copyright © 2017 GNF
 * Copyright © 2017 connexta / OCTO
 * Copyright © 2018 Jurgen Doll / Lightware Software
+* Copyright © 2018 BFO
+* Copyright © 2020 Egor Radchenko
 
 The complete copyright notice for this project is in
 [COPYRIGHT.md](COPYRIGHT.md)

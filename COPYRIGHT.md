@@ -10,6 +10,7 @@
 © 2018 Jurgen Doll / Lightware Software  
 © 2018 BFO  
 © 2020 Egor Radchenko  
+© 2017 Matt Parker
 
 
 

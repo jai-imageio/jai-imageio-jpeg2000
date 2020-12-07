@@ -1,8 +1,13 @@
 # Build modifications
 
-(c) 2010-2015 University of Manchester <soiland-reyes@cs.manchester.ac.uk>
-(c) 2014-2015 Stian Soiland-Reyes <stian@soiland-reyes.com>
-(c) 2015 Yannick De Turck
+© 2010-2020 University of Manchester <soiland-reyes@cs.manchester.ac.uk>
+© 2014-2015 Stian Soiland-Reyes <stian@soiland-reyes.com>
+© 2015 Yannick De Turck
+© 2017-2018 University of Dundee
+© 2017 Glencoe Software
+© 2017 GNF
+© 2017 connexta / OCTO
+© 2018 Jurgen Doll / Lightware Software
 
 
 

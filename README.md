@@ -106,9 +106,14 @@ Copyright and licenses
 
 * Copyright © 1999/2000 JJ2000 Partners
 * Copyright © 2005 Sun Microsystems
-* Copyright © 2010-2015 University of Manchester
+* Copyright © 2010-2020 University of Manchester
 * Copyright © 2014-2015 Stian Soiland-Reyes
 * Copyright © 2015 Yannick De Turck
+* Copyright © 2017-2018 University of Dundee
+* Copyright © 2017 Glencoe Software
+* Copyright © 2017 GNF
+* Copyright © 2017 connexta / OCTO
+* Copyright © 2018 Jurgen Doll / Lightware Software
 
 The complete copyright notice for this project is in
 [COPYRIGHT.md](COPYRIGHT.md)

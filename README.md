@@ -26,7 +26,8 @@ It depends on the [jai-imageio-core](https://github.com/jai-imageio/jai-imageio-
 module.
 
 There is **NO FURTHER DEVELOPMENT** in this repository; any commits here are
-just to keep the build working with recent versions of Maven/Java.
+just to keep the build working with recent versions of Maven/Java and to fix
+regressions against previous releases.
 
 If you are not concerned about GPL compatibility or source code
 availability, you might instead want to use
@@ -51,7 +52,7 @@ This project is maintained fully on GitHub by its community - to follow the proj
 Usage
 -----
 
-To build this project, use Apache Maven 2.2.1 or newer and run:
+To build this project, use OpenJDK 8 or 11, together with Apache Maven 2.2.1 or newer, and run:
 
     mvn clean install
 

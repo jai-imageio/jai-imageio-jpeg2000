@@ -81,7 +81,12 @@ public class StdEntropyDecoder extends EntropyDecoder
     implements StdEntropyCoderOptions {
 
     /** Whether to collect timing information or not: false. Used as a compile
-     * time directive. */
+     * time directive.
+     * 
+     * WARNING: This does not currently work in OpenJDK 11, 
+     * also uncomment corresponding UNCOMMENT block inline 
+     * before recompiling!
+     */
     private final static boolean DO_TIMING = false;
 
     /** The cumulative wall time for the entropy coding engine, for each
@@ -619,11 +624,15 @@ public class StdEntropyDecoder extends EntropyDecoder
         this.mQuit = mQuit;
 
         // If we do timing create necessary structures
+        /* UNCOMMENT AT COMPILE TIME
         if (DO_TIMING) {
             time = new long[src.getNumComps()];
             // If we are timing make sure that 'finalize' gets called.
             System.runFinalizersOnExit(true);
+            // NOTE: deprecated method runFinalizersOnExit removed in JDK 11+
+            // use OpenJDK 8 to test
         }
+        */
 
         // Initialize internal variables
         state = new int[(decSpec.cblks.getMaxCBlkWidth()+2) *

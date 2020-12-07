@@ -193,16 +193,18 @@ public class FileFormatReader implements FileFormatBoxes{
                 metadata.addNode(new SignatureBox());
 
             // Read all remaining boxes
+            int inputLength = in.length();
             while(!lastBoxFound){
                 pos = in.getPos();
                 length = in.readInt();
-                if((pos+length) == in.length())
+                int remainingLength = inputLength - (pos+length);
+                if(remainingLength >=0 && remainingLength < 4)
                     lastBoxFound = true;
 
                 box = in.readInt();
                 if (length == 0) {
                     lastBoxFound = true;
-                    length = in.length()-in.getPos();
+                    length = inputLength-in.getPos();
                 } else if(length == 1) {
                     longLength = in.readLong();
                     throw new IOException("File too long.");

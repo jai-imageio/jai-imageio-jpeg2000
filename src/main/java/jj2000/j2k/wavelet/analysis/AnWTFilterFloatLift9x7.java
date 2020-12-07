@@ -62,33 +62,46 @@ import jj2000.j2k.wavelet.FilterTypes;
 public class AnWTFilterFloatLift9x7 extends AnWTFilterFloat {
 
     /** The low-pass synthesis filter of the 9x7 wavelet transform */
-    private final static float LPSynthesisFilter[] =
-    { -0.091272f, -0.057544f, 0.591272f, 1.115087f,
-      0.591272f, -0.057544f, -0.091272f};
+    private final static float LPSynthesisFilter[] = {
+        -0.091271763114250f,    // Table J.2 n=-3
+        -0.057543526228500f,    // Table J.2 n=-2
+        0.591271763114250f,     // Table J.2 n=-1
+        1.115087052457000f,     // Table J.2 n=0
+        0.591271763114250f,     // Table J.2 n=1
+        -0.057543526228500f,    // Table J.2 n=2
+        -0.091271763114250f     // Table J.2 n=3
+    };
 
     /** The high-pass synthesis filter of the 9x7 wavelet transform */
-    private final static float HPSynthesisFilter[] =
-        { 0.026749f, 0.016864f, -0.078223f, -0.266864f,
-          0.602949f,
-          -0.266864f, -0.078223f, 0.016864f, 0.026749f };
+    private final static float HPSynthesisFilter[] = {
+        0.026748757410810f,   // Table J.2 n=-3
+        0.016864118442875f,   // Table J.2 n=-2
+        -0.078223266528990f,  // Table J.2 n=-1
+        -0.266864118442875f,  // Table J.2 n=0
+        0.602949018236360f,   // Table J.2 n=1
+        -0.266864118442875f,  // Table J.2 n=2
+        -0.078223266528990f,  // Table J.2 n=3
+        0.016864118442875f,   // Table J.2 n=4
+        0.026748757410810f,   // Table J.2 n=5
+    };
 
     /** The value of the first lifting step coefficient */
-    public final static float ALPHA = -1.586134342f;
+    public final static float ALPHA = -1.586134342059924f;      // Table F.4 
 
     /** The value of the second lifting step coefficient */
-    public final static float BETA = -0.05298011854f;
+    public final static float BETA = -0.052980118572961f;       // Table F.4
 
     /** The value of the third lifting step coefficient */
-    public final static float GAMMA = 0.8829110762f;
+    public final static float GAMMA = 0.882911075530934f;       // Table F.4
 
     /** The value of the fourth lifting step coefficient */
-    public final static float DELTA = 0.443568522f;
+    public final static float DELTA = 0.443506852043971f;       // Table F.4
 
     /** The value of the low-pass subband normalization factor */
-    public final static float KL = 0.8128930655f;//1.149604398f;
+    public final static float KL = 0.812893066115961f;          // Table F.6 t0 (1.149604398f);
 
     /** The value of the high-pass subband normalization factor */
-    public final static float KH = 1.230174106f;//0.8698644523f;
+    public final static float KH = 1.230174104914001f;          // Table F.4 (0.8698644523f)
 
     /**
      * An implementation of the analyze_lpf() method that works on int

@@ -6,7 +6,7 @@
   </prerequisites>
   <groupId>com.github.jai-imageio</groupId>  
     <artifactId>jai-imageio-jpeg2000</artifactId>
-    <version>1.4.0</version>
+    <version>1.4.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -261,7 +261,7 @@
       <connection>scm:git:git://github.com/jai-imageio/jai-imageio-jpeg2000.git</connection>
       <developerConnection>scm:git:git@github.com:jai-imageio/jai-imageio-jpeg2000.git</developerConnection>
       <url>https://github.com/stain/jai-imageio-jpeg2000</url>
-      <tag>jai-imageio-jpeg2000-1.4.0-RC1</tag>
+      <tag>HEAD</tag>
   </scm>
     <developers>
     <developer>

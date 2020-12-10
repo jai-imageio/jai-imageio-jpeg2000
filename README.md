@@ -61,7 +61,7 @@ To use jai-imageio-core-jpeg2000 from a Maven project, add:
     <dependency>
         <groupId>com.github.jai-imageio</groupId>
         <artifactId>jai-imageio-jpeg2000</artifactId>
-        <version>1.3.0</version>
+        <version>1.4.0</version>
     </dependency>
 
 To find the latest `<version>` above, see
@@ -75,7 +75,7 @@ this explicit repository:
       <repository>
         <id>bintray-jai-imageio</id>
         <name>jai-imageio at bintray</name>
-        <url>http://dl.bintray.com/jai-imageio/maven/</url>
+        <url>https://dl.bintray.com/jai-imageio/maven/</url>
         <snapshots>
           <enabled>false</enabled>
         </snapshots>
@@ -90,7 +90,7 @@ Download
 --------
 
 To download the binary JARs, browse the
-[Downloads at BinTray](https://bintray.com/jai-imageio/maven/jai-imageio-jpeg2000).
+[Downloads at BinTray](https://bintray.com/jai-imageio/maven/jai-imageio-jpeg2000) or see [GitHub releases](https://github.com/jai-imageio/jai-imageio-jpeg2000/releases) (since 1.4.0)
 
 
 Javadoc
@@ -138,6 +138,7 @@ of the JJ2000 license with other open source licenses.
 Changelog
 ---------
 
+* 1.4.0 - see [1.4.0 changelog](https://github.com/jai-imageio/jai-imageio-jpeg2000/releases/tag/jai-imageio-jpeg2000-1.4.0)
 * 1.3.1 - Now an OSGi bundle
 * 1.3.0 - Changed package name to org.github.imageio.plugins.jpeg2000.
       Added JPEG2000 test. Java 8-workaround in test.

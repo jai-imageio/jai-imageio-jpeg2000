@@ -56,6 +56,8 @@ To build this project, use OpenJDK 8 or 11, together with Apache Maven 2.2.1 or 
 
     mvn clean install
 
+(JDK 11 is preferred due to better compatibility with Java 6 target API)
+
 To use jai-imageio-core-jpeg2000 from a Maven project, add:
 
     <dependency>

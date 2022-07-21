@@ -44,6 +44,7 @@
  * */
 package jj2000.j2k.roi.encoder;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -544,8 +545,7 @@ public class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
             mask.setDataInt(maskData);
         }
         else{
-            for(i=w*h-1;i>=0;i--)
-                maskData[i]=0;
+        	Arrays.fill(maskData, 0, w * h, 0);
         }
         mask.ulx = ulx;
         mask.uly = uly;

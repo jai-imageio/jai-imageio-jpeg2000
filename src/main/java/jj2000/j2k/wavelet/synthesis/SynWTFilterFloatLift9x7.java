@@ -153,7 +153,7 @@ public class SynWTFilterFloatLift9x7 extends SynWTFilterFloat {
         
         //Handle tail boundary effect. Use symmetric extension
         if(outLen>1) {
-            outSig[ik] = lowSig[lk]/KL - 2*DELTA*highSig[hk]/KH;
+            outSig[ik] = lowSig[lk]*(1f / KL) - 2*DELTA*highSig[hk]*(1f / KH);
         }
 	else {
 	    outSig[ik] = lowSig[lk];
@@ -165,15 +165,15 @@ public class SynWTFilterFloatLift9x7 extends SynWTFilterFloat {
     	
         //Apply lifting step to each "inner" sample
         for(i=2; i<outLen-1; i+=2, ik+=iStep, lk+=lowStep, hk+=highStep) {
-            outSig[ik] = lowSig[lk]/KL - 
-            	DELTA*(highSig[hk-highStep] + highSig[hk])/KH;
+            outSig[ik] = lowSig[lk]*(1f / KL) - 
+            	DELTA*(highSig[hk-highStep] + highSig[hk])*(1f / KH);
         }
         
         //Handle head boundary effect if input signal has odd length
         if(outLen%2 == 1) {
             if(outLen>2){
-                outSig[ik] = lowSig[lk]/KL - 
-                2*DELTA*highSig[hk-highStep]/KH;
+                outSig[ik] = lowSig[lk]*(1f / KL) - 
+                2*DELTA*highSig[hk-highStep]*(1f / KH);
             }
         }
         
@@ -186,13 +186,13 @@ public class SynWTFilterFloatLift9x7 extends SynWTFilterFloat {
 
         //Apply lifting step to each "inner" sample
         for(i = 1; i<outLen-1; i+=2, ik+=iStep, hk+=highStep, lk+=lowStep) {
-            outSig[ik] = highSig[hk]/KH - 
+            outSig[ik] = highSig[hk]*(1f / KH) - 
                 GAMMA*(outSig[ik-outStep] + outSig[ik+outStep]);
     	}
 
         //Handle head boundary effect if output signal has even length
         if(outLen % 2 == 0) {
-            outSig[ik] = highSig[hk]/KH - 2*GAMMA*outSig[ik-outStep];
+            outSig[ik] = highSig[hk]*(1f / KH) - 2*GAMMA*outSig[ik-outStep];
         }       
 
         // Generate even samples (inverse low-pass filter)
@@ -306,18 +306,18 @@ public class SynWTFilterFloatLift9x7 extends SynWTFilterFloat {
 	    int outLen2 = outLen>>1;
             // "Inverse normalize" each sample
             for(i=0; i<outLen2; i++) {
-                lowSig[lk] /= KL;
-                highSig[hk] /= KH;
+                lowSig[lk] *= (1f / KL);
+                highSig[hk] *= (1f / KH);
                 lk += lowStep;  
                 hk += highStep;
             } 
             // "Inverse normalise" last high pass coefficient
             if(outLen%2==1) {
-		highSig[hk] /= KH;
+		highSig[hk] *= (1f / KH);
             }
         } else {
 	    // Normalize for Nyquist gain
-	    highSig[highOff] /= 2;
+	    highSig[highOff] *= 0.5f;
 	}
         
         // Generate intermediate low frequency subband
